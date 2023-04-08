@@ -37,32 +37,33 @@ m_window->setAnyKeyDownOnceEvent("export file type",
 ### Mouse event bindings:
 ```
 m_window->setMouseDragEvent(sf::Mouse::Middle,
-   [this](ivec2 startPos, ivec2 currentPos, ivec2 currentDelta, DragState dragState) {
-       vec2 textureSize = toFloat(m_texture.getSize());
-       vec2 uvCurrentDelta = m_window->mapPixelToCoords(currentDelta) / textureSize;
-       vec2 uvStartPos = m_window->mapPixelToCoords(startPos) / textureSize;
-       vec2 uvCurrentPos = m_window->mapPixelToCoords(currentPos) / textureSize;
-       vec2 uvCurrentDir = normalized(uvCurrentPos - uvStartPos);
+    [this](ivec2 startPos, ivec2 currentPos, ivec2 currentDelta, DragState dragState) {
+        vec2 textureSize = toFloat(m_texture.getSize());
+        vec2 uvCurrentDelta = m_window->mapPixelToCoords(currentDelta) / textureSize;
+        vec2 uvStartPos = m_window->mapPixelToCoords(startPos) / textureSize;
+        vec2 uvCurrentPos = m_window->mapPixelToCoords(currentPos) / textureSize;
+        vec2 uvCurrentDir = normalized(uvCurrentPos - uvStartPos);
 
-       if (dragState == DragState::StartDrag) {
-         // when start dragging
-       } else if (dragState == DragState::ContinueDrag) {
-         // when continue dragging
-       }
-       // do something on MMB drag
-   });
+        if (dragState == DragState::StartDrag) {
+          // when start dragging
+        } else if (dragState == DragState::ContinueDrag) {
+          // when continue dragging
+        }
+        // do something on MMB drag
+    });
 
 m_window->setMouseDownEvent(sf::Mouse::Left, [this](ivec2 pos, bool mouseDown) {
-         if (mouseDown) { /* on mouse down */ 
-         } else {
-          // on mouse up, maybe it is better to separate these events
-         }
-     });
+        if (mouseDown) { /* on mouse down */  }  else { /* on mouse up */ }
+        // maybe it is better to separate these events
+    });
 ```
-### Read/write file dialogs
+### Read/write file dialog templates
+
+You can create image reader/writer template.
+It saves functions, extensions, current folder and last open filename.
 ```
-// read(write)functions are bool(const std::filesystem::path& fullFilePath)
-// (return success of read/write)
+// let's create a "Primary" template
+// read(write)functions: bool(const std::filesystem::path& fullFilePath) (return success)
 addFileInteractionInfo("Primary", "png,jpg", readFunction, writeFunction);
 
 // open file
@@ -75,10 +76,14 @@ m_window->addKeyDownEvent(sf::Keyboard::S, ModifierKey::Control,
 
 // save file as
 m_window->addKeyDownEvent(sf::Keyboard::S, ModifierKey::Control | ModifierKey::Shift,
-    std::bind(&Application::saveFileOptionalDialog, this, "Primary", true));
+    std::bind(&Application::saveFileOptionalDialog, this, "Primary", true)); 
+// last 'true' is force open dialog window
 
 // you can add additional file import
-addFileInteractionInfo("VectorFormatImport", "svg", readFunction, writeFunction);
+
+addFileInteractionInfo("VectorFormatImport", "svg", 
+    anotherReadFunction, anotherWriteFunction);
+
 m_window->addKeyDownEvent(sf::Keyboard::I, ModifierKey::Control,
     std::bind(&Application::openFileDialog, this, "VectorFormatImport"));
 ```
