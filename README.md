@@ -88,6 +88,24 @@ m_window->addKeyDownEvent(sf::Keyboard::I, ModifierKey::Control,
     std::bind(&Application::openFileDialog, this, "VectorFormatImport"));
 ```
 
+## How to add it to your project
+For CMake noobs like me.
+
+This repo is your child project, the parent project is your "main".
+CMake in your root project:
+```
+set(MET "third_party/media-editor-template")   # something like set variable, to get it write ${MET}
+add_subdirectory(${MET}) # just do it!
+
+set(SOURCE_FILES main.cpp)        # the "main" of your project
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+
+include_directories(${MET}/src)         # to find includes do this
+target_link_libraries(${PROJECT_NAME} media-editor-template)  # undefined reference without this
+```
+
+Trust me, I brute-forced a lot of words in CMake!
+
 ## Feel free to use and/or make it better!
 
 # Dependencies:
