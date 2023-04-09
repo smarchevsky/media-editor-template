@@ -88,19 +88,35 @@ m_window->addKeyDownEvent(sf::Keyboard::I, ModifierKey::Control,
     std::bind(&Application::openFileDialog, this, "VectorFormatImport"));
 ```
 
+### FileSystemNavigator
+If you want to navigate through a filesystem with ImGui - there is builtin FileSystemNavigator. It opens with Application::openFileDialog.
+
+- Navigate through filesystem via up/down direction keys.
+- Write filename in textbox, highlight text, if filemane exists or not exists in this folder.
+- Show overwrite dialog window ("yes"/"no"), if you are going to overwrite file.
+- Extension sensitive filter.
+- Autocomplene first supported extension if not exists.
+- launch individual save/read functions for each extension.
+
+You can use it independently of the main project.
+
+<img src="readme_images/screenshot_imgui_filesystem.png"  width=40%>
+
+I did not try it on Windows, so it may not be able to change disks (now).
+
 ## How to add it to your project
-For CMake noobs like me.
+For complete CMake noobs like me.
 
 This repo is your child project, the parent project is your "main".
 CMake in your root project:
 ```
-set(MET "third_party/media-editor-template")   # something like set variable, to get it write ${MET}
+set(MET "third_party/media-editor-template") # something like set variable, to get it write ${MET}
 add_subdirectory(${MET}) # just do it!
 
-set(SOURCE_FILES main.cpp)        # the "main" of your project
+set(SOURCE_FILES main.cpp) # the "main" of your project
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-include_directories(${MET}/src)         # to find includes do this
+include_directories(${MET}/src) # to find includes do this
 target_link_libraries(${PROJECT_NAME} media-editor-template)  # undefined reference without this
 ```
 
