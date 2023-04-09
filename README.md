@@ -106,6 +106,25 @@ target_link_libraries(${PROJECT_NAME} media-editor-template)  # undefined refere
 
 Trust me, I brute-forced a lot of words in CMake!
 
+Your main:
+```
+#include "application.h"
+
+int main()
+{
+    Application app;
+    app.init(); 
+    // override key bindings and creating save templates here
+    
+    app.mainLoop();
+    // override drawContext() to draw your stuff
+
+    return 0;
+}
+
+```
+Override Application's functions and be happy!
+
 ## Feel free to use and/or make it better!
 
 # Dependencies:
