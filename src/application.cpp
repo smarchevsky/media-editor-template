@@ -171,7 +171,7 @@ void Application::mainLoop()
     while (m_window && m_window->isOpen()) {
         m_window->processEvents();
 
-        if (true || m_window->windowMayBeDirty()) {
+        if (m_window->windowMayBeDirty()) {
             drawContext();
 
             m_window->drawImGuiContext(std::bind(&Application::drawImGuiLayer, this));
