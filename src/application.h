@@ -15,6 +15,7 @@ class Window;
 typedef std::function<bool(const std::filesystem::path&)> FileInteractionFunction;
 
 class Application {
+protected:
     struct OpenFileData {
         explicit OpenFileData(
             Application* const parentApp,
@@ -48,7 +49,7 @@ protected:
     void addFileInteractionInfo(const std::string& name, const std::string& supportedExtensions,
         FileInteractionFunction fileReader, FileInteractionFunction fileWriter);
 
-protected:
+public:
     void openFileDialog(const std::string& openFileName);
     // if m_openedFileName (and !forceDialogWindow) force save current file
     void saveFileOptionalDialog(const std::string& openFileDataName, bool forceDialogWindow = false);

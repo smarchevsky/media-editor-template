@@ -89,8 +89,6 @@ void Application::OpenFileData::saveFileOptionalDialog(bool forceDialogWindow)
 
 Application::Application()
 {
-    m_window.emplace(sf::VideoMode(1024, 768), "");
-    // m_primaryOpenFileData.currentDir = HOME_DIR;
 }
 
 void Application::addFileInteractionInfo(const std::string& name, const std::string& supportedExtensions,
@@ -128,6 +126,10 @@ void Application::drawContext()
 
 void Application::init()
 {
+    // auto& mode = sf::VideoMode::getFullscreenModes()[0];
+    // m_window.emplace(mode, "", sf::Style::Fullscreen);
+    m_window.emplace(sf::VideoMode(2000, 1000), "Fucking awesome application");
+
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
 
     // open file

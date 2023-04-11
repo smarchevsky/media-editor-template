@@ -5,7 +5,6 @@ project(media-editor-template LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
 add_definitions(-DPROJECT_DIR="${PROJECT_SOURCE_DIR}")
 add_definitions(-DSHADER_DIR="${PROJECT_SOURCE_DIR}/resources/shaders")
 add_definitions(-DFONT_DIR="${PROJECT_SOURCE_DIR}/resources/fonts")
