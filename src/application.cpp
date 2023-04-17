@@ -121,41 +121,41 @@ void Application::saveFileOptionalDialog(const std::string& openFileDataName, bo
 
 void Application::drawContext()
 {
-    m_window->clear();
+    // m_window->clear();
 }
 
 void Application::init()
 {
     // auto& mode = sf::VideoMode::getFullscreenModes()[0];
     // m_window.emplace(mode, "", sf::Style::Fullscreen);
-    m_window.emplace(sf::VideoMode(2000, 1000), "Fucking awesome application");
+    m_window.emplace(glm::ivec2(2000, 1000), "Fucking awesome application");
 
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
 
     // open file
-    m_window->addKeyDownEvent(sf::Keyboard::O, ModifierKey::Control,
+    m_window->addKeyDownEvent(SDLK_o, KMOD_CTRL,
         std::bind(&Application::openFileDialog, this, "Primary"));
 
     // save file
-    m_window->addKeyDownEvent(sf::Keyboard::S, ModifierKey::Control,
+    m_window->addKeyDownEvent(SDLK_s, KMOD_CTRL,
         std::bind(&Application::saveFileOptionalDialog, this, "Primary", false));
 
     // save file as
-    m_window->addKeyDownEvent(sf::Keyboard::S, ModifierKey::Control | ModifierKey::Shift,
+    m_window->addKeyDownEvent(SDLK_s, KMOD_CTRL | KMOD_SHIFT,
         std::bind(&Application::saveFileOptionalDialog, this, "Primary", true));
 
     m_window->setMouseScrollEvent( // zoom on scroll
-        [this](float diff, ivec2 mousePos) {
+        [this](float diff, glm::ivec2 mousePos) {
             float scaleFactor = pow(1.1f, -diff);
-            m_window->addScale(scaleFactor);
-            vec2 mouseWorld = m_window->mapPixelToCoords(mousePos);
-            vec2 offset = (mouseWorld - m_window->getOffset()) * log(scaleFactor);
-            m_window->addOffset(-offset);
+            // m_window->addScale(scaleFactor);
+            // glm::vec2 mouseWorld = m_window->mapPixelToCoords(mousePos);
+            // glm::vec2 offset = (mouseWorld - m_window->getOffset()) * log(scaleFactor);
+            // m_window->addOffset(-offset);
         });
 
-    m_window->setMouseDragEvent(sf::Mouse::Middle, // drag on MMB
-        [this](ivec2 startPos, ivec2 currentPos, ivec2 currentDelta, DragState dragState) {
-            m_window->addOffset(toFloat(-currentDelta) * m_window->getScale());
+    m_window->setMouseDragEvent(MouseButton::Middle, // drag on MMB
+        [this](glm::ivec2 startPos, glm::ivec2 currentPos, glm::ivec2 currentDelta, DragState dragState) {
+            //   m_window->addOffset(toFloat(-currentDelta) * m_window->getScale());
         });
 }
 
@@ -173,11 +173,7 @@ void Application::mainLoop()
     while (m_window && m_window->isOpen()) {
         m_window->processEvents();
 
-        if (m_window->windowMayBeDirty()) {
-            drawContext();
-
-            m_window->drawImGuiContext(std::bind(&Application::drawImGuiLayer, this));
-        }
+        drawContext();
 
         m_window->display();
     }

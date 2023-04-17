@@ -1,41 +1,43 @@
 #ifndef WINDOW_H
 #define WINDOW_H
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_mouse.h>
 
-#include <SFML/Graphics.hpp>
 #include <functional>
+#include <glm/glm.hpp>
 #include <iostream>
 #include <optional>
 #include <unordered_map>
-#include <vec2.h>
 
 #ifndef LOG
 #define LOG(x) std::cout << x << std::endl
 #endif
 
-enum class ModifierKey : uint8_t {
-    None = 0,
-    Alt = 1,
-    Control = 1 << 1,
-    Shift = 1 << 2,
-    System = 1 << 3
+typedef void* SDL_GLContext;
+
+// #define SDL_BUTTON(X)       (1 << ((X)-1))
+// #define SDL_BUTTON_LEFT     1
+// #define SDL_BUTTON_MIDDLE   2
+// #define SDL_BUTTON_RIGHT    3
+
+static SDL_Keymod operator|(SDL_Keymod a, SDL_Keymod b) { return SDL_Keymod((int)a | (int)b); }
+enum class MouseButton : uint8_t {
+    Left = SDL_BUTTON(SDL_BUTTON_LEFT),
+    Middle = SDL_BUTTON(SDL_BUTTON_MIDDLE),
+    Right = SDL_BUTTON(SDL_BUTTON_RIGHT),
 };
 
-static ModifierKey operator|(ModifierKey a, ModifierKey b) { return ModifierKey((int)a | (int)b); }
-static ModifierKey makeModifier(bool alt = false, bool ctrl = false, bool shift = false, bool system = false)
-{
-    return ModifierKey(alt | ctrl << 1 | shift << 2 | system << 3);
-}
 struct KeyWithModifier {
-    KeyWithModifier(sf::Keyboard::Key key, ModifierKey mod, bool down)
+    KeyWithModifier(SDL_KeyCode key, SDL_Keymod mod, bool down)
         : key(key)
         , mod(mod)
         , down(down)
     {
     }
     bool operator==(const KeyWithModifier& rhs) const { return key == rhs.key && mod == rhs.mod && down == rhs.down; }
-
-    sf::Keyboard::Key key = sf::Keyboard::Key::Unknown;
-    ModifierKey mod = ModifierKey::None;
+    SDL_KeyCode key = SDLK_UNKNOWN;
+    uint16_t mod = KMOD_NONE;
     bool down = true;
 };
 
@@ -59,11 +61,12 @@ enum class DragState {
     ContinueDrag
 };
 
-typedef std::function<void(ivec2 currentPos, ivec2 delta)> MouseMoveEvent;
-typedef std::function<void(ivec2 startPos, ivec2 currentPos, ivec2 delta, DragState)> MouseDragEvent;
-typedef std::function<void(float scrollDelta, ivec2 mousePos)> MouseScrollEvent;
-typedef std::function<void(ivec2 mousePos, bool mouseDown)> MouseDownEvent;
-typedef std::function<void(uvec2 oldSize, uvec2 newSize)> ScreenResizeEvent;
+typedef std::function<void(glm::ivec2 currentPos, glm::ivec2 delta)> MouseMoveEvent;
+typedef std::function<void(glm::ivec2 startPos, glm::ivec2 currentPos, glm::ivec2 delta, DragState)> MouseDragEvent;
+typedef std::function<void(float scrollDelta, glm::ivec2 mousePos)> MouseScrollEvent;
+typedef std::function<void(glm::ivec2 mousePos)> MouseDownEvent;
+typedef std::function<void(glm::ivec2 mousePos)> MouseUpEvent;
+typedef std::function<void(glm::ivec2 oldSize, glm::ivec2 newSize)> ScreenResizeEvent;
 typedef std::function<void()> KeyEvent;
 typedef std::function<void(KeyWithModifier)> AnyKeyEvent;
 typedef std::function<void()> ImGuiContextFunctions;
@@ -71,13 +74,16 @@ typedef std::function<void()> ImGuiContextFunctions;
 class MouseEventData {
     MouseMoveEvent m_mouseMoveEvent {};
     MouseDragEvent m_mouseDragEvent {};
+
     MouseDownEvent m_mouseDownEvent {};
-    ivec2 m_startMouseDragPos {};
+    MouseUpEvent m_mouseUpEvent {};
+
+    glm::ivec2 m_startMouseDragPos {};
     DragState m_dragState = DragState::MouseUp;
     bool m_buttomPressed = false;
 
 public:
-    void runMouseMoveEvents(ivec2 currentPos, ivec2 delta)
+    void runMouseMoveEvents(glm::ivec2 currentPos, glm::ivec2 delta)
     {
         if (m_mouseMoveEvent) {
             m_mouseMoveEvent(currentPos, delta);
@@ -91,20 +97,27 @@ public:
 
     void setMouseMoveEvent(const MouseMoveEvent& event) { m_mouseMoveEvent = event; }
     void setMouseDragEvent(const MouseDragEvent& event) { m_mouseDragEvent = event; }
-    void setMouseDownEvent(const MouseDownEvent& event) { m_mouseDownEvent = event; }
 
-    void mouseDown(ivec2 mousePos, bool down)
+    void setMouseDownEvent(const MouseDownEvent& event) { m_mouseDownEvent = event; }
+    void setMouseUpEvent(const MouseUpEvent& event) { m_mouseUpEvent = event; }
+
+    void mouseDown(glm::ivec2 mousePos)
     {
-        if (down) {
-            m_buttomPressed = true;
-            m_startMouseDragPos = mousePos;
-            m_dragState = DragState::StartDrag;
-        } else {
-            m_buttomPressed = false;
-            m_dragState = DragState::MouseUp;
-        }
         if (m_mouseDownEvent)
-            m_mouseDownEvent(mousePos, down);
+            m_mouseDownEvent(mousePos);
+
+        m_buttomPressed = true;
+        m_startMouseDragPos = mousePos;
+        m_dragState = DragState::StartDrag;
+    }
+
+    void mouseUp(glm::ivec2 mousePos)
+    {
+        if (m_mouseUpEvent)
+            m_mouseUpEvent(mousePos);
+
+        m_buttomPressed = false;
+        m_dragState = DragState::MouseUp;
     }
 
     // operator bool() { return !!m_event; }
@@ -112,69 +125,53 @@ public:
 
 // kinda window wrapper, you can wrap SDL window the same way
 
-class Window : public sf::RenderWindow {
+class Window {
 public:
-    template <typename... Args>
-    Window(Args&&... args)
-        : sf::RenderWindow(std::forward<Args>(args)...)
-        , m_windowSize(getSize())
-        , m_viewOffset(toFloat(m_windowSize) / 2)
-    {
-        init();
-        setVerticalSyncEnabled(true);
-        setFramerateLimit(100);
-    }
+    Window(glm::ivec2 size, const std::string& name);
+
     ~Window();
 
-    void processEvents();
+    void setScale(float scale);
+    void addScale(float scaleFactor);
+    float getScale() const;
+    void addOffset(glm::vec2 offset);
+    void setOffset(glm::vec2 offset);
+    glm::vec2 getOffset() const;
+    void applyScaleAndOffset();
 
-    void setScale(float scale) { m_scale = scale, applyScaleAndOffset(); }
-    void addScale(float scaleFactor) { m_scale *= scaleFactor, applyScaleAndOffset(); }
-    float getScale() const { return m_scale; }
-    void addOffset(vec2 offset) { m_viewOffset += offset, applyScaleAndOffset(); }
-    void setOffset(vec2 offset) { m_viewOffset = offset; }
-    vec2 getOffset() const { return m_viewOffset; }
-    void applyScaleAndOffset()
-    {
-        sf::View view(m_viewOffset, toFloat(m_windowSize) * m_scale);
-        setView(view);
-    }
+    void setMouseDragEvent(MouseButton button, MouseDragEvent event);
+    void setMouseMoveEvent(MouseButton button, MouseMoveEvent event);
+    void setMouseDownEvent(MouseButton button, MouseDownEvent event);
+    void setMouseScrollEvent(MouseScrollEvent event);
 
-    void setMouseDragEvent(sf::Mouse::Button button, MouseDragEvent event);
-    void setMouseMoveEvent(sf::Mouse::Button button, MouseMoveEvent event);
-    void setMouseDownEvent(sf::Mouse::Button button, MouseDownEvent event);
-    void setMouseScrollEvent(MouseScrollEvent event) { m_mouseScrollEvent = event; }
+    void addKeyDownEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event);
+    void addKeyUpEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event);
 
-    void addKeyDownEvent(sf::Keyboard::Key key, ModifierKey modifier, KeyEvent event);
-    void addKeyUpEvent(sf::Keyboard::Key key, ModifierKey modifier, KeyEvent event);
-
-    void setAnyKeyDownOnceEvent(const std::string& reason, AnyKeyEvent event) { m_anyKeyDownEvents[reason] = event; }
-    void setAnyKeyReason(const std::string& reason) { m_anyKeyDownReason = reason; }
-    void setScreenResizeEvent(ScreenResizeEvent screenResizeEvent) { m_screenResizeEvent = screenResizeEvent; }
+    void setAnyKeyDownOnceEvent(const std::string& reason, AnyKeyEvent event);
+    void setAnyKeyReason(const std::string& reason);
+    void setScreenResizeEvent(ScreenResizeEvent screenResizeEvent);
 
     void drawImGuiContext(ImGuiContextFunctions imguiFunctions);
     void display();
 
-    bool windowMayBeDirty() { return !!m_showDisplayDirtyLevel; }
+    bool isOpen();
     void exit();
+    void setTitle(const std::string& title);
+
+    bool processEvents();
 
 private:
+    bool processEvent(const SDL_Event* event);
     void init();
-    MouseEventData* getMouseEventData(sf::Mouse::Button button)
-    {
-        switch (button) {
-        case sf::Mouse::Left:
-            return &m_mouseEventLMB;
-        case sf::Mouse::Middle:
-            return &m_mouseEventMMB;
-        case sf::Mouse::Right:
-            return &m_mouseEventRMB;
-        default: {
-            return nullptr;
-        }
-        }
-    }
 
+private: // SDL stuff
+    class SDL_Window* m_SDLWindow;
+    class SDL_Renderer* m_renderer;
+    SDL_GLContext gl_context;
+    int m_SDLWindowID;
+
+private: // events
+    MouseEventData* getMouseEventData(MouseButton button);
     MouseEventData m_mouseEventLMB {}, m_mouseEventMMB {}, m_mouseEventRMB {};
     MouseScrollEvent m_mouseScrollEvent {};
     std::unordered_map<KeyWithModifier, KeyEvent> m_keyMap;
@@ -185,16 +182,14 @@ private:
 
     ScreenResizeEvent m_screenResizeEvent;
 
-    ivec2 m_mousePos {};
-    uvec2 m_windowSize {};
+    glm::ivec2 m_mousePos {};
+    glm::ivec2 m_windowSize {};
     float m_scale = 1.f;
-    vec2 m_viewOffset {};
-
-    sf::Clock m_deltaClock;
+    glm::vec2 m_viewOffset {};
 
     class ImFont* m_robotoFont;
+    bool m_isOpen = true;
 
-    int m_showDisplayDirtyLevel = 10;
     static uint32_t s_instanceCounter;
 };
 
