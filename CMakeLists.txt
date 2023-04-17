@@ -17,10 +17,11 @@ include_directories(third_party/)
 FILE(GLOB_RECURSE ALL_HEADERS ${CMAKE_SOURCE_DIR}/*.h)
 FILE(GLOB_RECURSE ALL_CPP  "src/*.cpp" "third_party/*.cpp")
 
-# FILE(GLOB_RECURSE ALL_SHADERS "resources/shaders/*.frag")
-# FILE(GLOB_RECURSE ALL_SHADERS "resources/shaders/*.vert")
+FILE(GLOB_RECURSE ALL_SHADERS "resources/shaders/*.frag")
+FILE(GLOB_RECURSE ALL_SHADERS "resources/shaders/*.vert")
 
-add_library(${PROJECT_NAME} ${ALL_CPP} ${ALL_SHADERS} ${ALL_HEADERS})
+# add_library(${PROJECT_NAME} ${ALL_CPP} ${ALL_SHADERS} ${ALL_HEADERS})
+add_executable(${PROJECT_NAME} ${ALL_CPP} ${ALL_SHADERS} ${ALL_HEADERS} "main.cpp")
 
 if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
@@ -28,7 +29,7 @@ else()
 #  target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC sfml-system sfml-window sfml-graphics GL)
+target_link_libraries(${PROJECT_NAME} PUBLIC GL SDL2)
 
 
 # Hints for CMake noobs like me.
