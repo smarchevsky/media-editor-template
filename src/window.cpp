@@ -9,13 +9,9 @@
 #include <cassert>
 #include <filesystem>
 
-#define MAX_DIRTY(x) m_showDisplayDirtyLevel = m_showDisplayDirtyLevel > x ? m_showDisplayDirtyLevel : x
 namespace fs = std::filesystem;
 
 uint32_t Window::s_instanceCounter = 0;
-void Window::init()
-{
-}
 
 MouseEventData* Window::getMouseEventData(MouseButton button)
 {
@@ -35,27 +31,33 @@ MouseEventData* Window::getMouseEventData(MouseButton button)
 Window::Window(glm::ivec2 size, const std::string& name)
 {
     m_windowSize = size;
-
-    m_SDLWindow = SDL_CreateWindow(name.c_str(),
+    m_SDLwindow = SDL_CreateWindow(name.c_str(),
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        m_windowSize.x, m_windowSize.y, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+        m_windowSize.x, m_windowSize.y,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
-    assert(m_SDLWindow && "Could not create window");
+    assert(m_SDLwindow && "Could not create window");
 
-    gl_context = SDL_GL_CreateContext(m_SDLWindow);
-    assert(gl_context && "Could not create GL context");
+    m_GLccontext = SDL_GL_CreateContext(m_SDLwindow);
+    assert(m_GLccontext && "Could not create GL context");
 
-    m_renderer = SDL_CreateRenderer(m_SDLWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    assert(m_renderer && "Could not create renderer");
+    //    m_renderer = SDL_CreateRenderer(m_SDLwindow, -1,
+    //        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    //    assert(m_renderer && "Could not create renderer");
 
-    m_SDLWindowID = SDL_GetWindowID(m_SDLWindow);
+    m_SDLWindowID = SDL_GetWindowID(m_SDLwindow);
     assert(m_SDLWindowID && "Invalid window ID");
 
-    SDL_GL_MakeCurrent(m_SDLWindow, gl_context);
+    SDL_GL_SetSwapInterval(-1);
 }
 
 Window::~Window()
 {
+    if (m_SDLWindowID) {
+        SDL_GL_DeleteContext(m_GLccontext);
+        // SDL_DestroyRenderer(m_renderer);
+        SDL_DestroyWindow(m_SDLwindow);
+    }
 }
 
 bool Window::processEvents()
@@ -78,8 +80,8 @@ bool Window::processEvent(const SDL_Event* event)
     switch (event->type) {
     case SDL_QUIT: {
         exit();
-        // p_engine->stop();
-    } break;
+        return true;
+    }
     case SDL_MOUSEMOTION: {
         m_mousePos = glm::ivec2(event->motion.x, event->motion.y);
         glm::ivec2 relativeOffset(event->motion.xrel, event->motion.yrel);
@@ -191,7 +193,7 @@ bool Window::processEvent(const SDL_Event* event)
             //        }
             if (m_screenResizeEvent)
                 m_screenResizeEvent(oldScreenSize, m_windowSize);
-            SDL_RenderPresent(m_renderer);
+            // SDL_RenderPresent(m_renderer);
             break;
         }
         } // switch window event
@@ -260,7 +262,7 @@ void Window::exit() { m_isOpen = false; }
 
 void Window::setTitle(const std::string& title)
 {
-    SDL_SetWindowTitle(m_SDLWindow, title.c_str());
+    SDL_SetWindowTitle(m_SDLwindow, title.c_str());
 }
 
 void Window::setScale(float scale) { m_scale = scale, applyScaleAndOffset(); }
@@ -283,5 +285,10 @@ void Window::applyScaleAndOffset()
 
 void Window::display()
 {
-    SDL_GL_SwapWindow(m_SDLWindow);
+    SDL_GL_SwapWindow(m_SDLwindow);
+}
+
+void Window::bind()
+{
+    SDL_GL_MakeCurrent(m_SDLwindow, m_GLccontext);
 }

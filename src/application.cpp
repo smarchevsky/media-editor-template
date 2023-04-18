@@ -172,6 +172,7 @@ void Application::mainLoop()
 {
     while (m_window && m_window->isOpen()) {
         m_window->processEvents();
+        m_window->bind();
 
         drawContext();
 
