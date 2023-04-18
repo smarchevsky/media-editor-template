@@ -16,11 +16,6 @@
 
 typedef void* SDL_GLContext;
 
-// #define SDL_BUTTON(X)       (1 << ((X)-1))
-// #define SDL_BUTTON_LEFT     1
-// #define SDL_BUTTON_MIDDLE   2
-// #define SDL_BUTTON_RIGHT    3
-
 static SDL_Keymod operator|(SDL_Keymod a, SDL_Keymod b) { return SDL_Keymod((int)a | (int)b); }
 enum class MouseButton : uint8_t {
     Left = SDL_BUTTON(SDL_BUTTON_LEFT),
@@ -128,7 +123,8 @@ public:
 class Window {
 public:
     Window(glm::ivec2 size, const std::string& name);
-
+    Window(const Window&) = delete;
+    Window(Window&& rhs) = default;
     ~Window();
 
     void setScale(float scale);
@@ -153,6 +149,7 @@ public:
 
     void drawImGuiContext(ImGuiContextFunctions imguiFunctions);
     void display();
+    void bind();
 
     bool isOpen();
     void exit();
@@ -162,13 +159,12 @@ public:
 
 private:
     bool processEvent(const SDL_Event* event);
-    void init();
 
 private: // SDL stuff
-    class SDL_Window* m_SDLWindow;
-    class SDL_Renderer* m_renderer;
-    SDL_GLContext gl_context;
-    int m_SDLWindowID;
+    class SDL_Window* m_SDLwindow {};
+    // class SDL_Renderer* m_renderer {};
+    SDL_GLContext m_GLccontext {};
+    int m_SDLWindowID {};
 
 private: // events
     MouseEventData* getMouseEventData(MouseButton button);
