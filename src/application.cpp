@@ -5,6 +5,31 @@
 #define LOG(x) std::cout << x << std::endl
 #endif
 
+const char* shaderSource_defaultVertex =
+    R"(\
+#version 330 core
+layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 uv;
+uniform mat4 matViewProjection = mat4(
+  1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1
+);
+out vec3 ourColor;
+void main()
+{
+   gl_Position = matViewProjection * vec4(aPos, 0.0, 1.0);
+   ourColor = vec3(uv, 0.);
+})";
+
+const char* shaderSource_defaultFragment =
+    R"(\
+#version 330 core
+out vec4 FragColor;
+in vec3 ourColor;
+void main()
+{
+   FragColor = vec4(ourColor, 1.0f);
+})";
+
 static const std::string strNoOpenFileFunction("Open function is not specified");
 static const std::string strNoSaveFileFunction("Save function is not specified");
 static const std::string strOpenFileFailed("Failed to open file: ");
@@ -129,6 +154,8 @@ void Application::init()
     // auto& mode = sf::VideoMode::getFullscreenModes()[0];
     // m_window.emplace(mode, "", sf::Style::Fullscreen);
     m_window.emplace(glm::ivec2(2000, 1000), "Fucking awesome application");
+    m_quadShader.create(shaderSource_defaultVertex, shaderSource_defaultFragment, "default");
+    m_camera.setViewportSize(m_window->getSize());
 
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
 
@@ -147,16 +174,18 @@ void Application::init()
     m_window->setMouseScrollEvent( // zoom on scroll
         [this](float diff, glm::ivec2 mousePos) {
             float scaleFactor = pow(1.1f, -diff);
-            // m_window->addScale(scaleFactor);
-            // glm::vec2 mouseWorld = m_window->mapPixelToCoords(mousePos);
-            // glm::vec2 offset = (mouseWorld - m_window->getOffset()) * log(scaleFactor);
-            // m_window->addOffset(-offset);
+
+            m_camera.multiplyScaleOffseted(scaleFactor, mousePos);
         });
 
     m_window->setMouseDragEvent(MouseButton::Middle, // drag on MMB
         [this](glm::ivec2 startPos, glm::ivec2 currentPos, glm::ivec2 currentDelta, DragState dragState) {
-            //   m_window->addOffset(toFloat(-currentDelta) * m_window->getScale());
+            m_camera.addOffset_View(glm::vec2(-currentDelta));
         });
+
+    m_window->setScreenResizeEvent([this](glm::ivec2 oldSize, glm::ivec2 newSize) {
+        m_camera.setViewportSize(glm::vec2(newSize));
+    });
 }
 
 void Application::drawImGuiLayer()
@@ -173,6 +202,8 @@ void Application::mainLoop()
     while (m_window && m_window->isOpen()) {
         m_window->processEvents();
         m_window->bind();
+        m_quadShader.bind();
+        m_quadShader.setUniform("matViewProjection", m_camera.getViewProjection());
 
         drawContext();
 

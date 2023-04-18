@@ -1,9 +1,8 @@
 #include "window.h"
 
 #include <SDL2/SDL.h>
-#undef main
-#include <SDL2/SDL_opengl.h>
 
+#include "graphics/graphics_common.h"
 // #include "imgui/imgui.h"
 // #include "imgui/imgui_internal.h"
 #include <cassert>
@@ -30,20 +29,23 @@ MouseEventData* Window::getMouseEventData(MouseButton button)
 
 Window::Window(glm::ivec2 size, const std::string& name)
 {
+    // if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    //     assert(false && "SDL did not init");
+    // }
+
     m_windowSize = size;
     m_SDLwindow = SDL_CreateWindow(name.c_str(),
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         m_windowSize.x, m_windowSize.y,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
 
     assert(m_SDLwindow && "Could not create window");
 
-    m_GLccontext = SDL_GL_CreateContext(m_SDLwindow);
-    assert(m_GLccontext && "Could not create GL context");
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-    //    m_renderer = SDL_CreateRenderer(m_SDLwindow, -1,
-    //        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    //    assert(m_renderer && "Could not create renderer");
+    m_GLcontext = SDL_GL_CreateContext(m_SDLwindow);
+    assert(m_GLcontext && "Could not create GL context");
 
     m_SDLWindowID = SDL_GetWindowID(m_SDLwindow);
     assert(m_SDLWindowID && "Invalid window ID");
@@ -54,8 +56,7 @@ Window::Window(glm::ivec2 size, const std::string& name)
 Window::~Window()
 {
     if (m_SDLWindowID) {
-        SDL_GL_DeleteContext(m_GLccontext);
-        // SDL_DestroyRenderer(m_renderer);
+        SDL_GL_DeleteContext(m_GLcontext);
         SDL_DestroyWindow(m_SDLwindow);
     }
 }
@@ -94,7 +95,7 @@ bool Window::processEvent(const SDL_Event* event)
     case SDL_MOUSEWHEEL: {
         if (!ImGuiWantsCaptureMouse) {
             if (m_mouseScrollEvent)
-                m_mouseScrollEvent(event->wheel.preciseX, m_mousePos);
+                m_mouseScrollEvent(event->wheel.preciseY, m_mousePos);
         }
         return true;
     }
@@ -176,6 +177,7 @@ bool Window::processEvent(const SDL_Event* event)
         case SDL_WINDOWEVENT_SIZE_CHANGED: {
             glm::ivec2 oldScreenSize = m_windowSize;
             m_windowSize = glm::ivec2(event->window.data1, event->window.data2);
+            GraphicsCommon::setOpenGLViewport(0, 0, m_windowSize.x, m_windowSize.y);
             //        m_windowSize = newSize;
             //        applyScaleAndOffset();
             //        glm::ivec2 offset = m_windowSize - oldScreenSize;
@@ -265,24 +267,6 @@ void Window::setTitle(const std::string& title)
     SDL_SetWindowTitle(m_SDLwindow, title.c_str());
 }
 
-void Window::setScale(float scale) { m_scale = scale, applyScaleAndOffset(); }
-
-void Window::addScale(float scaleFactor) { m_scale *= scaleFactor, applyScaleAndOffset(); }
-
-float Window::getScale() const { return m_scale; }
-
-void Window::addOffset(glm::vec2 offset) { m_viewOffset += offset, applyScaleAndOffset(); }
-
-void Window::setOffset(glm::vec2 offset) { m_viewOffset = offset; }
-
-glm::vec2 Window::getOffset() const { return m_viewOffset; }
-
-void Window::applyScaleAndOffset()
-{
-    // sf::View view(m_viewOffset, toFloat(m_windowSize) * m_scale);
-    // setView(view);
-}
-
 void Window::display()
 {
     SDL_GL_SwapWindow(m_SDLwindow);
@@ -290,5 +274,5 @@ void Window::display()
 
 void Window::bind()
 {
-    SDL_GL_MakeCurrent(m_SDLwindow, m_GLccontext);
+    SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);
 }

@@ -127,14 +127,6 @@ public:
     Window(Window&& rhs) = default;
     ~Window();
 
-    void setScale(float scale);
-    void addScale(float scaleFactor);
-    float getScale() const;
-    void addOffset(glm::vec2 offset);
-    void setOffset(glm::vec2 offset);
-    glm::vec2 getOffset() const;
-    void applyScaleAndOffset();
-
     void setMouseDragEvent(MouseButton button, MouseDragEvent event);
     void setMouseMoveEvent(MouseButton button, MouseMoveEvent event);
     void setMouseDownEvent(MouseButton button, MouseDownEvent event);
@@ -157,13 +149,16 @@ public:
 
     bool processEvents();
 
+    glm::vec2 toCoordonates01(const glm::vec2 p) { return p / glm::vec2(m_windowSize); }
+    glm::vec2 toCoordonatesM11(const glm::vec2 p) { return toCoordonates01(p) * 2.f - 1.f; }
+    glm::ivec2 getSize() { return m_windowSize; }
+
 private:
     bool processEvent(const SDL_Event* event);
 
 private: // SDL stuff
     class SDL_Window* m_SDLwindow {};
-    // class SDL_Renderer* m_renderer {};
-    SDL_GLContext m_GLccontext {};
+    SDL_GLContext m_GLcontext {};
     int m_SDLWindowID {};
 
 private: // events
@@ -180,8 +175,6 @@ private: // events
 
     glm::ivec2 m_mousePos {};
     glm::ivec2 m_windowSize {};
-    float m_scale = 1.f;
-    glm::vec2 m_viewOffset {};
 
     class ImFont* m_robotoFont;
     bool m_isOpen = true;

@@ -1,11 +1,13 @@
 #ifndef APP_ABSTRACT_H
 #define APP_ABSTRACT_H
 
+#include "graphics/orthocamera.h"
 #include "window.h"
 #include <filesystem>
 #include <map>
 #include <memory>
 #include <string>
+#include "graphics/shader.h"
 
 namespace ImguiUtils {
 class FileSystemNavigator;
@@ -44,6 +46,11 @@ protected:
     std::map<std::string, OpenFileData> m_openFileData;
 
 protected:
+    OrthoCamera m_camera;
+
+    GL::Shader m_quadShader;
+
+
     std::optional<Window> m_window;
     std::unique_ptr<ImguiUtils::FileSystemNavigator> m_fsNavigator;
     void addFileInteractionInfo(const std::string& name, const std::string& supportedExtensions,
