@@ -10,10 +10,6 @@
 #include <optional>
 #include <unordered_map>
 
-#ifndef LOG
-#define LOG(x) std::cout << x << std::endl
-#endif
-
 typedef void* SDL_GLContext;
 
 static SDL_Keymod operator|(SDL_Keymod a, SDL_Keymod b) { return SDL_Keymod((int)a | (int)b); }

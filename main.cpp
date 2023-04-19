@@ -1,9 +1,7 @@
 
 #include "application.h"
 #include "graphics/glmesh.h"
-
-#define GL_GLEXT_PROTOTYPES
-#include <SDL2/SDL_opengl.h>
+#include "graphics/graphics_common.h"
 
 class OpenGLApp : public Application {
 
@@ -14,8 +12,7 @@ public:
     }
     void drawContext() override
     {
-        glClearColor(0, 0.1f, 0.3f, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
+        GraphicsCommon::clear();
 
         GLMeshStatics::get().getQuad().draw();
     }

@@ -9,6 +9,9 @@ add_definitions(-DPROJECT_DIR="${PROJECT_SOURCE_DIR}")
 add_definitions(-DSHADER_DIR="${PROJECT_SOURCE_DIR}/resources/shaders")
 add_definitions(-DFONT_DIR="${PROJECT_SOURCE_DIR}/resources/fonts")
 
+string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
+add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
+
 add_definitions(-DHOME_DIR="$ENV{HOME}")
 
 include_directories(src/)

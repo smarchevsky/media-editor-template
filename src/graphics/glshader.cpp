@@ -1,4 +1,5 @@
 #include "glshader.h"
+#include "glshadersources.h"
 #include "helper_general.h"
 
 #define ERRORCHEKING
@@ -9,100 +10,30 @@
 #include <iostream>
 #include <sstream>
 
-void GLShader::setUniform(const char* name, float var) { glUniform1f(getUniformLocation(name), var); }
-void GLShader::setUniform(const char* name, const glm::vec2& var) { glUniform2fv(getUniformLocation(name), 1, &var[0]); }
-void GLShader::setUniform(const char* name, const glm::vec3& var) { glUniform3fv(getUniformLocation(name), 1, &var[0]); }
-void GLShader::setUniform(const char* name, const glm::vec4& var) { glUniform4fv(getUniformLocation(name), 1, &var[0]); }
-void GLShader::setUniform(const char* name, const glm::mat4& var) { glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, &var[0][0]); }
-void GLShader::setUniform(const char* name, const GLTexture& texture)
+namespace {
+UniformLocationMap getUniformList(GLuint program)
 {
-    glUniform1i(getUniformLocation(name), texture.getHandle());
-}
+    UniformLocationMap result;
+    GLint count;
+    GLint size; // size of the variable
+    GLenum type; // type of the variable (float, vec3 or mat4, etc)
 
-int GLShader::getUniformLocation(const char* name)
-{
-    if (m_shaderProgramHandle) {
-        int location = glGetUniformLocation(m_shaderProgramHandle, name);
-        if (location == -1) {
-            LOGE("No such variable: " << name << ", in shader: " << m_shaderVisualName);
-        }
+    const GLsizei bufSize = 512; // maximum name length
+    GLchar name[bufSize] {}; // variable name in GLSL
+    GLsizei length; // name length
 
-        return location;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
+    printf("Active Uniforms: %d\n", count);
+
+    for (int i = 0; i < count; i++) {
+        glGetActiveUniform(program, (GLuint)i, bufSize, &length, &size, &type, name);
+        result.insert({ name, i });
+        printf("Uniform #%d Type: %u Name: %s\n", i, type, name);
     }
-    // std::cerr << "Invalid shader: " << m_shaderVisualName << std::endl;
-    return -1;
+    return result;
 }
 
-void GLShader::create(const fs::path& vertexShaderPath, const fs::path& fragmentShaderPath)
-{
-    bool success = true;
-    std::string vertexShaderCode;
-    std::ifstream vertexShaderStream(vertexShaderPath, std::ios::in);
-    if (vertexShaderStream.is_open()) {
-        std::stringstream sstr;
-        sstr << vertexShaderStream.rdbuf();
-        vertexShaderCode = sstr.str();
-        vertexShaderStream.close();
-    } else {
-        success = false;
-        std::cerr << "Can't open file: " << vertexShaderPath << std::endl;
-    }
-
-    // Read the Fragment Shader code from the file
-    std::string fragmentShaderCode;
-    std::ifstream fragmentShaderStream(fragmentShaderPath, std::ios::in);
-    if (fragmentShaderStream.is_open()) {
-        std::stringstream sstr;
-        sstr << fragmentShaderStream.rdbuf();
-        fragmentShaderCode = sstr.str();
-        fragmentShaderStream.close();
-    } else {
-        success = false;
-        std::cerr << "Can't open file: " << fragmentShaderPath << std::endl;
-    }
-
-    m_shaderVisualName = vertexShaderPath.filename().string() + " " + fragmentShaderPath.filename().string();
-
-    if (success)
-        create(vertexShaderCode, fragmentShaderCode);
-}
-
-void GLShader::create(const char* vertexShaderCode, const char* fragmentShaderCode, const char* shaderVisialName)
-{
-    if (vertexShaderCode && fragmentShaderCode) {
-        int shaderProgramHandle = glCreateProgram();
-        int vs = createShader(vertexShaderCode, GL_VERTEX_SHADER);
-        int fs = createShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
-        glAttachShader(shaderProgramHandle, vs);
-        glAttachShader(shaderProgramHandle, fs);
-        glLinkProgram(shaderProgramHandle);
-
-        int success;
-        char infoLog[512];
-        glGetProgramiv(shaderProgramHandle, GL_LINK_STATUS, &success);
-        if (success == GL_TRUE) {
-            m_shaderProgramHandle = shaderProgramHandle;
-        } else {
-            glGetProgramInfoLog(shaderProgramHandle, 512, NULL, infoLog);
-            std::cerr << "Linking failed: " << infoLog << std::endl;
-        }
-        glDeleteShader(vs);
-        glDeleteShader(fs);
-    }
-    m_shaderVisualName = shaderVisialName;
-}
-
-GLShader::~GLShader()
-{
-    glDeleteProgram(m_shaderProgramHandle);
-}
-
-void GLShader::bind()
-{
-    glUseProgram(m_shaderProgramHandle);
-}
-
-int GLShader::createShader(const char* shaderSource, int shaderType)
+int createShader(const char* shaderSource, int shaderType)
 {
     const char* shaderTypeName {};
     switch (shaderType) {
@@ -133,4 +64,161 @@ int GLShader::createShader(const char* shaderSource, int shaderType)
     }
 
     return currentShader;
+}
+
+bool createShaderProgram(const char* vertexShaderCode, const char* fragmentShaderCode,
+    uint32_t& outShaderProgram, UniformLocationMap& outUniforms)
+{
+    GLint success = GL_FALSE;
+    if (vertexShaderCode && fragmentShaderCode) {
+        GLuint shaderProgramHandle = glCreateProgram();
+        GLuint vs = createShader(vertexShaderCode, GL_VERTEX_SHADER);
+        GLuint fs = createShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
+        glAttachShader(shaderProgramHandle, vs);
+        glAttachShader(shaderProgramHandle, fs);
+        glLinkProgram(shaderProgramHandle);
+
+        char infoLog[512];
+        glGetProgramiv(shaderProgramHandle, GL_LINK_STATUS, &success);
+        if (success == GL_TRUE) {
+            outShaderProgram = shaderProgramHandle;
+            outUniforms = getUniformList(shaderProgramHandle);
+        } else {
+            glGetProgramInfoLog(shaderProgramHandle, 512, NULL, infoLog);
+            std::cerr << "Linking failed: " << infoLog << std::endl;
+        }
+        glDeleteShader(vs);
+        glDeleteShader(fs);
+    }
+    return success == GL_TRUE;
+}
+
+}
+
+uint32_t GLShader::s_currentBindedShaderHandle = 0;
+std::map<std::string, GLShader> GLShaderCompiler::s_staticShaders;
+
+void GLShader::setUniform(int location, float var) { glUniform1f(location, var); }
+void GLShader::setUniform(int location, const glm::vec2& var) { glUniform2fv(location, 1, &var[0]); }
+void GLShader::setUniform(int location, const glm::vec3& var) { glUniform3fv(location, 1, &var[0]); }
+void GLShader::setUniform(int location, const glm::vec4& var) { glUniform4fv(location, 1, &var[0]); }
+void GLShader::setUniform(int location, const glm::mat4& var) { glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]); }
+void GLShader::setUniform(int location, const GLTexture& texture) { glUniform1i(location, texture.getHandle()); }
+
+int GLShader::getUniformLocation(const char* name)
+{
+    // return glGetUniformLocation(m_shaderProgram, name);
+    auto it = m_uniforms.find(name);
+    if (it != m_uniforms.end()) {
+        return it->second;
+    }
+    return -1;
+}
+
+GLShader::~GLShader()
+{
+    if (m_shaderProgram) {
+        glDeleteProgram(m_shaderProgram);
+        LOG("Shader destroyed");
+    }
+}
+
+GLShader::GLShader(GLShader&& r)
+{
+    m_shaderProgram = r.m_shaderProgram;
+    m_uniforms = std::move(r.m_uniforms);
+    r.m_shaderProgram = 0;
+}
+
+void GLShader::bind()
+{
+#define ALWAYS_BIND_SHADER
+#ifdef ALWAYS_BIND_SHADER
+    glUseProgram(m_shaderProgram);
+#else
+    if (s_currentBindedShaderHandle != m_shaderProgram) {
+        s_currentBindedShaderHandle = m_shaderProgram;
+        glUseProgram(m_shaderProgram);
+    }
+#endif
+}
+
+void GLShaderInstance::setShader(GLShader* shader)
+{
+    m_shader = shader;
+}
+
+GLShader* GLShaderCompiler::addShader(
+    const char* vertexShaderCode, const char* fragmentShaderCode, const char* uniqueName)
+{
+    const std::string nameString(uniqueName);
+
+    const auto it = s_staticShaders.find(nameString);
+    if (it == s_staticShaders.end()) {
+
+        uint32_t shaderProgram;
+        UniformLocationMap uniforms;
+        if (createShaderProgram(vertexShaderCode, fragmentShaderCode, shaderProgram, uniforms)) {
+            s_staticShaders[nameString].initialize(shaderProgram, uniforms);
+            LOG("Shader: \"" << uniqueName << "\" created successfully.");
+            return &s_staticShaders[nameString];
+
+        } else {
+            LOGE("Failed to compile shader");
+            return nullptr;
+        }
+    } else {
+        return &it->second;
+        LOGE("Shader with this name already exists, get from cache");
+    }
+    return nullptr;
+}
+
+GLShader* GLShaderCompiler::addShader(
+    const fs::path& vertexShaderPath, const fs::path& fragmentShaderPath, const char* uniqueName)
+{
+    bool success = true;
+    std::string vertexShaderCode;
+    std::ifstream vertexShaderStream(vertexShaderPath, std::ios::in);
+
+    if (vertexShaderStream.is_open()) {
+        std::stringstream sstr;
+        sstr << vertexShaderStream.rdbuf();
+        vertexShaderCode = sstr.str();
+        vertexShaderStream.close();
+    } else {
+        success = false;
+        std::cerr << "Can't open file: " << vertexShaderPath << std::endl;
+    }
+
+    std::string fragmentShaderCode;
+    std::ifstream fragmentShaderStream(fragmentShaderPath, std::ios::in);
+    if (fragmentShaderStream.is_open()) {
+        std::stringstream sstr;
+        sstr << fragmentShaderStream.rdbuf();
+        fragmentShaderCode = sstr.str();
+        fragmentShaderStream.close();
+    } else {
+        success = false;
+        std::cerr << "Can't open file: " << fragmentShaderPath << std::endl;
+    }
+
+    if (success) {
+        return addShader(vertexShaderCode, fragmentShaderCode, uniqueName);
+    }
+    return nullptr;
+}
+
+GLShader* GLShaderCompiler::getDefaultShader2d()
+{
+    return addShader(GLShaderSources::getDefault2d_VS(), GLShaderSources::getDefault2d_FS(), "DefaultShader2d");
+}
+
+GLShader* GLShaderCompiler::getByName(const std::string& name)
+{
+    auto it = s_staticShaders.find(name);
+    if (it != s_staticShaders.end()) {
+        return &it->second;
+    }
+    return nullptr;
 }
