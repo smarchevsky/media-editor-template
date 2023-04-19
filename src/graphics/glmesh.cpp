@@ -1,28 +1,28 @@
-#include "mesh.h"
+#include "glmesh.h"
 
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
+#include <iostream>
 
-namespace GL {
-Mesh MeshStatics::s_quad;
+GLMesh GLMeshStatics::s_quad;
 
-void Mesh::draw()
+void GLMesh::draw()
 {
     glBindVertexArray(m_VAO);
     glDrawArrays(GL_TRIANGLES, 0, m_vertCount);
 }
 
-Mesh::Mesh()
+GLMesh::GLMesh()
 {
 }
 
-Mesh::~Mesh()
+GLMesh::~GLMesh()
 {
     glDeleteVertexArrays(1, &m_VAO);
     glDeleteBuffers(1, &m_VBO);
 }
 
-MeshStatics::MeshStatics()
+GLMeshStatics::GLMeshStatics()
 {
     const float px0 = -1., px1 = 1;
     const float py0 = -1., py1 = 1;
@@ -32,13 +32,13 @@ MeshStatics::MeshStatics()
     // clang-format off
     const float vertices[] = {
 
-        px1, py1, tx1, ty1, // 11
-        px0, py1, tx0, ty1, // 01
-        px1, py0, tx1, ty0, // 10
+        px1, py1, tx1, ty1, // 11 right top
+        px0, py1, tx0, ty1, // 01 left top
+        px1, py0, tx1, ty0, // 10 right bottom
 
-        px1, py0, tx1, ty0, // 10
-        px0, py1, tx0, ty1, // 01
-        px0, py0, tx0, ty0, // 00
+        px1, py0, tx1, ty0, // 10 right bottom
+        px0, py1, tx0, ty1, // 01 left top
+        px0, py0, tx0, ty0, // 00 left bottom
     };
     // clang-format on
 
@@ -60,5 +60,4 @@ MeshStatics::MeshStatics()
     s_quad.m_VAO = VAO;
     s_quad.m_VBO = VBO;
     s_quad.m_vertCount = 6;
-}
 }

@@ -1,34 +1,41 @@
 #include "application.h"
 #include "imgui_filesystem.h"
 
-#ifndef LOG
-#define LOG(x) std::cout << x << std::endl
-#endif
-
 const char* shaderSource_defaultVertex =
     R"(\
 #version 330 core
-layout (location = 0) in vec2 aPos;
-layout (location = 1) in vec2 uv;
-uniform mat4 matViewProjection = mat4(
-  1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1
-);
-out vec3 ourColor;
+#define IDENTITY mat4(1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1)
+
+layout (location = 0) in vec2 inPos;
+layout (location = 1) in vec2 inUV;
+
+out vec2 UV;
+
+uniform mat4 matViewProjection = IDENTITY;
+uniform mat4 matModel = IDENTITY;
+
 void main()
 {
-   gl_Position = matViewProjection * vec4(aPos, 0.0, 1.0);
-   ourColor = vec3(uv, 0.);
-})";
+   gl_Position = matViewProjection * vec4(inPos, 0.0, 1.0);
+   UV = inUV;
+}
+)";
 
 const char* shaderSource_defaultFragment =
     R"(\
 #version 330 core
+
+in vec2 UV;
 out vec4 FragColor;
-in vec3 ourColor;
+
+uniform sampler2D texture;
+
 void main()
 {
-   FragColor = vec4(ourColor, 1.0f);
-})";
+    // FragColor = vec4(UV, 0.0, 1.0);
+    FragColor = texture2D(texture, UV);
+}
+)";
 
 static const std::string strNoOpenFileFunction("Open function is not specified");
 static const std::string strNoSaveFileFunction("Save function is not specified");
@@ -38,6 +45,7 @@ static const std::string strOpenFileSuccess("File opened successfully: ");
 static const std::string strSaveFileSuccess("File saved successfully: ");
 
 namespace fs = std::filesystem;
+static fs::path projectDir(PROJECT_DIR);
 
 bool Application::OpenFileData::openFileInternal(const fs::path& fullFilePath)
 {
@@ -157,6 +165,9 @@ void Application::init()
     m_quadShader.create(shaderSource_defaultVertex, shaderSource_defaultFragment, "default");
     m_camera.setViewportSize(m_window->getSize());
 
+    m_texture.fromImage(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
+    m_quadShader.setUniform("texture", m_texture);
+
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
 
     // open file
@@ -203,7 +214,10 @@ void Application::mainLoop()
         m_window->processEvents();
         m_window->bind();
         m_quadShader.bind();
-        m_quadShader.setUniform("matViewProjection", m_camera.getViewProjection());
+
+        glm::mat4 viewProjection;
+        if (m_camera.getViewProjection(viewProjection))
+            m_quadShader.setUniform("matViewProjection", viewProjection);
 
         drawContext();
 

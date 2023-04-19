@@ -5,7 +5,7 @@
 #include <SDL2/SDL_mouse.h>
 
 #include <functional>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
 #include <iostream>
 #include <optional>
 #include <unordered_map>
