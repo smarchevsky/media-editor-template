@@ -1,6 +1,8 @@
 #ifndef ORTHOCAMERA_H
 #define ORTHOCAMERA_H
-#include <glm/glm.hpp>
+
+#include <glm/mat4x4.hpp>
+#include <glm/vec2.hpp>
 
 class OrthoCamera {
     glm::mat4 m_viewProjection;
@@ -32,9 +34,10 @@ public:
 
     glm::vec2 getPos()        const       { return m_posWorld; }
     float getScale()          const       { return m_scaleMultiplier; }
+    // clang-format on
 
-
-    glm::mat4 getViewProjection();
+    //    glm::mat4 getViewProjection();
+    bool getViewProjection(glm::mat4& outViewProjection);
 };
 
 #endif // ORTHOCAMERA_H

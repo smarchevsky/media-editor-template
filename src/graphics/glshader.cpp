@@ -1,4 +1,5 @@
-#include "shader.h"
+#include "glshader.h"
+#include "helper_general.h"
 
 #define ERRORCHEKING
 #define GL_GLEXT_PROTOTYPES
@@ -8,27 +9,31 @@
 #include <iostream>
 #include <sstream>
 
-namespace GL {
-void Shader::setUniform(const char* name, float var) { glUniform1f(getUniformLocation(name), var); }
-void Shader::setUniform(const char* name, const glm::vec2& var) { glUniform2fv(getUniformLocation(name), 1, &var[0]); }
-void Shader::setUniform(const char* name, const glm::vec3& var) { glUniform3fv(getUniformLocation(name), 1, &var[0]); }
-void Shader::setUniform(const char* name, const glm::vec4& var) { glUniform4fv(getUniformLocation(name), 1, &var[0]); }
-void Shader::setUniform(const char* name, const glm::mat4& var) { glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, &var[0][0]); }
-
-int Shader::getUniformLocation(const char* name)
+void GLShader::setUniform(const char* name, float var) { glUniform1f(getUniformLocation(name), var); }
+void GLShader::setUniform(const char* name, const glm::vec2& var) { glUniform2fv(getUniformLocation(name), 1, &var[0]); }
+void GLShader::setUniform(const char* name, const glm::vec3& var) { glUniform3fv(getUniformLocation(name), 1, &var[0]); }
+void GLShader::setUniform(const char* name, const glm::vec4& var) { glUniform4fv(getUniformLocation(name), 1, &var[0]); }
+void GLShader::setUniform(const char* name, const glm::mat4& var) { glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, &var[0][0]); }
+void GLShader::setUniform(const char* name, const GLTexture& texture)
 {
-    if (m_shaderProgramHandle == 0) {
-        std::cerr << "Invalid shader: " << m_shaderVisualName << std::endl;
-        return -1;
-    }
-    int location = glGetUniformLocation(m_shaderProgramHandle, name);
-    if (location == -1) {
-        std::cerr << "No such variable: " << name << " in shader: " << m_shaderVisualName << std::endl;
-    }
-    return location;
+    glUniform1i(getUniformLocation(name), texture.getHandle());
 }
 
-void Shader::create(const fs::path& vertexShaderPath, const fs::path& fragmentShaderPath)
+int GLShader::getUniformLocation(const char* name)
+{
+    if (m_shaderProgramHandle) {
+        int location = glGetUniformLocation(m_shaderProgramHandle, name);
+        if (location == -1) {
+            LOGE("No such variable: " << name << ", in shader: " << m_shaderVisualName);
+        }
+
+        return location;
+    }
+    // std::cerr << "Invalid shader: " << m_shaderVisualName << std::endl;
+    return -1;
+}
+
+void GLShader::create(const fs::path& vertexShaderPath, const fs::path& fragmentShaderPath)
 {
     bool success = true;
     std::string vertexShaderCode;
@@ -62,7 +67,7 @@ void Shader::create(const fs::path& vertexShaderPath, const fs::path& fragmentSh
         create(vertexShaderCode, fragmentShaderCode);
 }
 
-void Shader::create(const char* vertexShaderCode, const char* fragmentShaderCode, const char* shaderVisialName)
+void GLShader::create(const char* vertexShaderCode, const char* fragmentShaderCode, const char* shaderVisialName)
 {
     if (vertexShaderCode && fragmentShaderCode) {
         int shaderProgramHandle = glCreateProgram();
@@ -87,17 +92,17 @@ void Shader::create(const char* vertexShaderCode, const char* fragmentShaderCode
     m_shaderVisualName = shaderVisialName;
 }
 
-Shader::~Shader()
+GLShader::~GLShader()
 {
     glDeleteProgram(m_shaderProgramHandle);
 }
 
-void Shader::bind()
+void GLShader::bind()
 {
     glUseProgram(m_shaderProgramHandle);
 }
 
-int Shader::createShader(const char* shaderSource, int shaderType)
+int GLShader::createShader(const char* shaderSource, int shaderType)
 {
     const char* shaderTypeName {};
     switch (shaderType) {
@@ -128,6 +133,4 @@ int Shader::createShader(const char* shaderSource, int shaderType)
     }
 
     return currentShader;
-}
-
 }

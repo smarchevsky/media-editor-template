@@ -2,12 +2,14 @@
 #define APP_ABSTRACT_H
 
 #include "graphics/orthocamera.h"
+#include "graphics/glshader.h"
+#include "graphics/gltexture.h"
+#include "helper_general.h"
 #include "window.h"
 #include <filesystem>
 #include <map>
 #include <memory>
 #include <string>
-#include "graphics/shader.h"
 
 namespace ImguiUtils {
 class FileSystemNavigator;
@@ -16,7 +18,7 @@ class Window;
 
 typedef std::function<bool(const std::filesystem::path&)> FileInteractionFunction;
 
-class Application {
+class Application : NoCopy<Application> {
 protected:
     struct OpenFileData {
         explicit OpenFileData(
@@ -48,8 +50,8 @@ protected:
 protected:
     OrthoCamera m_camera;
 
-    GL::Shader m_quadShader;
-
+    GLShader m_quadShader;
+    GLTexture m_texture;
 
     std::optional<Window> m_window;
     std::unique_ptr<ImguiUtils::FileSystemNavigator> m_fsNavigator;
