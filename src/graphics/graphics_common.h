@@ -1,6 +1,7 @@
 #ifndef GRAPHICS_COMMON_H
 #define GRAPHICS_COMMON_H
 
+#include "glshader.h"
 class GraphicsCommon {
 public:
     static GraphicsCommon& getInit()
@@ -9,8 +10,9 @@ public:
         return instance;
     }
 
-
     static void setOpenGLViewport(int x, int y, int width, int height);
+    static void clear();
+
 
 private:
     GraphicsCommon();

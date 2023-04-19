@@ -12,6 +12,12 @@ void GraphicsCommon::setOpenGLViewport(int x, int y, int width, int height)
     glViewport(x, y, width, height);
 }
 
+void GraphicsCommon::clear()
+{
+    glClearColor(0.1f, 0.1f, 0.1f, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 GraphicsCommon::GraphicsCommon()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {

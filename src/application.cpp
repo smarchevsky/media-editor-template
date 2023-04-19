@@ -1,42 +1,6 @@
 #include "application.h"
 #include "imgui_filesystem.h"
 
-const char* shaderSource_defaultVertex =
-    R"(\
-#version 330 core
-#define IDENTITY mat4(1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1)
-
-layout (location = 0) in vec2 inPos;
-layout (location = 1) in vec2 inUV;
-
-out vec2 UV;
-
-uniform mat4 matViewProjection = IDENTITY;
-uniform mat4 matModel = IDENTITY;
-
-void main()
-{
-   gl_Position = matViewProjection * vec4(inPos, 0.0, 1.0);
-   UV = inUV;
-}
-)";
-
-const char* shaderSource_defaultFragment =
-    R"(\
-#version 330 core
-
-in vec2 UV;
-out vec4 FragColor;
-
-uniform sampler2D texture;
-
-void main()
-{
-    // FragColor = vec4(UV, 0.0, 1.0);
-    FragColor = texture2D(texture, UV);
-}
-)";
-
 namespace fs = std::filesystem;
 static fs::path projectDir(PROJECT_DIR);
 
@@ -82,11 +46,13 @@ void Application::init()
     // auto& mode = sf::VideoMode::getFullscreenModes()[0];
     // m_window.emplace(mode, "", sf::Style::Fullscreen);
     m_window.emplace(glm::ivec2(2000, 1000), "Fucking awesome application");
-    m_shaderDefault.create(shaderSource_defaultVertex, shaderSource_defaultFragment, "default");
+
+    m_shaderDefault.setShader(GLShaderCompiler::get().getDefaultShader2d());
+
     m_camera.setViewportSize(m_window->getSize());
 
     m_textureDefault.fromImage(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
-    m_shaderDefault.setUniform("texture", m_textureDefault);
+    // m_shaderDefault.setUniform("texture", m_textureDefault);
 
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
 
@@ -133,11 +99,13 @@ void Application::mainLoop()
     while (m_window && m_window->isOpen()) {
         m_window->processEvents();
         m_window->bind();
+
         m_shaderDefault.bind();
 
         glm::mat4 viewProjection;
-        if (m_camera.getViewProjection(viewProjection))
+        if (m_camera.getViewProjection(viewProjection)) {
             m_shaderDefault.setUniform("matViewProjection", viewProjection);
+        }
 
         drawContext();
 

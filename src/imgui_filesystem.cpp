@@ -1,14 +1,11 @@
 #include "imgui_filesystem.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_stdlib.h"
+#include "helper_general.h"
 
 #include <iostream>
 #include <sstream>
 namespace ImguiUtils {
-
-#ifndef LOG
-#define LOG(x) std::cout << x << std::endl
-#endif
 
 static constexpr FileVisualColor s_folderColor = -1;
 static constexpr FileVisualColor s_unsupportedFileColor = IM_COL32(200, 200, 200, 255);

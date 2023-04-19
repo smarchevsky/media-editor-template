@@ -29,8 +29,6 @@ static int getGLTextureFormatExternal(int nrChannels)
     }
 }
 
-
-
 GLTexture::~GLTexture()
 {
     glDeleteTextures(1, &m_textureHandle);
@@ -55,12 +53,11 @@ bool GLTexture::fromImage(const Image& img)
 
     glGenTextures(1, &m_textureHandle);
 
-    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+    bind();
     // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    setOutOfBoundsBehavior(OutOfBoundsBehavior::Repeat);
     // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load image, create texture and generate mipmaps
 
@@ -70,6 +67,35 @@ bool GLTexture::fromImage(const Image& img)
         0 /* border? */,
         externalTextureFormat, texelType, img.m_data);
 
-    // glGenerateMipmap(GL_TEXTURE_2D);
+    glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST /*GL_FASTEST*/);
+    glGenerateMipmap(GL_TEXTURE_2D);
     return true;
 }
+
+bool GLTexture::setOutOfBoundsBehavior(OutOfBoundsBehavior behavior)
+{
+    int GLBehaviorHandle {};
+    switch (behavior) {
+    case OutOfBoundsBehavior::Repeat: {
+        GLBehaviorHandle = GL_REPEAT;
+    } break;
+    case OutOfBoundsBehavior::MirrorRepeat: {
+        GLBehaviorHandle = GL_MIRRORED_REPEAT;
+    } break;
+    case OutOfBoundsBehavior::ClampEdge: {
+        GLBehaviorHandle = GL_CLAMP_TO_EDGE;
+    } break;
+    case OutOfBoundsBehavior::ClampBorder: {
+        GLBehaviorHandle = GL_CLAMP_TO_BORDER;
+    } break;
+    default:
+        LOGE("Unsuppoerted OutOfBoundsBehavior type");
+        return false;
+    }
+    // bind ?
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GLBehaviorHandle);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GLBehaviorHandle);
+    return true;
+}
+
+void GLTexture::bind() { glBindTexture(GL_TEXTURE_2D, m_textureHandle); }

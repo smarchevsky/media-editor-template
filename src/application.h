@@ -23,7 +23,7 @@ protected:
 
 protected:
     OrthoCamera m_camera;
-    GLShader m_shaderDefault;
+    GLShaderInstance m_shaderDefault;
     GLTexture m_textureDefault;
 
     std::optional<Window> m_window;
