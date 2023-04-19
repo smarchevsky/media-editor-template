@@ -1,10 +1,11 @@
 #ifndef APP_ABSTRACT_H
 #define APP_ABSTRACT_H
 
-#include "graphics/orthocamera.h"
 #include "graphics/glshader.h"
 #include "graphics/gltexture.h"
+#include "graphics/orthocamera.h"
 #include "helper_general.h"
+#include "openfileinfo.h"
 #include "window.h"
 #include <filesystem>
 #include <map>
@@ -16,42 +17,14 @@ class FileSystemNavigator;
 }
 class Window;
 
-typedef std::function<bool(const std::filesystem::path&)> FileInteractionFunction;
-
 class Application : NoCopy<Application> {
 protected:
-    struct OpenFileData {
-        explicit OpenFileData(
-            Application* const parentApp,
-            const std::string& extensions,
-            const std::filesystem::path& currentDir,
-            FileInteractionFunction fileReader,
-            FileInteractionFunction fileWriter);
-
-        Application* const m_parentApp;
-        const std::string m_supportedFileExtensions;
-
-        std::filesystem::path m_currentDir;
-        std::optional<std::filesystem::path> m_currentFileName;
-
-        const FileInteractionFunction m_openFileFunction;
-        const FileInteractionFunction m_saveFileFunction;
-
-        void openFileDialog();
-        // if m_openedFileName (and !forceDialogWindow) force save current file
-        void saveFileOptionalDialog(bool forceDialogWindow = false);
-
-        bool openFileInternal(const std::filesystem::path& path);
-        bool saveFileInternal(const std::filesystem::path& path);
-    };
-
-    std::map<std::string, OpenFileData> m_openFileData;
+    std::map<std::string, OpenFileInfo> m_openFileData;
 
 protected:
     OrthoCamera m_camera;
-
-    GLShader m_quadShader;
-    GLTexture m_texture;
+    GLShader m_shaderDefault;
+    GLTexture m_textureDefault;
 
     std::optional<Window> m_window;
     std::unique_ptr<ImguiUtils::FileSystemNavigator> m_fsNavigator;
@@ -74,6 +47,9 @@ public:
     virtual ~Application();
 
     void mainLoop();
+
+private:
+    friend class OpenFileInfo;
 };
 
 #endif // APP_ABSTRACT_H
