@@ -1,4 +1,4 @@
-#include "gltexture.h"
+#include "gl_texture.h"
 
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
@@ -69,7 +69,6 @@ bool GLTexture::fromImage(const Image& img)
     glTexImage2D(GL_TEXTURE_2D, 0, internalTextureFormat, img.m_size.x, img.m_size.y,
         0 /* border? */, externalTextureFormat, texelType, img.m_data);
 
-    // set the texture wrapping parameters
     setWrapping(Wrapping::Repeat);
     setFiltering(Filtering::LinearMipmap);
     return true;

@@ -1,7 +1,7 @@
 #ifndef APP_ABSTRACT_H
 #define APP_ABSTRACT_H
 
-#include "graphics/gltexture.h"
+#include "graphics/gl_texture.h"
 #include "graphics/orthocamera.h"
 
 #include "helper_general.h"
