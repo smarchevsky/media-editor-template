@@ -1,4 +1,5 @@
 #include "application.h"
+#include "graphics/glshader.h"
 #include "imgui_filesystem.h"
 
 namespace fs = std::filesystem;
@@ -47,11 +48,10 @@ void Application::init()
     // m_window.emplace(mode, "", sf::Style::Fullscreen);
     m_window.emplace(glm::ivec2(2000, 1000), "Fucking awesome application");
 
-    m_shaderDefault.setShader(GLShaderCompiler::get().getDefaultShader2d());
-
     m_camera.setViewportSize(m_window->getSize());
 
     m_textureDefault.fromImage(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
+    /// m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
     // m_shaderDefault.setUniform("texture", m_textureDefault);
 
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
@@ -100,11 +100,10 @@ void Application::mainLoop()
         m_window->processEvents();
         m_window->bind();
 
-        m_shaderDefault.bind();
-
         glm::mat4 viewProjection;
         if (m_camera.getViewProjection(viewProjection)) {
-            m_shaderDefault.setUniform("matViewProjection", viewProjection);
+            GLShaderManager::get().getDefaultShader2d()->setUniform(
+                "matViewProjection", viewProjection);
         }
 
         drawContext();
