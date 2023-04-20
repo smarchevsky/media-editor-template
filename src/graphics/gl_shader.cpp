@@ -1,5 +1,5 @@
-#include "glshader.h"
-#include "glshadersources.h"
+#include "gl_shader.h"
+#include "gl_shadersources.h"
 #include "helper_general.h"
 
 #define ERRORCHEKING

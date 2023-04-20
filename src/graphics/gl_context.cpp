@@ -1,4 +1,4 @@
-#include "graphics_common.h"
+#include "gl_context.h"
 
 #include <SDL2/SDL.h>
 
@@ -7,18 +7,18 @@
 
 #include <cassert>
 
-void GraphicsCommon::setOpenGLViewport(int x, int y, int width, int height)
+void GLContext::setOpenGLViewport(int x, int y, int width, int height)
 {
     glViewport(x, y, width, height);
 }
 
-void GraphicsCommon::clear()
+void GLContext::clear()
 {
     glClearColor(0.1f, 0.1f, 0.1f, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-GraphicsCommon::GraphicsCommon()
+GLContext::GLContext()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         assert(false && "SDL did not init");
@@ -27,7 +27,7 @@ GraphicsCommon::GraphicsCommon()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 }
 
-GraphicsCommon::~GraphicsCommon()
+GLContext::~GLContext()
 {
     SDL_Quit();
 }

@@ -1,6 +1,6 @@
 
 #include "application.h"
-#include "graphics/graphics_common.h"
+#include "graphics/gl_context.h"
 #include "graphics/sprite2d.h"
 
 class OpenGLApp : public Application {
@@ -10,18 +10,18 @@ public:
     void init() override
     {
         Application::init();
-        Sprite2d s;
-        s.setPos({ 0.5f, 0.f });
-        //s.setSize({ 0.5f, 0.5f });
-        m_sprites.push_back(s);
+        for (int i = 0; i < 4; ++i) {
+            Sprite2d s;
+            s.setPos({ 0.5f, 0.f });
+            m_sprites.push_back(s);
+        }
     }
 
     void drawContext() override
     {
-        GraphicsCommon::clear();
+        GLContext::clear();
         for (auto& s : m_sprites)
             s.draw();
-        // GLMeshStatics::get().getQuad2d().draw();
     }
 };
 

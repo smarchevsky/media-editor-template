@@ -1,5 +1,5 @@
 #include "sprite2d.h"
-#include "glshader.h"
+#include "gl_shader.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 Sprite2d::Sprite2d()

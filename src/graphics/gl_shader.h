@@ -3,7 +3,7 @@
 
 #include <filesystem>
 
-#include "gltexture.h"
+#include "gl_texture.h"
 #include "hashstring.h"
 
 #include <glm/mat4x4.hpp>

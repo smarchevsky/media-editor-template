@@ -1,5 +1,5 @@
 #include "application.h"
-#include "graphics/glshader.h"
+#include "graphics/gl_shader.h"
 #include "imgui_filesystem.h"
 
 namespace fs = std::filesystem;

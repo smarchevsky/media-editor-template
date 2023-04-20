@@ -1,4 +1,4 @@
-#include "glmesh.h"
+#include "gl_mesh.h"
 
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
@@ -11,7 +11,7 @@ void GLMesh::bind() const
 {
 // #define ALWAYS_BIND_MESH
 #ifdef ALWAYS_BIND_MESH
-    glUseProgram(m_shaderProgram);
+    glBindVertexArray(m_VAO);
 #else
     if (s_currentBindedMeshHandle != m_VAO) {
         s_currentBindedMeshHandle = m_VAO;

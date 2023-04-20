@@ -1,7 +1,7 @@
 #ifndef SPRITE2D_H
 #define SPRITE2D_H
 
-#include "glmesh.h"
+#include "gl_mesh.h"
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>

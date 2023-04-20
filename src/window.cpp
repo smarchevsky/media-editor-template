@@ -2,7 +2,7 @@
 
 #include <SDL2/SDL.h>
 
-#include "graphics/graphics_common.h"
+#include "graphics/gl_context.h"
 // #include "imgui/imgui.h"
 // #include "imgui/imgui_internal.h"
 #include <cassert>
@@ -177,7 +177,7 @@ bool Window::processEvent(const SDL_Event* event)
         case SDL_WINDOWEVENT_SIZE_CHANGED: {
             glm::ivec2 oldScreenSize = m_windowSize;
             m_windowSize = glm::ivec2(event->window.data1, event->window.data2);
-            GraphicsCommon::setOpenGLViewport(0, 0, m_windowSize.x, m_windowSize.y);
+            GLContext::setOpenGLViewport(0, 0, m_windowSize.x, m_windowSize.y);
             //        m_windowSize = newSize;
             //        applyScaleAndOffset();
             //        glm::ivec2 offset = m_windowSize - oldScreenSize;

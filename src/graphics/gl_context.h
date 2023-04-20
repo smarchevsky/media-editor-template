@@ -1,12 +1,12 @@
 #ifndef GRAPHICS_COMMON_H
 #define GRAPHICS_COMMON_H
 
-#include "glshader.h"
-class GraphicsCommon {
+
+class GLContext {
 public:
-    static GraphicsCommon& getInit()
+    static GLContext& getInit()
     {
-        static GraphicsCommon instance;
+        static GLContext instance;
         return instance;
     }
 
@@ -15,8 +15,8 @@ public:
 
 
 private:
-    GraphicsCommon();
-    ~GraphicsCommon();
+    GLContext();
+    ~GLContext();
 };
 
 #endif // GRAPHICS_COMMON_H
