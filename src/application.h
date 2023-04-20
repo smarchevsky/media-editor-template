@@ -1,12 +1,13 @@
 #ifndef APP_ABSTRACT_H
 #define APP_ABSTRACT_H
 
-#include "graphics/glshader.h"
 #include "graphics/gltexture.h"
 #include "graphics/orthocamera.h"
+
 #include "helper_general.h"
 #include "openfileinfo.h"
 #include "window.h"
+
 #include <filesystem>
 #include <map>
 #include <memory>
@@ -23,7 +24,6 @@ protected:
 
 protected:
     OrthoCamera m_camera;
-    GLShaderInstance m_shaderDefault;
     GLTexture m_textureDefault;
 
     std::optional<Window> m_window;

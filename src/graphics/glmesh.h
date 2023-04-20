@@ -9,12 +9,15 @@ typedef std::vector<uint8_t> ByteArray;
 
 class GLMesh : NoCopy<GLMesh> {
     friend class GLMeshStatics;
+    static uint32_t s_currentBindedMeshHandle;
     unsigned int m_VBO {}, m_VAO {}, m_vertCount {};
 
 public:
-    void draw();
     GLMesh();
     ~GLMesh();
+
+    void draw() const;
+    void bind() const;
 };
 
 class GLMeshStatics {
@@ -24,7 +27,7 @@ public:
         static GLMeshStatics instance;
         return instance;
     }
-    GLMesh& getQuad() { return get().s_quad; };
+    GLMesh& getQuad2d() { return get().s_quad; };
 
 private:
     GLMeshStatics();

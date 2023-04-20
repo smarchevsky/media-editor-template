@@ -5,10 +5,24 @@
 #include <iostream>
 
 GLMesh GLMeshStatics::s_quad;
+uint32_t GLMesh::s_currentBindedMeshHandle = 0;
 
-void GLMesh::draw()
+void GLMesh::bind() const
 {
-    glBindVertexArray(m_VAO);
+// #define ALWAYS_BIND_MESH
+#ifdef ALWAYS_BIND_MESH
+    glUseProgram(m_shaderProgram);
+#else
+    if (s_currentBindedMeshHandle != m_VAO) {
+        s_currentBindedMeshHandle = m_VAO;
+        glBindVertexArray(m_VAO);
+    }
+#endif
+}
+
+void GLMesh::draw() const
+{
+    bind();
     glDrawArrays(GL_TRIANGLES, 0, m_vertCount);
 }
 

@@ -13,22 +13,12 @@
 
 #include <string>
 #include <unordered_map>
+#include <variant>
+#include <iostream>
 
 namespace fs = std::filesystem;
 
 class GLShader;
-class GLShaderInstance {
-public:
-    GLShaderInstance() = default;
-    void setShader(GLShader* shader);
-
-    template <class UniformType>
-    bool setUniform(HashString name, UniformType var);
-    void bind();
-
-private:
-    GLShader* m_shader {};
-};
 
 typedef std::unordered_map<HashString, int> UniformLocationMap;
 class GLShader : NoCopy<GLShader> {
@@ -37,21 +27,28 @@ private: // DATA
     UniformLocationMap m_uniforms;
 
 public:
-    GLShader() = default; // does nothing, create from GLShaderCompiler
+    GLShader() = default;
     ~GLShader();
     GLShader(GLShader&& r);
+    int getHandle() const { return m_shaderProgram; }
+
+    template <class UniformType>
+    void setUniform(HashString name, UniformType var)
+    {
+        int location = getUniformLocation(name);
+        if (location != -1) {
+            bind();
+            setUniform(location, var);
+        }
+        else {
+            LOGE("Invalid name");
+        }
+    }
 
 private:
-    int getHandle() const
-    {
-        return m_shaderProgram;
-    }
     void bind();
-    void initialize(uint32_t shaderProgram, const UniformLocationMap& uniforms)
-    {
-        m_shaderProgram = shaderProgram;
-        m_uniforms = uniforms;
-    }
+    void initialize(uint32_t shaderProgram, const UniformLocationMap& uniforms) { m_shaderProgram = shaderProgram, m_uniforms = uniforms; }
+
     void setUniform(int location, float var);
     void setUniform(int location, const glm::vec2& var);
     void setUniform(int location, const glm::vec3& var);
@@ -63,54 +60,34 @@ private:
 
 private:
     static uint32_t s_currentBindedShaderHandle;
-    friend class GLShaderInstance;
-    friend class GLShaderCompiler;
+    friend class GLShaderManager;
 };
 
-template <class UniformType>
-bool GLShaderInstance::setUniform(HashString name, UniformType var)
-{
-    if (!m_shader)
-        return false;
-    auto location = m_shader->getUniformLocation(name);
-    if (location != -1) {
-        m_shader->setUniform(location, var);
-        return true;
-    }
-    return false;
-}
-
-inline void GLShaderInstance::bind()
-{
-    if (m_shader)
-        m_shader->bind();
-}
-
-class GLShaderCompiler {
+class GLShaderManager {
 
 public:
-    static GLShaderCompiler& get()
+    static GLShaderManager& get()
     {
-        static GLShaderCompiler shaderGeneratorStatic;
+        static GLShaderManager shaderGeneratorStatic;
         return shaderGeneratorStatic;
     }
     GLShader* addShader(
+        const char* uniqueName,
         const char* vertexShaderCode,
-        const char* fragmentShaderCode,
-        const char* uniqueName);
+        const char* fragmentShaderCode);
 
     GLShader* addShader(
+        const char* uniqueName,
         const fs::path& vertexShaderPath,
-        const fs::path& fragmentShaderPath,
-        const char* uniqueName);
+        const fs::path& fragmentShaderPath);
 
     GLShader* getDefaultShader2d();
 
-    static GLShader* getByName(HashString str);
+    GLShader* getByName(HashString str);
 
 private:
-    GLShaderCompiler() = default;
-    ~GLShaderCompiler() = default;
+    GLShaderManager() = default;
+    ~GLShaderManager() = default;
 
     static std::unordered_map<HashString, GLShader> s_staticShaders;
 };
