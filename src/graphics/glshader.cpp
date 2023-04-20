@@ -21,7 +21,17 @@ UniformLocationMap getUniformList(GLuint program)
     const GLsizei bufSize = 512; // maximum name length
     GLchar name[bufSize] {}; // variable name in GLSL
     GLsizei length; // name length
+    /*
+    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &count);
+    printf("Active Attributes: %d\n", count);
 
+    for (int i = 0; i < count; i++)
+    {
+        glGetActiveAttrib(program, (GLuint)i, bufSize, &length, &size, &type, name);
+
+        printf("Attribute #%d Type: %u Name: %s\n", i, type, name);
+    }
+    */
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
     printf("Active Uniforms: %d\n", count);
 
@@ -96,7 +106,7 @@ bool createShaderProgram(const char* vertexShaderCode, const char* fragmentShade
 }
 
 uint32_t GLShader::s_currentBindedShaderHandle = 0;
-std::map<std::string, GLShader> GLShaderCompiler::s_staticShaders;
+std::unordered_map<HashString, GLShader> GLShaderCompiler::s_staticShaders;
 
 void GLShader::setUniform(int location, float var) { glUniform1f(location, var); }
 void GLShader::setUniform(int location, const glm::vec2& var) { glUniform2fv(location, 1, &var[0]); }
@@ -105,7 +115,7 @@ void GLShader::setUniform(int location, const glm::vec4& var) { glUniform4fv(loc
 void GLShader::setUniform(int location, const glm::mat4& var) { glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]); }
 void GLShader::setUniform(int location, const GLTexture& texture) { glUniform1i(location, texture.getHandle()); }
 
-int GLShader::getUniformLocation(const char* name)
+int GLShader::getUniformLocation(HashString name)
 {
     // return glGetUniformLocation(m_shaderProgram, name);
     auto it = m_uniforms.find(name);
@@ -132,7 +142,7 @@ GLShader::GLShader(GLShader&& r)
 
 void GLShader::bind()
 {
-#define ALWAYS_BIND_SHADER
+//#define ALWAYS_BIND_SHADER
 #ifdef ALWAYS_BIND_SHADER
     glUseProgram(m_shaderProgram);
 #else
@@ -151,17 +161,16 @@ void GLShaderInstance::setShader(GLShader* shader)
 GLShader* GLShaderCompiler::addShader(
     const char* vertexShaderCode, const char* fragmentShaderCode, const char* uniqueName)
 {
-    const std::string nameString(uniqueName);
 
-    const auto it = s_staticShaders.find(nameString);
+    const auto it = s_staticShaders.find(uniqueName);
     if (it == s_staticShaders.end()) {
 
         uint32_t shaderProgram;
         UniformLocationMap uniforms;
         if (createShaderProgram(vertexShaderCode, fragmentShaderCode, shaderProgram, uniforms)) {
-            s_staticShaders[nameString].initialize(shaderProgram, uniforms);
+            s_staticShaders[uniqueName].initialize(shaderProgram, uniforms);
             LOG("Shader: \"" << uniqueName << "\" created successfully.");
-            return &s_staticShaders[nameString];
+            return &s_staticShaders[uniqueName];
 
         } else {
             LOGE("Failed to compile shader");
@@ -214,9 +223,9 @@ GLShader* GLShaderCompiler::getDefaultShader2d()
     return addShader(GLShaderSources::getDefault2d_VS(), GLShaderSources::getDefault2d_FS(), "DefaultShader2d");
 }
 
-GLShader* GLShaderCompiler::getByName(const std::string& name)
+GLShader* GLShaderCompiler::getByName(HashString str)
 {
-    auto it = s_staticShaders.find(name);
+    auto it = s_staticShaders.find(str);
     if (it != s_staticShaders.end()) {
         return &it->second;
     }

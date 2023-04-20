@@ -11,10 +11,12 @@ protected:
     NoCopy() = default;
     ~NoCopy() = default; /// Protected non-virtual destructor
 };
-
+inline const char* getPathFromSourceDirectory(const char* path){
+    return path + SOURCE_PATH_SIZE;
+}
 // clang-format off
-#define LOG(x)  std::cout << __FILE__ + SOURCE_PATH_SIZE << " line: " << __LINE__ << ". " << x << std::endl
-#define LOGE(x) std::cerr << __FILE__ + SOURCE_PATH_SIZE << " line: " << __LINE__ << ". " << x << std::endl
+#define LOG(x)  std::cout << getPathFromSourceDirectory(__FILE__) << " line: " << __LINE__ << ". " << x << std::endl
+#define LOGE(x) std::cerr << getPathFromSourceDirectory(__FILE__) << " line: " << __LINE__ << ". " << x << std::endl
 // fprintf(stderr, "%2.2x", var[i]);
 //#define LOG(text, ...) UE_LOG(LogTemp, Warning,
 // TEXT("%s: " text), LOG_FUNCTION_COMMENT, ##__VA_ARGS__)
