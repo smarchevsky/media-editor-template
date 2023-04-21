@@ -18,6 +18,8 @@ void GLContext::clear()
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
+void GLContext::unbindFrameBuffer() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+
 GLContext::GLContext()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {

@@ -2,6 +2,7 @@
 #define SPRITE2D_H
 
 #include "gl_mesh.h"
+#include "gl_framebuffer.h"
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
@@ -18,7 +19,10 @@ public:
     Sprite2d();
     Sprite2d& setPos(glm::vec2 pos);
     Sprite2d& setSize(glm::vec2 size);
-    void draw();
+
+    void draw(const GLFrameBufferBase& where) const;
+
+
 };
 
 #endif // SPRITE2D_H

@@ -12,6 +12,7 @@ public:
 
     static void setOpenGLViewport(int x, int y, int width, int height);
     static void clear();
+    static void unbindFrameBuffer();
 
 
 private:

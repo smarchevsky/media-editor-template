@@ -5,23 +5,27 @@
 
 class OpenGLApp : public Application {
     std::vector<Sprite2d> m_sprites;
+    GLFrameBuffer fb;
 
 public:
     void init() override
     {
         Application::init();
+
         for (int i = 0; i < 4; ++i) {
             Sprite2d s;
             s.setPos({ 0.5f, 0.f });
-            m_sprites.push_back(s);
+            m_sprites.push_back(Sprite2d());
         }
+        fb.create({ 512, 512 });
     }
 
     void drawContext() override
     {
         GLContext::clear();
-        for (auto& s : m_sprites)
-            s.draw();
+        for (auto& s : m_sprites) {
+            s.draw(*m_window);
+        }
     }
 };
 
