@@ -9,8 +9,8 @@ uint32_t GLMesh::s_currentBindedMeshHandle = 0;
 
 void GLMesh::bind() const
 {
-// #define ALWAYS_BIND_MESH
-#ifdef ALWAYS_BIND_MESH
+// #define ALWAYS_BIND
+#ifdef ALWAYS_BIND
     glBindVertexArray(m_VAO);
 #else
     if (s_currentBindedMeshHandle != m_VAO) {

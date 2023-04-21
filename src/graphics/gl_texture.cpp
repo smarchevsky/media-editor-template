@@ -156,8 +156,9 @@ bool GLTexture::setFiltering(Filtering filtering)
 
 void GLTexture::bind()
 {
-// #define ALWAYS_BIND_MESH
-#ifdef ALWAYS_BIND_MESH
+#define ALWAYS_BIND
+#ifdef ALWAYS_BIND
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
 #else
     if (s_currentBindedTexture != m_textureHandle) {
