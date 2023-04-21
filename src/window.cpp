@@ -272,7 +272,8 @@ void Window::display()
     SDL_GL_SwapWindow(m_SDLwindow);
 }
 
-void Window::bind()
+void Window::bind() const
 {
+    GLContext::unbindFrameBuffer();
     SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);
 }

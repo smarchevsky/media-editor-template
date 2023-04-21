@@ -4,6 +4,8 @@
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_mouse.h>
 
+#include "graphics/gl_framebuffer.h"
+
 #include <functional>
 #include <glm/vec2.hpp>
 #include <iostream>
@@ -116,7 +118,7 @@ public:
 
 // kinda window wrapper, you can wrap SDL window the same way
 
-class Window {
+class Window : public GLFrameBufferBase {
 public:
     Window(glm::ivec2 size, const std::string& name);
     Window(const Window&) = delete;
@@ -137,7 +139,7 @@ public:
 
     void drawImGuiContext(ImGuiContextFunctions imguiFunctions);
     void display();
-    void bind();
+    void bind() const override;
 
     bool isOpen();
     void exit();

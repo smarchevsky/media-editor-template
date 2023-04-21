@@ -51,8 +51,7 @@ void Application::init()
     m_camera.setViewportSize(m_window->getSize());
 
     m_textureDefault.fromImage(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
-    /// m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
-    // m_shaderDefault.setUniform("texture", m_textureDefault);
+    // m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
 
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
 

@@ -41,6 +41,15 @@ bool GLTexture::createEmpty(glm::ivec2 size)
     if (size.x <= 0 || size.y <= 0)
         return false;
 
+    clear();
+    glGenTextures(1, &m_textureHandle);
+    bind();
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0,
+        GL_RGB, GL_UNSIGNED_BYTE, nullptr); // input data seems useless
+
+    setFiltering(Filtering::Nearset);
+
     return true;
 }
 
@@ -60,14 +69,11 @@ bool GLTexture::fromImage(const Image& img)
         return false;
 
     clear();
-
-    const GLenum texelType = GL_UNSIGNED_BYTE; // stbImage always gives uint8 image format
-
     glGenTextures(1, &m_textureHandle);
     bind();
 
     glTexImage2D(GL_TEXTURE_2D, 0, internalTextureFormat, img.m_size.x, img.m_size.y,
-        0 /* border? */, externalTextureFormat, texelType, img.m_data);
+        0 /* border? */, externalTextureFormat, GL_UNSIGNED_BYTE, img.m_data);
 
     setWrapping(Wrapping::Repeat);
     setFiltering(Filtering::LinearMipmap);
@@ -82,26 +88,26 @@ void GLTexture::clear()
     }
 }
 
-bool GLTexture::setWrapping(Wrapping behavior)
+bool GLTexture::setWrapping(Wrapping wrapping)
 {
     if (!m_textureHandle) {
         LOGE("No texture handle");
         return false;
     }
 
-    int GLBehaviorHandle {};
-    switch (behavior) {
+    int wrappingGLformat {};
+    switch (wrapping) {
     case Wrapping::Repeat: {
-        GLBehaviorHandle = GL_REPEAT;
+        wrappingGLformat = GL_REPEAT;
     } break;
     case Wrapping::MirrorRepeat: {
-        GLBehaviorHandle = GL_MIRRORED_REPEAT;
+        wrappingGLformat = GL_MIRRORED_REPEAT;
     } break;
     case Wrapping::ClampEdge: {
-        GLBehaviorHandle = GL_CLAMP_TO_EDGE;
+        wrappingGLformat = GL_CLAMP_TO_EDGE;
     } break;
     case Wrapping::ClampBorder: {
-        GLBehaviorHandle = GL_CLAMP_TO_BORDER;
+        wrappingGLformat = GL_CLAMP_TO_BORDER;
     } break;
     default:
         LOGE("Unsuppoerted wrapping type");
@@ -109,8 +115,8 @@ bool GLTexture::setWrapping(Wrapping behavior)
     }
 
     bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GLBehaviorHandle);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GLBehaviorHandle);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappingGLformat);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingGLformat);
     return true;
 }
 

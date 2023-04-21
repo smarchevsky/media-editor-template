@@ -22,8 +22,9 @@ Sprite2d& Sprite2d::setSize(glm::vec2 size)
     return *this;
 }
 
-void Sprite2d::draw()
+void Sprite2d::draw(const GLFrameBufferBase &where) const
 {
+    where.bind();
     m_shader->setUniform("matModel", m_transform);
     m_mesh.draw();
 }
