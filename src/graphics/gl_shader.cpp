@@ -142,8 +142,8 @@ GLShader::GLShader(GLShader&& r)
 
 void GLShader::bind()
 {
-// #define ALWAYS_BIND_SHADER
-#ifdef ALWAYS_BIND_SHADER
+// #define ALWAYS_BIND
+#ifdef ALWAYS_BIND
     glUseProgram(m_shaderProgram);
 #else
     if (s_currentBindedShaderHandle != m_shaderProgram) {
@@ -152,8 +152,6 @@ void GLShader::bind()
     }
 #endif
 }
-
-
 
 GLShader* GLShaderManager::addShader(
     const char* uniqueName,

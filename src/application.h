@@ -24,7 +24,6 @@ protected:
 
 protected:
     OrthoCamera m_camera;
-    GLTexture m_textureDefault;
 
     std::optional<Window> m_window;
     std::unique_ptr<ImguiUtils::FileSystemNavigator> m_fsNavigator;
