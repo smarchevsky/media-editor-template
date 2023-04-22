@@ -46,7 +46,7 @@ typedef std::variant<
     glm::vec3,
     glm::vec4,
     glm::mat4,
-    GLTexture*>
+    std::shared_ptr<GLTexture>>
     UniformVariant;
 
 class GLShader : NoCopy<GLShader> {
@@ -134,6 +134,7 @@ public:
     }
 
     void updateUniform(HashString name, const UniformVariant& var);
+    UniformVariant getUniform(HashString name);
 
     void applyUniformData() const
     {
