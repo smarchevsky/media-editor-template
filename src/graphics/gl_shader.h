@@ -56,21 +56,22 @@ public:
     GLShader(GLShader&& r);
     int getHandle() const { return m_shaderProgram; }
 
-    void setUniform(const char* name, const UniformVariant& var, UniformType type)
+    void setUniform(const char* name, const UniformVariant& var, UniformType type, int textureIndex)
     {
         bind();
         int location = getUniformLocation(name);
         if (location != -1) {
-            setUniform(location, var, type);
+            setUniform(location, var, type, textureIndex);
         } else {
             LOGE("Invalid name");
         }
     }
-    void setUniform(int location, const UniformVariant& var, UniformType type);
+    void setUniform(int location, const UniformVariant& var, UniformType type, int textureIndex);
 
     const UniformList& getUniforms() { return m_uniforms; }
 
     void bind();
+
 private:
     void initialize(uint32_t shaderProgram, const std::vector<UniformInfo>& uniforms)
     {
@@ -144,7 +145,11 @@ public:
         m_shader->bind();
         for (const auto& u : m_savedUniforms) {
             const UniformData& data = u.second;
-            m_shader->setUniform(data.location, data.dataVariant, data.info.type);
+            m_shader->setUniform(
+                data.location,
+                data.dataVariant,
+                data.info.type,
+                data.info.textureIndex);
         }
     }
 
