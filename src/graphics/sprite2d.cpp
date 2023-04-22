@@ -12,29 +12,42 @@ void Sprite2d::init()
 {
     m_shader.setShader(GLShaderManager::get().getDefaultShader2d());
     m_shader.trackUniformsExcept({ "matViewProjection" });
-
-    m_shader.updateUniform("matModel", m_transform);
 }
 
 Sprite2d& Sprite2d::setPos(glm::vec2 pos)
 {
-    m_transform[3][0] = pos.x;
-    m_transform[3][1] = pos.y;
-    m_shader.updateUniform("matModel", m_transform);
+    m_pos = pos;
+    m_dirty = true;
     return *this;
 }
 
 Sprite2d& Sprite2d::setSize(glm::vec2 size)
 {
-    m_transform = glm::scale(m_transform, glm::vec3(size.x, size.y, 0.f));
-    m_shader.updateUniform("matModel", m_transform);
+    m_size = size;
+    m_dirty = true;
+    return *this;
+}
+
+Sprite2d& Sprite2d::setRotation(float angleRad)
+{
+    m_angle = angleRad;
+    m_dirty = true;
     return *this;
 }
 
 void Sprite2d::draw(const GLFrameBufferBase& where)
 {
     where.bind();
+    if (m_dirty) {
+        glm::mat4 mat(1);
+        mat = glm::scale(mat, glm::vec3(m_size.x, m_size.y, 0.f));
+        mat = glm::rotate(mat, m_angle, glm::vec3(0, 0, 1));
+        mat[3][0] = m_pos.x;
+        mat[3][1] = m_pos.y;
 
+        m_shader.updateUniform("matModel", mat);
+        m_dirty = false;
+    }
     m_shader.applyUniformData();
     m_mesh.draw();
 }

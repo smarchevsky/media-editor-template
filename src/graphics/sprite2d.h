@@ -14,7 +14,10 @@ class Sprite2d // square sprite -1 to 1
     const GLMesh& m_mesh;
     GLShaderInstance m_shader;
 
-    glm::mat4 m_transform = glm::mat4(1);
+    glm::vec2 m_pos = glm::vec2(0);
+    glm::vec2 m_size = glm::vec2(1);
+    float m_angle = 0;
+    bool m_dirty = true;
 
 public:
     GLShaderInstance& getShaderInstance() { return m_shader; }
@@ -22,6 +25,7 @@ public:
     void init();
     Sprite2d& setPos(glm::vec2 pos);
     Sprite2d& setSize(glm::vec2 size);
+    Sprite2d& setRotation(float angleRad);
 
     void draw(const GLFrameBufferBase& where);
 };

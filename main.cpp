@@ -20,6 +20,7 @@ public:
             Sprite2d s;
             s.init();
             s.setPos({ 0.5f, 0.f });
+            s.setRotation(0.2f);
 
             s.getShaderInstance().updateUniform("texture0", texChecker);
             s.getShaderInstance().updateUniform("texture1", texLiza);
