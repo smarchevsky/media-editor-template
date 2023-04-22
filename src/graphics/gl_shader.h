@@ -11,57 +11,148 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <variant>
-#include <iostream>
+#include <vector>
 
 namespace fs = std::filesystem;
-
 class GLShader;
 
-typedef std::unordered_map<HashString, int> UniformLocationMap;
-class GLShader : NoCopy<GLShader> {
-private: // DATA
-    uint32_t m_shaderProgram {};
-    UniformLocationMap m_uniforms;
+enum class UniformType : uint8_t {
+    Invalid,
+    Float,
+    Vec2,
+    Vec3,
+    Vec4,
+    Mat4,
+    Texture2D,
+    InvalidMax
+};
 
+//////////////////////// SHADER //////////////////////////
+struct UniformInfo {
+    std::string name;
+    UniformType type = UniformType::InvalidMax;
+    uint8_t textureIndex; // texture index, if texture
+};
+typedef std::vector<UniformInfo> UniformList;
+
+typedef std::variant<
+    char, // is invalid, dont set char :)
+    float,
+    glm::vec2,
+    glm::vec3,
+    glm::vec4,
+    glm::mat4,
+    GLTexture*>
+    UniformVariant;
+
+class GLShader : NoCopy<GLShader> {
 public:
     GLShader() = default;
     ~GLShader();
     GLShader(GLShader&& r);
     int getHandle() const { return m_shaderProgram; }
 
-    template <class UniformType>
-    void setUniform(HashString name, UniformType var)
+    void setUniform(const char* name, const UniformVariant& var, UniformType type)
     {
+        bind();
         int location = getUniformLocation(name);
         if (location != -1) {
-            bind();
-            setUniform(location, var);
-        }
-        else {
+            setUniform(location, var, type);
+        } else {
             LOGE("Invalid name");
         }
     }
+    void setUniform(int location, const UniformVariant& var, UniformType type);
 
-private:
+    const UniformList& getUniforms() { return m_uniforms; }
+
     void bind();
-    void initialize(uint32_t shaderProgram, const UniformLocationMap& uniforms) { m_shaderProgram = shaderProgram, m_uniforms = uniforms; }
+private:
+    void initialize(uint32_t shaderProgram, const std::vector<UniformInfo>& uniforms)
+    {
+        m_shaderProgram = shaderProgram;
+        m_uniforms = uniforms;
+    }
 
-    void setUniform(int location, float var);
-    void setUniform(int location, const glm::vec2& var);
-    void setUniform(int location, const glm::vec3& var);
-    void setUniform(int location, const glm::vec4& var);
-    void setUniform(int location, const glm::mat4& var);
-    void setUniform(int location, const GLTexture& texture);
+    int getUniformLocation(const char* name);
 
-    int getUniformLocation(HashString name);
+private: // DATA
+    uint32_t m_shaderProgram {};
+    UniformList m_uniforms;
 
 private:
     static uint32_t s_currentBindedShaderHandle;
     friend class GLShaderManager;
 };
+
+//////////////////////// SHADER INSTANCE //////////////////////////
+
+struct UniformData {
+    UniformInfo info;
+    int location;
+    UniformVariant dataVariant;
+};
+
+typedef std::unordered_map<HashString, UniformData> UniformDataList;
+
+class GLShaderInstance {
+public:
+    void setShader(GLShader* shader) { m_shader = shader; }
+    void trackUniformsExcept(std::initializer_list<std::string> names)
+    {
+        const auto& uniforms = m_shader->getUniforms();
+        if (!m_shader)
+            return;
+
+        for (int i = 0; i < uniforms.size(); ++i) {
+            const UniformInfo& uniformInfo = uniforms[i];
+
+            const std::string& uniformName = uniformInfo.name;
+
+            bool dontAdd = false;
+            for (const auto& n : names) {
+                if (uniformName == n) {
+                    dontAdd = true;
+                    break;
+                }
+            }
+            if (dontAdd)
+                continue;
+
+            UniformData data;
+            data.info = uniformInfo;
+            data.location = i;
+
+            HashString uniformHashString(uniformName.c_str());
+
+            m_savedUniforms.insert({ uniformHashString, data });
+        }
+    }
+
+    void updateUniform(HashString name, const UniformVariant& var);
+
+    void applyUniformData() const
+    {
+        if (!m_shader)
+            return;
+
+        m_shader->bind();
+        for (const auto& u : m_savedUniforms) {
+            const UniformData& data = u.second;
+            m_shader->setUniform(data.location, data.dataVariant, data.info.type);
+        }
+    }
+
+private:
+    GLShader* m_shader {};
+    UniformDataList m_savedUniforms;
+};
+
+//////////////////////// SHADER MANAGER //////////////////////////
 
 class GLShaderManager {
 

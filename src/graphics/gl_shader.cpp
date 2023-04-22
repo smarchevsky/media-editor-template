@@ -6,14 +6,58 @@
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
 namespace {
-UniformLocationMap getUniformList(GLuint program)
+UniformType getUniformTypeFromGLType(int GLtype, int size)
 {
-    UniformLocationMap result;
+    constexpr int floatSize = sizeof(float);
+    constexpr int intSize = sizeof(int);
+
+    switch (GLtype) {
+    case GL_FLOAT: {
+        // assert(size == floatSize);
+        return UniformType::Float;
+    };
+
+    case GL_FLOAT_VEC2: {
+        // assert(size == floatSize * 2);
+        return UniformType::Vec2;
+    }
+
+    case GL_FLOAT_VEC3: {
+        // assert(size == floatSize * 3);
+        return UniformType::Vec3;
+    };
+
+    case GL_FLOAT_VEC4: {
+        // assert(size == floatSize * 4);
+        return UniformType::Vec4;
+    };
+
+    case GL_SAMPLER_2D: {
+        // assert(size == intSize);
+        return UniformType::Texture2D;
+    }
+
+    case GL_FLOAT_MAT4: {
+        // assert(size == floatSize * 16);
+        return UniformType::Mat4;
+    };
+    }
+
+    assert(false && "Unsupported uniform format");
+    return {};
+}
+
+UniformList getUniformList(GLuint program)
+{
+    UniformList result;
     GLint count;
     GLint size; // size of the variable
     GLenum type; // type of the variable (float, vec3 or mat4, etc)
@@ -21,24 +65,34 @@ UniformLocationMap getUniformList(GLuint program)
     const GLsizei bufSize = 512; // maximum name length
     GLchar name[bufSize] {}; // variable name in GLSL
     GLsizei length; // name length
+
     /*
     glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &count);
     printf("Active Attributes: %d\n", count);
-
     for (int i = 0; i < count; i++)
     {
         glGetActiveAttrib(program, (GLuint)i, bufSize, &length, &size, &type, name);
-
         printf("Attribute #%d Type: %u Name: %s\n", i, type, name);
-    }
-    */
+    } */
+
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
     printf("Active Uniforms: %d\n", count);
 
+    int textureIndex = 0;
     for (int i = 0; i < count; i++) {
         glGetActiveUniform(program, (GLuint)i, bufSize, &length, &size, &type, name);
-        result.insert({ name, i });
+
+        UniformInfo info;
+        info.name = name;
+        info.type = getUniformTypeFromGLType(type, size);
+        info.textureIndex = textureIndex;
+
+        result.push_back(info);
+
         printf("Uniform #%d Type: %u Name: %s\n", i, type, name);
+
+        if (info.type == UniformType::Texture2D)
+            textureIndex++;
     }
     return result;
 }
@@ -77,7 +131,7 @@ int createShader(const char* shaderSource, int shaderType)
 }
 
 bool createShaderProgram(const char* vertexShaderCode, const char* fragmentShaderCode,
-    uint32_t& outShaderProgram, UniformLocationMap& outUniforms)
+    uint32_t& outShaderProgram, UniformList& outUniforms)
 {
     GLint success = GL_FALSE;
     if (vertexShaderCode && fragmentShaderCode) {
@@ -102,27 +156,13 @@ bool createShaderProgram(const char* vertexShaderCode, const char* fragmentShade
     }
     return success == GL_TRUE;
 }
-
-}
+} // namespace
 
 uint32_t GLShader::s_currentBindedShaderHandle = 0;
-std::unordered_map<HashString, GLShader> GLShaderManager::s_staticShaders;
 
-void GLShader::setUniform(int location, float var) { glUniform1f(location, var); }
-void GLShader::setUniform(int location, const glm::vec2& var) { glUniform2fv(location, 1, &var[0]); }
-void GLShader::setUniform(int location, const glm::vec3& var) { glUniform3fv(location, 1, &var[0]); }
-void GLShader::setUniform(int location, const glm::vec4& var) { glUniform4fv(location, 1, &var[0]); }
-void GLShader::setUniform(int location, const glm::mat4& var) { glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]); }
-void GLShader::setUniform(int location, const GLTexture& texture) { glUniform1i(location, texture.getHandle()); }
-
-int GLShader::getUniformLocation(HashString hashName)
+int GLShader::getUniformLocation(const char* name)
 {
-    // return glGetUniformLocation(m_shaderProgram, name);
-    auto it = m_uniforms.find(hashName);
-    if (it != m_uniforms.end()) {
-        return it->second;
-    }
-    return -1;
+    return glGetUniformLocation(m_shaderProgram, name);
 }
 
 GLShader::~GLShader()
@@ -140,6 +180,91 @@ GLShader::GLShader(GLShader&& r)
     r.m_shaderProgram = 0;
 }
 
+void GLShader::setUniform(int location, const UniformVariant& uniformVariable, UniformType type)
+{
+    switch (type) {
+
+    case UniformType::Texture2D: {
+        const auto& var = std::get_if<GLTexture*>(&uniformVariable);
+        GLTexture* texture = var ? *var : nullptr;
+        int textureHandle = var ? texture->getHandle() : 0;
+
+        glBindTextureUnit(0, textureHandle);
+
+#ifdef PRECISE_LOG
+        if (!var)
+            LOGE("Texture var not set");
+        else
+            LOG("Texture set location: " << location << ", handle: " << textureHandle);
+#endif
+    } break;
+
+    case UniformType::Float: {
+        const auto& var = std::get_if<float>(&uniformVariable);
+        glUniform1f(location, var ? *var : 0.f);
+#ifdef PRECISE_LOG
+        if (!var)
+            LOGE("Float var not set");
+#endif
+    } break;
+
+    case UniformType::Vec2: {
+        const auto* var = std::get_if<glm::vec2>(&uniformVariable);
+        glm::vec2 result = var ? *var : glm::vec2(0);
+        glUniform2fv(location, 1, &result[0]);
+#ifdef PRECISE_LOG
+        if (!var)
+            LOGE("Vec2 var not set");
+#endif
+    } break;
+
+    case UniformType::Vec3: {
+        const auto& var = std::get_if<glm::vec3>(&uniformVariable);
+        glm::vec2 result = var ? *var : glm::vec3(0);
+        glUniform3fv(location, 1, &result[0]);
+#ifdef PRECISE_LOG
+        if (!var)
+            LOGE("Vec3 var not set");
+#endif
+    } break;
+
+    case UniformType::Vec4: {
+        const auto& var = std::get_if<glm::vec4>(&uniformVariable);
+        glm::vec4 result = var ? *var : glm::vec4(0);
+        glUniform4fv(location, 1, &result[0]);
+#ifdef PRECISE_LOG
+        if (!var)
+            LOGE("Vec4 var not set");
+#endif
+    } break;
+
+    case UniformType::Mat4: {
+        const auto& var = std::get_if<glm::mat4>(&uniformVariable);
+        glm::mat4 result = var ? *var : glm::mat4(1);
+        glUniformMatrix4fv(location, 1, GL_FALSE, &result[0][0]);
+#ifdef PRECISE_LOG
+        if (!var)
+            LOGE("Mat4 var not set");
+        else
+            LOG("Mat4 set location: " << location);
+#endif
+    } break;
+
+    default: {
+        // LOGE("Unsupported uniform variable type");
+    }
+    }
+}
+
+void GLShaderInstance::updateUniform(HashString name, const UniformVariant& var)
+{
+    auto it = m_savedUniforms.find(name);
+    if (it != m_savedUniforms.end()) {
+        UniformData& data = it->second;
+        data.dataVariant = var;
+    }
+}
+
 void GLShader::bind()
 {
 // #define ALWAYS_BIND
@@ -152,6 +277,10 @@ void GLShader::bind()
     }
 #endif
 }
+
+//////////////////////// SHADER MANAGER //////////////////////////
+
+std::unordered_map<HashString, GLShader> GLShaderManager::s_staticShaders;
 
 GLShader* GLShaderManager::addShader(
     const char* uniqueName,
@@ -203,7 +332,7 @@ GLShader* GLShaderManager::addShader(
         return foundShader;
     } else {
         uint32_t shaderProgram;
-        UniformLocationMap uniforms;
+        UniformList uniforms;
         if (createShaderProgram(vertexShaderCode, fragmentShaderCode, shaderProgram, uniforms)) {
             s_staticShaders[uniqueName].initialize(shaderProgram, std::move(uniforms));
             LOG("Shader: \"" << uniqueName << "\" created successfully.");

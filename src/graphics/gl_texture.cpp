@@ -43,7 +43,7 @@ bool GLTexture::createEmpty(glm::ivec2 size)
 
     clear();
     glGenTextures(1, &m_textureHandle);
-    bind();
+    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0,
         GL_RGB, GL_UNSIGNED_BYTE, nullptr); // input data seems useless
@@ -70,7 +70,7 @@ bool GLTexture::fromImage(const Image& img)
 
     clear();
     glGenTextures(1, &m_textureHandle);
-    bind();
+    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
 
     glTexImage2D(GL_TEXTURE_2D, 0, internalTextureFormat, img.m_size.x, img.m_size.y,
         0 /* border? */, externalTextureFormat, GL_UNSIGNED_BYTE, img.m_data);
@@ -114,7 +114,7 @@ bool GLTexture::setWrapping(Wrapping wrapping)
         return false;
     }
 
-    bind();
+    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappingGLformat);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingGLformat);
     return true;
@@ -148,22 +148,8 @@ bool GLTexture::setFiltering(Filtering filtering)
         return false;
     }
     m_filtering = filtering;
-    bind();
+    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
     return true;
-}
-
-void GLTexture::bind()
-{
-#define ALWAYS_BIND
-#ifdef ALWAYS_BIND
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
-#else
-    if (s_currentBindedTexture != m_textureHandle) {
-        s_currentBindedTexture = m_textureHandle;
-        glBindTexture(GL_TEXTURE_2D, m_textureHandle);
-    }
-#endif
 }

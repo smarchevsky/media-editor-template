@@ -49,12 +49,12 @@ const char* GLShaderSources::getDefault2d_FS()
 in vec2 UV;
 out vec4 FragColor;
 
-uniform sampler2D texture;
+uniform sampler2D texture0;
 
 void main()
 {
     //FragColor = vec4(UV, 0, 1);
-    FragColor = texture2D(texture, UV);
+    FragColor = texture2D(texture0, UV);
 }
 )";
 }
