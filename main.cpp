@@ -22,6 +22,7 @@ public:
             s.setPos({ 0.5f, 0.f });
 
             s.getShaderInstance().updateUniform("texture0", texChecker);
+            s.getShaderInstance().updateUniform("texture1", texLiza);
 
             m_sprites.push_back(s);
         }
@@ -31,6 +32,7 @@ public:
             s.setPos({ -0.5f, -0.3f });
 
             s.getShaderInstance().updateUniform("texture0", texLiza);
+            s.getShaderInstance().updateUniform("texture1", texChecker);
 
             m_sprites.push_back(s);
         }

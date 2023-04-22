@@ -181,7 +181,7 @@ GLShader::GLShader(GLShader&& r)
 }
 
 void GLShader::setUniform(int location, const UniformVariant& uniformVariable,
-    UniformType type)
+    UniformType type, int textureIndex)
 {
     switch (type) {
 
@@ -190,13 +190,19 @@ void GLShader::setUniform(int location, const UniformVariant& uniformVariable,
         GLTexture* texture = var ? var->get() : nullptr;
         int textureHandle = var ? texture->getHandle() : 0;
 
-        glBindTextureUnit(0, textureHandle);
+        if (textureIndex < 0 || textureIndex >= 32) {
+            LOGE("Invalid texture index: " << textureIndex);
+            textureIndex = 0;
+        }
+
+        glBindTextureUnit(textureIndex, textureHandle);
+        glUniform1i(location, textureIndex);
 
 #ifdef PRECISE_LOG
         if (!var)
             LOGE("Texture var not set");
         else
-            LOG("Texture set location: " << location << ", handle: " << textureHandle);
+            LOG("Texture set: location: " << location << ", handle: " << textureHandle << ", index: " << (int)textureIndex);
 #endif
     } break;
 
