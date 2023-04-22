@@ -50,7 +50,6 @@ void Application::init()
 
     m_camera.setViewportSize(m_window->getSize());
 
-
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
 
     // open file
@@ -99,8 +98,9 @@ void Application::mainLoop()
 
         glm::mat4 viewProjection;
         if (m_camera.getViewProjection(viewProjection)) {
+
             GLShaderManager::get().getDefaultShader2d()->setUniform(
-                "matViewProjection", viewProjection);
+                "matViewProjection", viewProjection, UniformType::Mat4);
         }
 
         drawContext();

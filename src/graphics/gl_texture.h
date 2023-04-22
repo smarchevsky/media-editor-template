@@ -24,8 +24,6 @@ public:
     bool setFiltering(Filtering);
 
     uint32_t getHandle() const { return m_textureHandle; }
-    void bind();
-
 
 protected:
     uint32_t m_textureHandle {};
