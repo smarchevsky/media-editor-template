@@ -180,13 +180,14 @@ GLShader::GLShader(GLShader&& r)
     r.m_shaderProgram = 0;
 }
 
-void GLShader::setUniform(int location, const UniformVariant& uniformVariable, UniformType type)
+void GLShader::setUniform(int location, const UniformVariant& uniformVariable,
+    UniformType type)
 {
     switch (type) {
 
     case UniformType::Texture2D: {
-        const auto& var = std::get_if<GLTexture*>(&uniformVariable);
-        GLTexture* texture = var ? *var : nullptr;
+        const auto& var = std::get_if<std::shared_ptr<GLTexture>>(&uniformVariable);
+        GLTexture* texture = var ? var->get() : nullptr;
         int textureHandle = var ? texture->getHandle() : 0;
 
         glBindTextureUnit(0, textureHandle);
@@ -265,9 +266,19 @@ void GLShaderInstance::updateUniform(HashString name, const UniformVariant& var)
     }
 }
 
+UniformVariant GLShaderInstance::getUniform(HashString name)
+{
+    auto it = m_savedUniforms.find(name);
+    if (it != m_savedUniforms.end()) {
+        UniformData& data = it->second;
+        return data.dataVariant;
+    }
+    return {};
+}
+
 void GLShader::bind()
 {
-// #define ALWAYS_BIND
+    // #define ALWAYS_BIND
 #ifdef ALWAYS_BIND
     glUseProgram(m_shaderProgram);
 #else
@@ -299,7 +310,7 @@ GLShader* GLShaderManager::addShader(
         vertexShaderStream.close();
     } else {
         success = false;
-        std::cerr << "Can't open file: " << vertexShaderPath << std::endl;
+        LOGE("Can't open file: " << vertexShaderPath);
     }
 
     std::string fragmentShaderCode;
@@ -311,7 +322,7 @@ GLShader* GLShaderManager::addShader(
         fragmentShaderStream.close();
     } else {
         success = false;
-        std::cerr << "Can't open file: " << fragmentShaderPath << std::endl;
+        LOGE("Can't open file: " << fragmentShaderPath);
     }
 
     if (success) {

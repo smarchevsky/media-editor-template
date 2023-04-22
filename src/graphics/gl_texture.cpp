@@ -49,6 +49,7 @@ bool GLTexture::createEmpty(glm::ivec2 size)
         GL_RGB, GL_UNSIGNED_BYTE, nullptr); // input data seems useless
 
     setFiltering(Filtering::Nearset);
+    LOG("Texture successfully created empty");
 
     return true;
 }
@@ -77,6 +78,7 @@ bool GLTexture::fromImage(const Image& img)
 
     setWrapping(Wrapping::Repeat);
     setFiltering(Filtering::LinearMipmap);
+    LOG("Texture successfully loaded from image");
     return true;
 }
 
@@ -85,6 +87,7 @@ void GLTexture::clear()
     if (m_textureHandle) {
         glDeleteTextures(1, &m_textureHandle);
         m_textureHandle = 0;
+        LOG("Texture destroyed");
     }
 }
 
