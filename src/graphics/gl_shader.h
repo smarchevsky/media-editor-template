@@ -18,7 +18,6 @@
 #include <vector>
 
 namespace fs = std::filesystem;
-class GLShader;
 
 enum class UniformType : uint8_t {
     Invalid,
@@ -31,14 +30,6 @@ enum class UniformType : uint8_t {
     InvalidMax
 };
 
-//////////////////////// SHADER //////////////////////////
-struct UniformInfo {
-    std::string name;
-    UniformType type = UniformType::InvalidMax;
-    uint8_t textureIndex; // texture index, if texture
-};
-typedef std::vector<UniformInfo> UniformList;
-
 typedef std::variant<
     char, // is invalid, dont set char :)
     float,
@@ -49,8 +40,78 @@ typedef std::variant<
     std::shared_ptr<GLTexture>>
     UniformVariant;
 
+enum class UniformDependency : uint8_t {
+    Object, // object-related variables
+    View, // view-related variables
+    Free // non-related shader-wise variables
+};
+struct UniformInfo {
+    std::string name;
+    UniformType type = UniformType::InvalidMax;
+    UniformDependency dependency = UniformDependency::Object;
+    uint8_t textureIndex; // texture index, if texture
+};
+typedef std::vector<UniformInfo> UniformList;
+
+//////////////////////// UniformData //////////////////////////
+
+struct UniformData {
+    UniformInfo info;
+    int location;
+    UniformVariant data;
+};
+typedef std::unordered_map<HashString, UniformData> UniformDataList;
+
+//////////////////////// SHADER //////////////////////////
+
 class GLShader : NoCopy<GLShader> {
 public:
+    class Instance {
+    protected:
+    public:
+        void updateUniform(HashString name, const UniformVariant& var);
+        UniformVariant getUniform(HashString name);
+
+        Instance() = default;
+        Instance(GLShader* shader, UniformDependency dependency)
+        {
+            m_shader = shader;
+            const auto& uniforms = m_shader->getUniforms();
+
+            for (int i = 0; i < uniforms.size(); ++i) {
+                const UniformInfo& uniformInfo = uniforms[i];
+
+                if (uniformInfo.dependency == dependency) {
+                    const std::string& uniformName = uniformInfo.name;
+
+                    UniformData data;
+                    data.info = uniformInfo;
+                    data.location = i;
+
+                    HashString uniformHashString(uniformName.c_str());
+                    m_savedUniforms.insert({ uniformHashString, data });
+                }
+            }
+        }
+
+        void applyUniformData() const
+        {
+            m_shader->bind();
+            for (const auto& u : m_savedUniforms) {
+                const UniformData& d = u.second;
+                m_shader->setUniform(d.location, d.data, d.info.type, d.info.textureIndex);
+            }
+        }
+
+    private:
+        GLShader* m_shader {};
+        UniformDataList m_savedUniforms;
+    };
+    Instance getInstance(UniformDependency dependency)
+    {
+        return Instance(this, dependency);
+    }
+
     GLShader() = default;
     ~GLShader();
     GLShader(GLShader&& r);
@@ -91,72 +152,6 @@ private:
 };
 
 //////////////////////// SHADER INSTANCE //////////////////////////
-
-struct UniformData {
-    UniformInfo info;
-    int location;
-    UniformVariant dataVariant;
-};
-
-typedef std::unordered_map<HashString, UniformData> UniformDataList;
-
-class GLShaderInstance {
-public:
-    void setShader(GLShader* shader) { m_shader = shader; }
-    void trackUniformsExcept(std::initializer_list<std::string> names)
-    {
-        const auto& uniforms = m_shader->getUniforms();
-        if (!m_shader)
-            return;
-
-        for (int i = 0; i < uniforms.size(); ++i) {
-            const UniformInfo& uniformInfo = uniforms[i];
-
-            const std::string& uniformName = uniformInfo.name;
-
-            bool dontAdd = false;
-            for (const auto& n : names) {
-                if (uniformName == n) {
-                    dontAdd = true;
-                    break;
-                }
-            }
-            if (dontAdd)
-                continue;
-
-            UniformData data;
-            data.info = uniformInfo;
-            data.location = i;
-
-            HashString uniformHashString(uniformName.c_str());
-
-            m_savedUniforms.insert({ uniformHashString, data });
-        }
-    }
-
-    void updateUniform(HashString name, const UniformVariant& var);
-    UniformVariant getUniform(HashString name);
-
-    void applyUniformData() const
-    {
-        if (!m_shader)
-            return;
-
-        m_shader->bind();
-        for (const auto& u : m_savedUniforms) {
-            const UniformData& data = u.second;
-            m_shader->setUniform(
-                data.location,
-                data.dataVariant,
-                data.info.type,
-                data.info.textureIndex);
-        }
-    }
-
-private:
-    GLShader* m_shader {};
-    UniformDataList m_savedUniforms;
-};
 
 //////////////////////// SHADER MANAGER //////////////////////////
 

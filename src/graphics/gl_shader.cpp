@@ -87,6 +87,11 @@ UniformList getUniformList(GLuint program)
         info.type = getUniformTypeFromGLType(type, size);
         info.textureIndex = textureIndex;
 
+        if (info.name.find("view_") == 0)
+            info.dependency = UniformDependency::View;
+        else if (info.name.find("free_") == 0)
+            info.dependency = UniformDependency::Free;
+
         result.push_back(info);
 
         printf("Uniform #%d Type: %u Name: %s\n", i, type, name);
@@ -265,21 +270,23 @@ void GLShader::setUniform(int location, const UniformVariant& uniformVariable,
     }
 }
 
-void GLShaderInstance::updateUniform(HashString name, const UniformVariant& var)
+void GLShader::Instance::updateUniform(HashString name, const UniformVariant& var)
 {
     auto it = m_savedUniforms.find(name);
     if (it != m_savedUniforms.end()) {
-        UniformData& data = it->second;
-        data.dataVariant = var;
+        UniformData& uniformData = it->second;
+        uniformData.data = var;
+    } else {
+        LOGE("Trying to set unexisted variable");
     }
 }
 
-UniformVariant GLShaderInstance::getUniform(HashString name)
+UniformVariant GLShader::Instance::getUniform(HashString name)
 {
     auto it = m_savedUniforms.find(name);
     if (it != m_savedUniforms.end()) {
-        UniformData& data = it->second;
-        return data.dataVariant;
+        UniformData& uniformData = it->second;
+        return uniformData.data;
     }
     return {};
 }

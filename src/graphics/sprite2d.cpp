@@ -10,8 +10,7 @@ Sprite2d::Sprite2d()
 
 void Sprite2d::init()
 {
-    m_shader.setShader(GLShaderManager::get().getDefaultShader2d());
-    m_shader.trackUniformsExcept({ "matViewProjection" });
+    m_shaderInstance = GLShaderManager::get().getDefaultShader2d()->getInstance(UniformDependency::Object);
 }
 
 Sprite2d& Sprite2d::setPos(glm::vec2 pos)
@@ -50,9 +49,9 @@ void Sprite2d::draw(const GLFrameBufferBase& where)
         mat[3][0] = m_pos.x;
         mat[3][1] = m_pos.y;
 
-        m_shader.updateUniform("matModel", mat);
+        m_shaderInstance.updateUniform("matModel", mat);
         m_dirty = false;
     }
-    m_shader.applyUniformData();
+    m_shaderInstance.applyUniformData();
     m_mesh.draw();
 }
