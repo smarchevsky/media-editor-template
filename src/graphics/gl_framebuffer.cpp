@@ -3,6 +3,10 @@
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
 
+#include <iostream>
+
+size_t GLFrameBufferBase::m_currentBuffer = 0;
+
 void GLFrameBuffer::create(glm::vec2 size)
 {
     glGenFramebuffers(1, &m_fbo);
@@ -14,5 +18,10 @@ void GLFrameBuffer::create(glm::vec2 size)
 
 void GLFrameBuffer::bind() const
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+    if (m_currentBuffer != m_fbo) {
+        m_currentBuffer = m_fbo;
+        glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+
+        //LOGE("FBO: " << m_fbo << " binded");
+    }
 }
