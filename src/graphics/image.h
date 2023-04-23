@@ -19,6 +19,7 @@ public:
     bool isValid() const;
 
 private:
+    std::string m_name;
     glm::ivec2 m_size = glm::ivec2(0);
     int m_nrChannels {};
     unsigned char* m_data {};
