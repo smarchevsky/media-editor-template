@@ -20,12 +20,15 @@ public:
     bool setFiltering(Filtering);
 
     uint32_t getHandle() const { return m_textureHandle; }
+    glm::vec2 getSize() const { return m_size; }
 
 protected:
     bool createEmpty(glm::ivec2 size);
     bool fromImage(const Image& img);
     void clear();
 
+protected:
+    glm::ivec2 m_size = glm::ivec2(0);
     uint32_t m_textureHandle {};
     Format m_internalFormat = Format::RGBA;
     Filtering m_filtering = Filtering::Nearset;
@@ -51,6 +54,7 @@ public:
     operator std::shared_ptr<GLTexture>() { return m_texture; }
 
     GLTexture* get() { return m_texture.get(); }
+    const GLTexture* get() const { return m_texture.get(); }
 };
 
 #endif // GLTEXTURE_H
