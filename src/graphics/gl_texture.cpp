@@ -45,6 +45,7 @@ bool GLTexture::createEmpty(glm::ivec2 size)
     glGenTextures(1, &m_textureHandle);
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
 
+    m_size = size;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0,
         GL_RGB, GL_UNSIGNED_BYTE, nullptr); // input data seems useless
 
@@ -73,7 +74,8 @@ bool GLTexture::fromImage(const Image& img)
     glGenTextures(1, &m_textureHandle);
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, internalTextureFormat, img.m_size.x, img.m_size.y,
+    m_size = img.m_size;
+    glTexImage2D(GL_TEXTURE_2D, 0, internalTextureFormat, m_size.x, m_size.y,
         0 /* border? */, externalTextureFormat, GL_UNSIGNED_BYTE, img.m_data);
 
     setWrapping(Wrapping::Repeat);
@@ -87,6 +89,7 @@ void GLTexture::clear()
     if (m_textureHandle) {
         glDeleteTextures(1, &m_textureHandle);
         m_textureHandle = 0;
+        m_size = glm::ivec2(0);
         LOG("Texture destroyed");
     }
 }
