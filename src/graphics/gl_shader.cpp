@@ -188,12 +188,14 @@ void GLShader::setUniform(int location, const UniformVariant& uniformVariable,
     case UniformType::Texture2D: {
         const auto& var = std::get_if<std::shared_ptr<GLTexture>>(&uniformVariable);
         GLTexture* texture = var ? var->get() : nullptr;
-        int textureHandle = var ? texture->getHandle() : 0;
 
         if (textureIndex < 0 || textureIndex >= 32) {
             LOGE("Invalid texture index: " << textureIndex);
             textureIndex = 0;
         }
+
+        int textureHandle = var ? texture->getHandle() : 0;
+        textureIndex = var ? textureIndex : 0;
 
         glBindTextureUnit(textureIndex, textureHandle);
         glUniform1i(location, textureIndex);
@@ -258,7 +260,7 @@ void GLShader::setUniform(int location, const UniformVariant& uniformVariable,
     } break;
 
     default: {
-        // LOGE("Unsupported uniform variable type");
+        LOGE("Unsupported uniform variable type");
     }
     }
 }
