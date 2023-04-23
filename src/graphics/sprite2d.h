@@ -12,7 +12,7 @@ class GLFrameBufferBase;
 class Sprite2d // square sprite -1 to 1
 {
     const GLMesh& m_mesh;
-    GLShaderInstance m_shader;
+    GLShader::Instance m_shaderInstance;
 
     glm::vec2 m_pos = glm::vec2(0);
     glm::vec2 m_size = glm::vec2(1);
@@ -20,7 +20,7 @@ class Sprite2d // square sprite -1 to 1
     bool m_dirty = true;
 
 public:
-    GLShaderInstance& getShaderInstance() { return m_shader; }
+    GLShader::Instance& getShaderInstance() { return m_shaderInstance; }
     Sprite2d();
     void init();
     Sprite2d& setPos(glm::vec2 pos);

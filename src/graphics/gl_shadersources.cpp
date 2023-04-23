@@ -24,17 +24,20 @@ const char* GLShaderSources::getDefault2d_VS()
 #version 330 core
 #define IDENTITY mat4(1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1)
 
-layout (location = 0) in vec2 inPos;
+layout (location = 0) in vec3 inPos;
 layout (location = 1) in vec2 inUV;
 
 out vec2 UV;
 
-uniform mat4 matViewProjection = IDENTITY;
+// all view-dependent variables must be marked as "view_" in the beginning
+// all independent shader-wise variables must be marked as "free_" in the beginning
+
+uniform mat4 view_matViewProjection = IDENTITY;
 uniform mat4 matModel = IDENTITY;
 
 void main()
 {
-   gl_Position = matViewProjection * matModel * vec4(inPos, 0.0, 1.0);
+   gl_Position = view_matViewProjection * matModel * vec4(inPos, 1.0);
    UV = inUV;
 }
 )";
@@ -54,6 +57,7 @@ uniform sampler2D texture1;
 void main()
 {
     //FragColor = vec4(UV, 0, 1);
+
     vec4 t0 = texture2D(texture0, UV);
     vec4 t1 = texture2D(texture1, UV);
 
