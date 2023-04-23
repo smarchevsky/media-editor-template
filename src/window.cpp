@@ -274,6 +274,11 @@ void Window::display()
 
 void Window::bind() const
 {
-    GLContext::unbindFrameBuffer();
-    SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);
+    if (m_currentBuffer != (size_t)m_SDLwindow) {
+        m_currentBuffer = (size_t)m_SDLwindow;
+        GLContext::unbindFrameBuffer();
+        SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);
+
+        // LOGE("Window binded");
+    }
 }
