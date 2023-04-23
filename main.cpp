@@ -40,13 +40,12 @@ public:
         // fb.create({ 512, 512 });
     }
 
-    void drawContext() override
+    void updateWindow(float dt) override
     {
         GLContext::clear();
         // m_texture0.bind();
-
         for (auto& s : m_sprites) {
-            s.draw(*m_window);
+            s.draw(m_window);
         }
     }
 };

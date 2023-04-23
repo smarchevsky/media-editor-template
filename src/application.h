@@ -1,7 +1,6 @@
 #ifndef APP_ABSTRACT_H
 #define APP_ABSTRACT_H
 
-#include "graphics/gl_texture.h"
 #include "graphics/orthocamera.h"
 
 #include "helper_general.h"
@@ -25,7 +24,7 @@ protected:
 protected:
     OrthoCamera m_camera;
 
-    std::optional<Window> m_window;
+    Window m_window;
     std::unique_ptr<ImguiUtils::FileSystemNavigator> m_fsNavigator;
     void addFileInteractionInfo(const std::string& name, const std::string& supportedExtensions,
         FileInteractionFunction fileReader, FileInteractionFunction fileWriter);
@@ -35,7 +34,7 @@ public:
     // if m_openedFileName (and !forceDialogWindow) force save current file
     void saveFileOptionalDialog(const std::string& openFileDataName, bool forceDialogWindow = false);
 
-    virtual void drawContext();
+    virtual void updateWindow(float dt);
     virtual void drawImGuiLayer();
     virtual void printWarningMessage(const std::string& msg);
     virtual void printNotificationMessage(const std::string& msg);
@@ -49,6 +48,7 @@ public:
 
 private:
     friend class OpenFileInfo;
+    uint64_t m_currentTimeStamp {};
 };
 
 #endif // APP_ABSTRACT_H

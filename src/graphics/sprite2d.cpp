@@ -35,6 +35,11 @@ Sprite2d& Sprite2d::setRotation(float angleRad)
     return *this;
 }
 
+Sprite2d& Sprite2d::addRotation(float angleOffset)
+{
+    return setRotation(m_angle + angleOffset);
+}
+
 void Sprite2d::draw(const GLFrameBufferBase& where)
 {
     where.bind();
