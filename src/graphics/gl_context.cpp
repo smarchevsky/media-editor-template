@@ -1,5 +1,6 @@
 #include "gl_context.h"
 
+
 #include <SDL2/SDL.h>
 
 #define GL_GLEXT_PROTOTYPES
@@ -10,12 +11,6 @@
 void GLContext::setOpenGLViewport(int x, int y, int width, int height)
 {
     glViewport(x, y, width, height);
-}
-
-void GLContext::clear()
-{
-    glClearColor(0.1f, 0.1f, 0.1f, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void GLContext::unbindFrameBuffer() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
