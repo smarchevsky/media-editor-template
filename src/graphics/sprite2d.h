@@ -26,6 +26,7 @@ public:
     Sprite2d& setPos(glm::vec2 pos);
     Sprite2d& setSize(glm::vec2 size);
     Sprite2d& setRotation(float angleRad);
+    Sprite2d& addRotation(float angleOffset);
 
     void draw(const GLFrameBufferBase& where);
 };
