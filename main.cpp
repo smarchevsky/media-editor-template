@@ -1,6 +1,5 @@
 
 #include "application.h"
-#include "graphics/gl_context.h"
 #include "graphics/sprite2d.h"
 
 namespace fs = std::filesystem;
@@ -42,7 +41,7 @@ public:
 
     void updateWindow(float dt) override
     {
-        GLContext::clear();
+        m_window.clear(0.16f, 0.16f, 0.16f, 1);
         // m_texture0.bind();
         for (auto& s : m_sprites) {
             s.draw(m_window);

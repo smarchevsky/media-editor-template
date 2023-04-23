@@ -1,7 +1,10 @@
 #ifndef GRAPHICS_COMMON_H
 #define GRAPHICS_COMMON_H
 
+#include "gl_framebuffer.h"
+#include "sprite2d.h"
 
+#include <glm/vec3.hpp>
 class GLContext {
 public:
     static GLContext& getInit()
@@ -11,7 +14,6 @@ public:
     }
 
     static void setOpenGLViewport(int x, int y, int width, int height);
-    static void clear();
     static void unbindFrameBuffer();
 
 

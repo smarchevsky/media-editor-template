@@ -61,6 +61,75 @@ Window::~Window()
     }
 }
 
+void Window::setMouseDragEvent(MouseButton button, MouseDragEvent event)
+{
+    auto mouseEventData = getMouseEventData(button);
+    if (mouseEventData) {
+        mouseEventData->setMouseDragEvent(event);
+    }
+}
+
+void Window::setMouseMoveEvent(MouseButton button, MouseMoveEvent event)
+{
+    auto mouseEventData = getMouseEventData(button);
+    if (mouseEventData) {
+        mouseEventData->setMouseMoveEvent(event);
+    }
+}
+
+void Window::setMouseDownEvent(MouseButton button, MouseDownEvent event)
+{
+    auto mouseEventData = getMouseEventData(button);
+    if (mouseEventData) {
+        mouseEventData->setMouseDownEvent(event);
+    }
+}
+
+void Window::setMouseScrollEvent(MouseScrollEvent event) { m_mouseScrollEvent = event; }
+
+void Window::addKeyDownEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event)
+{
+    m_keyMap.insert({ KeyWithModifier(key, mod, true), event });
+}
+
+void Window::addKeyUpEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event)
+{
+    m_keyMap.insert({ KeyWithModifier(key, mod, false), event });
+}
+
+void Window::setAnyKeyDownOnceEvent(const std::string& reason, AnyKeyEvent event) { m_anyKeyDownEvents[reason] = event; }
+
+void Window::setAnyKeyReason(const std::string& reason) { m_anyKeyDownReason = reason; }
+
+void Window::setScreenResizeEvent(ScreenResizeEvent screenResizeEvent) { m_screenResizeEvent = screenResizeEvent; }
+
+void Window::drawImGuiContext(ImGuiContextFunctions imguiFunctions)
+{
+    // ImGui::SFML::Update(*this, m_deltaClock.restart());
+    // ImGui::PushFont(m_robotoFont);
+    // if (imguiFunctions)
+    //     imguiFunctions();
+    // ImGui::PopFont();
+    // ImGui::SFML::Render(*this);
+}
+
+bool Window::isOpen() { return m_isOpen; }
+void Window::exit() { m_isOpen = false; }
+void Window::setTitle(const std::string& title) { SDL_SetWindowTitle(m_SDLwindow, title.c_str()); }
+void Window::display() { SDL_GL_SwapWindow(m_SDLwindow); }
+
+void Window::bind() const
+{
+    if (m_currentBuffer != (size_t)m_SDLwindow) {
+        m_currentBuffer = (size_t)m_SDLwindow;
+        GLContext::unbindFrameBuffer();
+        GLContext::setOpenGLViewport(0, 0, m_windowSize.x, m_windowSize.y);
+        SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);
+
+        // LOGE("Window binded");
+    }
+}
+
 bool Window::processEvents()
 {
     SDL_Event event;
@@ -204,81 +273,4 @@ bool Window::processEvent(const SDL_Event* event)
     }
     } // end switch
     return false;
-}
-
-void Window::setMouseDragEvent(MouseButton button, MouseDragEvent event)
-{
-    auto mouseEventData = getMouseEventData(button);
-    if (mouseEventData) {
-        mouseEventData->setMouseDragEvent(event);
-    }
-}
-
-void Window::setMouseMoveEvent(MouseButton button, MouseMoveEvent event)
-{
-    auto mouseEventData = getMouseEventData(button);
-    if (mouseEventData) {
-        mouseEventData->setMouseMoveEvent(event);
-    }
-}
-
-void Window::setMouseDownEvent(MouseButton button, MouseDownEvent event)
-{
-    auto mouseEventData = getMouseEventData(button);
-    if (mouseEventData) {
-        mouseEventData->setMouseDownEvent(event);
-    }
-}
-
-void Window::setMouseScrollEvent(MouseScrollEvent event) { m_mouseScrollEvent = event; }
-
-void Window::addKeyDownEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event)
-{
-    m_keyMap.insert({ KeyWithModifier(key, mod, true), event });
-}
-
-void Window::addKeyUpEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event)
-{
-    m_keyMap.insert({ KeyWithModifier(key, mod, false), event });
-}
-
-void Window::setAnyKeyDownOnceEvent(const std::string& reason, AnyKeyEvent event) { m_anyKeyDownEvents[reason] = event; }
-
-void Window::setAnyKeyReason(const std::string& reason) { m_anyKeyDownReason = reason; }
-
-void Window::setScreenResizeEvent(ScreenResizeEvent screenResizeEvent) { m_screenResizeEvent = screenResizeEvent; }
-
-void Window::drawImGuiContext(ImGuiContextFunctions imguiFunctions)
-{
-    // ImGui::SFML::Update(*this, m_deltaClock.restart());
-    // ImGui::PushFont(m_robotoFont);
-    // if (imguiFunctions)
-    //     imguiFunctions();
-    // ImGui::PopFont();
-    // ImGui::SFML::Render(*this);
-}
-
-bool Window::isOpen() { return m_isOpen; }
-
-void Window::exit() { m_isOpen = false; }
-
-void Window::setTitle(const std::string& title)
-{
-    SDL_SetWindowTitle(m_SDLwindow, title.c_str());
-}
-
-void Window::display()
-{
-    SDL_GL_SwapWindow(m_SDLwindow);
-}
-
-void Window::bind() const
-{
-    if (m_currentBuffer != (size_t)m_SDLwindow) {
-        m_currentBuffer = (size_t)m_SDLwindow;
-        GLContext::unbindFrameBuffer();
-        SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);
-
-        // LOGE("Window binded");
-    }
 }
