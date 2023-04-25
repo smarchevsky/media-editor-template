@@ -119,8 +119,18 @@ public:
 
     void bind();
     void setUniform(const std::string& name, const UniformVariant& var);
+
     int getHandle() const { return m_shaderProgram; }
     bool valid() const { return m_shaderProgram != 0; }
+
+    void resetVariables(UniformDependency dependency)
+    {
+        for (const auto& vPair : m_defaultVariables) {
+            const auto& v = vPair.second;
+            if (v.getDependency() == dependency)
+                setUniform(v.getLocation(), v.getData());
+        }
+    }
     const UniformVariables& getUniforms() const { return m_defaultVariables; }
 
 private:

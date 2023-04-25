@@ -104,11 +104,7 @@ void Application::mainLoop()
 
         m_window.processEvents();
 
-        glm::mat4 viewProjection;
-        if (m_camera.getViewProjection(viewProjection)) {
-            GLShaderManager::get().getDefaultShader2d()->setUniform(
-                "view_matViewProjection", viewProjection);
-        }
+
         // m_window.bind();
         updateWindow(dt);
 

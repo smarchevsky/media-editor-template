@@ -216,6 +216,8 @@ void GLShader::setUniform(const std::string& name, const UniformVariant& var)
     }
 }
 
+
+
 #define GET_INDEX(type) variant_index<UniformVariant, type>()
 void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
 {
