@@ -14,6 +14,8 @@ protected:
 inline const char* getPathFromSourceDirectory(const char* path){
     return path + SOURCE_PATH_SIZE;
 }
+
+#define CAST(Type, ptr) std::dynamic_pointer_cast<Type>(ptr)
 // clang-format off
 #define LOG(x)  std::cout << getPathFromSourceDirectory(__FILE__) << " line: " << __LINE__ << ". " << x << std::endl
 #define LOGE(x) std::cerr << getPathFromSourceDirectory(__FILE__) << " line: " << __LINE__ << ". " << x << std::endl

@@ -13,41 +13,69 @@
 #include <iostream>
 #include <sstream>
 
+uint32_t GLShader::s_currentBindedShaderHandle = 0;
+
 namespace {
-UniformType getUniformTypeFromGLType(int GLtype, int size)
+/// https://gist.github.com/nnaumenko/1db96f7e187979a057ee7ad757dee4f2
+/// @return Index of type T in variant V; or variant size if V does not include an alternative for T.
+template <typename V, typename T, size_t I = 0>
+constexpr size_t variant_index()
 {
-    constexpr int floatSize = sizeof(float);
-    constexpr int intSize = sizeof(int);
+    if constexpr (I >= std::variant_size_v<V>) {
+        return (std::variant_size_v<V>);
+    } else {
+        if constexpr (std::is_same_v<std::variant_alternative_t<I, V>, T>) {
+            return (I);
+        } else {
+            return (variant_index<V, T, I + 1>());
+        }
+    }
+}
+
+static UniformDependency getDependencyTypeFromName(const std::string& name)
+{
+    UniformDependency dependency = UniformDependency::Object;
+    if (name.find("view_") == 0)
+        dependency = UniformDependency::View;
+    else if (name.find("free_") == 0)
+        dependency = UniformDependency::Free;
+    return dependency;
+}
+
+UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
+{
+    // constexpr int floatSize = sizeof(float);
+    // constexpr int intSize = sizeof(int);
 
     switch (GLtype) {
     case GL_FLOAT: {
         // assert(size == floatSize);
-        return UniformType::Float;
+        return 0.f;
     };
 
     case GL_FLOAT_VEC2: {
         // assert(size == floatSize * 2);
-        return UniformType::Vec2;
+        return glm::vec2(0);
     }
 
     case GL_FLOAT_VEC3: {
         // assert(size == floatSize * 3);
-        return UniformType::Vec3;
+        return glm::vec3(0);
     };
 
     case GL_FLOAT_VEC4: {
         // assert(size == floatSize * 4);
-        return UniformType::Vec4;
+        return glm::vec4(0);
     };
 
     case GL_SAMPLER_2D: {
         // assert(size == intSize);
-        return UniformType::Texture2D;
+        return Texture2Ddata(std::shared_ptr<GLTexture>(), textureIndex);
     }
 
     case GL_FLOAT_MAT4: {
-        // assert(size == floatSize * 16);
-        return UniformType::Mat4;
+        LOGE("size of mat4 is: " << size);
+        return glm::mat4(1);
     };
     }
 
@@ -55,9 +83,9 @@ UniformType getUniformTypeFromGLType(int GLtype, int size)
     return {};
 }
 
-UniformList getUniformList(GLuint program)
+GLShader::UniformVariables getUniformList(GLShader* shader)
 {
-    UniformList result;
+
     GLint count;
     GLint size; // size of the variable
     GLenum type; // type of the variable (float, vec3 or mat4, etc)
@@ -66,38 +94,35 @@ UniformList getUniformList(GLuint program)
     GLchar name[bufSize] {}; // variable name in GLSL
     GLsizei length; // name length
 
-    /*
-    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &count);
+    /* glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &count);
     printf("Active Attributes: %d\n", count);
     for (int i = 0; i < count; i++)
     {
         glGetActiveAttrib(program, (GLuint)i, bufSize, &length, &size, &type, name);
         printf("Attribute #%d Type: %u Name: %s\n", i, type, name);
-    } */
+    }*/
 
+    const auto program = shader->getHandle();
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
     printf("Active Uniforms: %d\n", count);
 
-    int textureIndex = 0;
+    GLShader::UniformVariables result;
+
+    int texture2DIndex = 0;
     for (int i = 0; i < count; i++) {
         glGetActiveUniform(program, (GLuint)i, bufSize, &length, &size, &type, name);
+        std::string nameStr(name);
 
-        UniformInfo info;
-        info.name = name;
-        info.type = getUniformTypeFromGLType(type, size);
-        info.textureIndex = textureIndex;
+        GLShader::Variable var(i, nameStr,
+            getDependencyTypeFromName(nameStr),
+            createDefaultUniformData(type, size, texture2DIndex));
 
-        if (info.name.find("view_") == 0)
-            info.dependency = UniformDependency::View;
-        else if (info.name.find("free_") == 0)
-            info.dependency = UniformDependency::Free;
-
-        result.push_back(info);
+        result.insert({ name, std::move(var) });
 
         printf("Uniform #%d Type: %u Name: %s\n", i, type, name);
 
-        if (info.type == UniformType::Texture2D)
-            textureIndex++;
+        if (type == GL_SAMPLER_2D)
+            texture2DIndex++;
     }
     return result;
 }
@@ -135,39 +160,40 @@ int createShader(const char* shaderSource, int shaderType)
     return currentShader;
 }
 
-bool createShaderProgram(const char* vertexShaderCode, const char* fragmentShaderCode,
-    uint32_t& outShaderProgram, UniformList& outUniforms)
+} // namespace
+
+GLShader::GLShader(const char* vertexShaderCode, const char* fragmentShaderCode)
 {
     GLint success = GL_FALSE;
     if (vertexShaderCode && fragmentShaderCode) {
-        GLuint shaderProgramHandle = glCreateProgram();
+        m_shaderProgram = glCreateProgram();
         GLuint vs = createShader(vertexShaderCode, GL_VERTEX_SHADER);
         GLuint fs = createShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
-        glAttachShader(shaderProgramHandle, vs);
-        glAttachShader(shaderProgramHandle, fs);
-        glLinkProgram(shaderProgramHandle);
+        glAttachShader(m_shaderProgram, vs);
+        glAttachShader(m_shaderProgram, fs);
+        glLinkProgram(m_shaderProgram);
 
         char infoLog[512];
-        glGetProgramiv(shaderProgramHandle, GL_LINK_STATUS, &success);
+        glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
+
         if (success == GL_TRUE) {
-            outShaderProgram = shaderProgramHandle;
-            outUniforms = getUniformList(shaderProgramHandle);
+
+            const_cast<UniformVariables&>(m_defaultVariables) = getUniformList(this);
+
         } else {
-            glGetProgramInfoLog(shaderProgramHandle, 512, NULL, infoLog);
+
+            glGetProgramInfoLog(m_shaderProgram, 512, NULL, infoLog);
             std::cerr << "Linking failed: " << infoLog << std::endl;
+            m_shaderProgram = 0;
         }
         glDeleteShader(vs);
         glDeleteShader(fs);
     }
-    return success == GL_TRUE;
 }
-} // namespace
 
-uint32_t GLShader::s_currentBindedShaderHandle = 0;
-
-int GLShader::getUniformLocation(const char* name)
+int GLShader::getUniformLocation(const std::string& name) const
 {
-    return glGetUniformLocation(m_shaderProgram, name);
+    return glGetUniformLocation(m_shaderProgram, name.c_str());
 }
 
 GLShader::~GLShader()
@@ -178,117 +204,84 @@ GLShader::~GLShader()
     }
 }
 
-GLShader::GLShader(GLShader&& r)
+void GLShader::setUniform(const std::string& name, const UniformVariant& var)
 {
-    m_shaderProgram = r.m_shaderProgram;
-    m_uniforms = std::move(r.m_uniforms);
-    r.m_shaderProgram = 0;
-}
-
-void GLShader::setUniform(int location, const UniformVariant& uniformVariable,
-    UniformType type, int textureIndex)
-{
-    switch (type) {
-
-    case UniformType::Texture2D: {
-        const auto& var = std::get_if<std::shared_ptr<GLTexture>>(&uniformVariable);
-        GLTexture* texture = var ? var->get() : nullptr;
-
-        if (textureIndex < 0 || textureIndex >= 32) {
-            LOGE("Invalid texture index: " << textureIndex);
-            textureIndex = 0;
-        }
-
-        int textureHandle = var ? texture->getHandle() : 0;
-        textureIndex = var ? textureIndex : 0;
-
-        glBindTextureUnit(textureIndex, textureHandle);
-        glUniform1i(location, textureIndex);
-
-#ifdef PRECISE_LOG
-        if (!var)
-            LOGE("Texture var not set");
-        else
-            LOG("Texture set: location: " << location << ", handle: " << textureHandle << ", index: " << (int)textureIndex);
-#endif
-    } break;
-
-    case UniformType::Float: {
-        const auto& var = std::get_if<float>(&uniformVariable);
-        glUniform1f(location, var ? *var : 0.f);
-#ifdef PRECISE_LOG
-        if (!var)
-            LOGE("Float var not set");
-#endif
-    } break;
-
-    case UniformType::Vec2: {
-        const auto* var = std::get_if<glm::vec2>(&uniformVariable);
-        glm::vec2 result = var ? *var : glm::vec2(0);
-        glUniform2fv(location, 1, &result[0]);
-#ifdef PRECISE_LOG
-        if (!var)
-            LOGE("Vec2 var not set");
-#endif
-    } break;
-
-    case UniformType::Vec3: {
-        const auto& var = std::get_if<glm::vec3>(&uniformVariable);
-        glm::vec2 result = var ? *var : glm::vec3(0);
-        glUniform3fv(location, 1, &result[0]);
-#ifdef PRECISE_LOG
-        if (!var)
-            LOGE("Vec3 var not set");
-#endif
-    } break;
-
-    case UniformType::Vec4: {
-        const auto& var = std::get_if<glm::vec4>(&uniformVariable);
-        glm::vec4 result = var ? *var : glm::vec4(0);
-        glUniform4fv(location, 1, &result[0]);
-#ifdef PRECISE_LOG
-        if (!var)
-            LOGE("Vec4 var not set");
-#endif
-    } break;
-
-    case UniformType::Mat4: {
-        const auto& var = std::get_if<glm::mat4>(&uniformVariable);
-        glm::mat4 result = var ? *var : glm::mat4(1);
-        glUniformMatrix4fv(location, 1, GL_FALSE, &result[0][0]);
-#ifdef PRECISE_LOG
-        if (!var)
-            LOGE("Mat4 var not set");
-        else
-            LOG("Mat4 set location: " << location);
-#endif
-    } break;
-
-    default: {
-        LOGE("Unsupported uniform variable type");
-    }
-    }
-}
-
-void GLShader::Instance::updateUniform(HashString name, const UniformVariant& var)
-{
-    auto it = m_savedUniforms.find(name);
-    if (it != m_savedUniforms.end()) {
-        UniformData& uniformData = it->second;
-        uniformData.data = var;
+    bind();
+    auto it = m_defaultVariables.find(name);
+    if (it != m_defaultVariables.end()) {
+        int location = it->second.getLocation();
+        setUniform(location, var);
     } else {
-        LOGE("Trying to set unexisted variable");
+        LOGE("Variable: " << name << " did not find in shader.");
     }
 }
 
-UniformVariant GLShader::Instance::getUniform(HashString name)
+#define GET_INDEX(type) variant_index<UniformVariant, type>()
+void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
 {
-    auto it = m_savedUniforms.find(name);
-    if (it != m_savedUniforms.end()) {
-        UniformData& uniformData = it->second;
-        return uniformData.data;
+    if (uniformVariable.index())
+        switch (uniformVariable.index()) {
+
+        case GET_INDEX(Texture2Ddata): {
+            const auto& var = std::get<Texture2Ddata>(uniformVariable);
+
+            const auto& sharedTexture = std::get<0>(var);
+            int textureIndex = sharedTexture ? std::get<1>(var) : 0;
+            int textureHandle = sharedTexture ? sharedTexture->getHandle() : 0;
+
+            if (textureIndex < 0 || textureIndex >= 32) {
+                LOGE("Invalid texture index: " << textureIndex);
+                textureIndex = 0;
+            }
+
+            glBindTextureUnit(textureIndex, textureHandle);
+            glUniform1i(location, textureIndex);
+
+// #define VERBOSE_LOG
+#ifdef VERBOSE_LOG
+            LOG("Texture set: location: " << location << ", handle: "
+                                          << textureHandle << ", index: "
+                                          << (int)textureIndex);
+#endif
+        } break;
+
+        case GET_INDEX(float): {
+            const auto& var = std::get<float>(uniformVariable);
+            glUniform1f(location, var);
+        } break;
+
+        case GET_INDEX(glm::vec2): {
+            const auto& var = std::get<glm::vec2>(uniformVariable);
+            glUniform2fv(location, 1, &var[0]);
+        } break;
+
+        case GET_INDEX(glm::vec3): {
+            const auto& var = std::get<glm::vec3>(uniformVariable);
+            glUniform3fv(location, 1, &var[0]);
+        } break;
+
+        case GET_INDEX(glm::vec4): {
+            const auto& var = std::get<glm::vec4>(uniformVariable);
+            glUniform4fv(location, 1, &var[0]);
+        } break;
+
+        case GET_INDEX(glm::mat4): {
+            const auto& var = std::get<glm::mat4>(uniformVariable);
+            glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]);
+        } break;
+
+        default: {
+            LOGE("Unsupported uniform variable type");
+        }
+        }
+}
+
+void GLShader::Variable::setData(const std::shared_ptr<GLTexture>& newTexture)
+{
+    if (m_data.index() == GET_INDEX(Texture2Ddata)) {
+        Texture2Ddata& existedTexture = std::get<Texture2Ddata>(m_data);
+        std::get<0>(existedTexture) = newTexture;
     }
-    return {};
 }
 
 void GLShader::bind()
@@ -306,9 +299,7 @@ void GLShader::bind()
 
 //////////////////////// SHADER MANAGER //////////////////////////
 
-std::unordered_map<HashString, GLShader> GLShaderManager::s_staticShaders;
-
-GLShader* GLShaderManager::addShader(
+GLShaderPtr GLShaderManager::addShader(
     const char* uniqueName,
     const fs::path& vertexShaderPath,
     const fs::path& fragmentShaderPath)
@@ -346,7 +337,7 @@ GLShader* GLShaderManager::addShader(
     return nullptr;
 }
 
-GLShader* GLShaderManager::addShader(
+GLShaderPtr GLShaderManager::addShader(
     const char* uniqueName,
     const char* vertexShaderCode,
     const char* fragmentShaderCode)
@@ -357,13 +348,11 @@ GLShader* GLShaderManager::addShader(
         LOGE("Shader with this name already exists, get from cache");
         return foundShader;
     } else {
-        uint32_t shaderProgram;
-        UniformList uniforms;
-        if (createShaderProgram(vertexShaderCode, fragmentShaderCode, shaderProgram, uniforms)) {
-            s_staticShaders[uniqueName].initialize(shaderProgram, std::move(uniforms));
+        GLShaderPtr shader = std::make_shared<GLShader>(vertexShaderCode, fragmentShaderCode);
+        if (shader->valid()) {
+            s_staticShaders[uniqueName] = shader;
             LOG("Shader: \"" << uniqueName << "\" created successfully.");
-            return &s_staticShaders[uniqueName];
-
+            return shader;
         } else {
             LOGE("Failed to compile shader");
             return nullptr;
@@ -373,7 +362,7 @@ GLShader* GLShaderManager::addShader(
     return nullptr;
 }
 
-GLShader* GLShaderManager::getDefaultShader2d()
+GLShaderPtr GLShaderManager::getDefaultShader2d()
 {
     static constexpr const char* defaultShaderName = "DefaultShader2d";
     auto shader = getByName(defaultShaderName);
@@ -385,11 +374,24 @@ GLShader* GLShaderManager::getDefaultShader2d()
             GLShaderSources::getDefault2d_FS());
 }
 
-GLShader* GLShaderManager::getByName(HashString str)
+GLShaderPtr GLShaderManager::getByName(const std::string& name)
 {
-    auto it = s_staticShaders.find(str);
+    auto it = s_staticShaders.find(name);
     if (it != s_staticShaders.end()) {
-        return &it->second;
+        return it->second;
     }
     return nullptr;
+}
+
+void GLShader::Variable::setData(const UniformVariant& data)
+{
+    if (isValid()) {
+        if (m_data.index() == data.index()) {
+            m_data = data;
+        } else {
+            LOGE("You are trying to set invalid data type for variable: " << m_name);
+        }
+    } else {
+        LOGE("Variable: " << m_name << " does not exist in this shader");
+    }
 }
