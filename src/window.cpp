@@ -2,7 +2,6 @@
 
 #include <SDL2/SDL.h>
 
-#include "graphics/gl_context.h"
 // #include "imgui/imgui.h"
 // #include "imgui/imgui_internal.h"
 #include <cassert>
@@ -122,8 +121,8 @@ void Window::bind() const
 {
     if (m_currentBuffer != (size_t)m_SDLwindow) {
         m_currentBuffer = (size_t)m_SDLwindow;
-        GLContext::unbindFrameBuffer();
-        GLContext::setOpenGLViewport(0, 0, m_windowSize.x, m_windowSize.y);
+        unbind();
+        setViewport(0, 0, m_windowSize.x, m_windowSize.y);
         SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);
 
         // LOGE("Window binded");
@@ -246,7 +245,7 @@ bool Window::processEvent(const SDL_Event* event)
         case SDL_WINDOWEVENT_SIZE_CHANGED: {
             glm::ivec2 oldScreenSize = m_windowSize;
             m_windowSize = glm::ivec2(event->window.data1, event->window.data2);
-            GLContext::setOpenGLViewport(0, 0, m_windowSize.x, m_windowSize.y);
+            setViewport(0, 0, m_windowSize.x, m_windowSize.y);
             //        m_windowSize = newSize;
             //        applyScaleAndOffset();
             //        glm::ivec2 offset = m_windowSize - oldScreenSize;

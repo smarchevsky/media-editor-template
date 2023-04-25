@@ -1,19 +1,11 @@
 #include "gl_context.h"
 
-
 #include <SDL2/SDL.h>
 
-#define GL_GLEXT_PROTOTYPES
-#include <SDL2/SDL_opengl.h>
+//#define GL_GLEXT_PROTOTYPES
+//#include <SDL2/SDL_opengl.h>
 
 #include <cassert>
-
-void GLContext::setOpenGLViewport(int x, int y, int width, int height)
-{
-    glViewport(x, y, width, height);
-}
-
-void GLContext::unbindFrameBuffer() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 
 GLContext::GLContext()
 {

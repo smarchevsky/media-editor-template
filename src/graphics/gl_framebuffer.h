@@ -9,6 +9,11 @@ protected:
     static size_t m_currentBuffer;
 
 public:
+    static void unbind();
+    static void setViewport(int x, int y, int width, int height);
+
+
+public:
     virtual void bind() const = 0;
     virtual ~GLFrameBufferBase() { }
     void clear(float, float, float, float);
