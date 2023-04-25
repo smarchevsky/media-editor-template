@@ -5,7 +5,7 @@
 #include <glm/vec2.hpp>
 
 class OrthoCamera {
-    glm::mat4 m_viewProjection;
+    glm::mat4 m_viewProjection = glm::mat4(1);
 
 private:
     glm::vec2 m_posWorld = glm::vec2(0);
@@ -37,7 +37,7 @@ public:
     // clang-format on
 
     //    glm::mat4 getViewProjection();
-    bool getViewProjection(glm::mat4& outViewProjection);
+    const glm::mat4& getViewProjection();
 };
 
 #endif // ORTHOCAMERA_H
