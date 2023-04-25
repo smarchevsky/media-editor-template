@@ -74,7 +74,7 @@ UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
     }
 
     case GL_FLOAT_MAT4: {
-        LOGE("size of mat4 is: " << size);
+        // LOGE("size of mat4 is: " << size);
         return glm::mat4(1);
     };
     }

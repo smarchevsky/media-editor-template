@@ -33,6 +33,9 @@ void GLFrameBuffer::bind() const
     }
 }
 
+void GLFrameBufferBase::unbind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+void GLFrameBufferBase::setViewport(int x, int y, int width, int height){    glViewport(x, y, width, height);}
+
 void GLFrameBufferBase::clear(float r, float g, float b, float a)
 {
     bind();
