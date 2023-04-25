@@ -22,7 +22,7 @@ public:
 
 private:
     unsigned int m_fbo {};
-    GLTextureInstance m_textureInstance {};
+    std::shared_ptr<GLTexture> m_textureInstance {};
 };
 
 #endif // GLFRAMEBUFFER_H

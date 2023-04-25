@@ -22,7 +22,7 @@ class Sprite2d // square sprite -1 to 1
 public:
     GLShader::Instance& getShaderInstance() { return m_shaderInstance; }
     Sprite2d();
-    void init();
+
     Sprite2d& setPos(glm::vec2 pos);
     Sprite2d& setSize(glm::vec2 size);
     Sprite2d& setRotation(float angleRad);

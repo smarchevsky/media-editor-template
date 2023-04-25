@@ -5,12 +5,8 @@
 
 Sprite2d::Sprite2d()
     : m_mesh(GLMeshStatics::get().getQuad2d())
+    , m_shaderInstance(GLShaderManager::get().getDefaultShader2d(), UniformDependency::Object)
 {
-}
-
-void Sprite2d::init()
-{
-    m_shaderInstance = GLShaderManager::get().getDefaultShader2d()->getInstance(UniformDependency::Object);
 }
 
 Sprite2d& Sprite2d::setPos(glm::vec2 pos)
@@ -49,9 +45,9 @@ void Sprite2d::draw(const GLFrameBufferBase& where)
         mat[3][0] = m_pos.x;
         mat[3][1] = m_pos.y;
 
-        m_shaderInstance.updateUniform("matModel", mat);
+        m_shaderInstance.set("matModel", mat);
         m_dirty = false;
     }
-    m_shaderInstance.applyUniformData();
+    m_shaderInstance.apply();
     m_mesh.draw();
 }

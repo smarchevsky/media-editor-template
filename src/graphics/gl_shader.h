@@ -4,7 +4,7 @@
 #include <filesystem>
 
 #include "gl_texture.h"
-#include "hashstring.h"
+// #include "hashstring.h"
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
@@ -19,17 +19,7 @@
 
 namespace fs = std::filesystem;
 
-enum class UniformType : uint8_t {
-    Invalid,
-    Float,
-    Vec2,
-    Vec3,
-    Vec4,
-    Mat4,
-    Texture2D,
-    InvalidMax
-};
-
+typedef std::tuple<std::shared_ptr<GLTexture>, int> Texture2Ddata;
 typedef std::variant<
     char, // is invalid, dont set char :)
     float,
@@ -37,7 +27,7 @@ typedef std::variant<
     glm::vec3,
     glm::vec4,
     glm::mat4,
-    std::shared_ptr<GLTexture>>
+    Texture2Ddata>
     UniformVariant;
 
 enum class UniformDependency : uint8_t {
@@ -45,113 +35,107 @@ enum class UniformDependency : uint8_t {
     View, // view-related variables
     Free // non-related shader-wise variables
 };
-struct UniformInfo {
-    std::string name;
-    UniformType type = UniformType::InvalidMax;
-    UniformDependency dependency = UniformDependency::Object;
-    uint8_t textureIndex; // texture index, if texture
-};
-typedef std::vector<UniformInfo> UniformList;
-
-//////////////////////// UniformData //////////////////////////
-
-struct UniformData {
-    UniformInfo info;
-    int location;
-    UniformVariant data;
-};
-typedef std::unordered_map<HashString, UniformData> UniformDataList;
 
 //////////////////////// SHADER //////////////////////////
 
+typedef std::shared_ptr<class GLShader> GLShaderPtr;
 class GLShader : NoCopy<GLShader> {
 public:
-    class Instance {
-    protected:
+    class Variable {
+        GLShader* m_shader;
+        int m_location = -1;
+        std::string m_name;
+        UniformDependency m_dependency;
+        UniformVariant m_data;
+
     public:
-        void updateUniform(HashString name, const UniformVariant& var);
-        UniformVariant getUniform(HashString name);
+        const std::string& getName() const { return m_name; }
+        const int getLocation() const { return m_location; }
+        UniformDependency getDependency() const { return m_dependency; }
 
-        Instance() = default;
-        Instance(GLShader* shader, UniformDependency dependency)
+        Variable() = default;
+        Variable(
+            int location,
+            const std::string& m_name,
+            UniformDependency m_dependency,
+            UniformVariant m_data)
+            : m_location(location)
+            , m_name(m_name)
+            , m_dependency(m_dependency)
+            , m_data(m_data)
         {
-            m_shader = shader;
-            const auto& uniforms = m_shader->getUniforms();
+        }
+        const UniformVariant& getData() const { return m_data; }
+        void setData(const UniformVariant& data);
+        void setData(const std::shared_ptr<GLTexture>& newTexture);
+        bool isValid() { return (m_location != -1); }
+    };
 
-            for (int i = 0; i < uniforms.size(); ++i) {
-                const UniformInfo& uniformInfo = uniforms[i];
+    typedef std::unordered_map<std::string, Variable> UniformVariables;
 
-                if (uniformInfo.dependency == dependency) {
-                    const std::string& uniformName = uniformInfo.name;
+    //////////////////////// VARIABLE LIST //////////////////////////
 
-                    UniformData data;
-                    data.info = uniformInfo;
-                    data.location = i;
+    class Instance {
+        const GLShaderPtr m_shader;
 
-                    HashString uniformHashString(uniformName.c_str());
-                    m_savedUniforms.insert({ uniformHashString, data });
+    public:
+        Instance(const GLShaderPtr& shader, UniformDependency dependency)
+            : m_shader(shader)
+        {
+            assert(m_shader);
+            for (const auto& u : shader->getUniforms()) {
+                if (u.second.getDependency() == dependency) {
+                    m_variables.insert(u);
+                }
+            }
+        }
+        // void set(const std::string& name, const std::shared_ptr<GLTexture>& texture);
+        template <class T>
+        void set(const std::string& name, const T& data)
+        {
+            auto it = m_variables.find(name);
+            if (it != m_variables.end()) {
+                it->second.setData(data);
+            } else {
+                LOG("You are trying to set data with unexisted name: " << name);
+            }
+        }
+
+        void apply()
+        {
+            if (m_shader) {
+                m_shader->bind();
+                for (const auto& v : m_variables) {
+                    m_shader->setUniform(v.second.getLocation(), v.second.getData());
                 }
             }
         }
 
-        void applyUniformData() const
-        {
-            m_shader->bind();
-            for (const auto& u : m_savedUniforms) {
-                const UniformData& d = u.second;
-                m_shader->setUniform(d.location, d.data, d.info.type, d.info.textureIndex);
-            }
-        }
-
-    private:
-        GLShader* m_shader {};
-        UniformDataList m_savedUniforms;
+        UniformVariables m_variables;
     };
-    Instance getInstance(UniformDependency dependency)
-    {
-        return Instance(this, dependency);
-    }
 
-    GLShader() = default;
+    GLShader(const char* vertexShaderCode, const char* fragmentShaderCode);
     ~GLShader();
-    GLShader(GLShader&& r);
-    int getHandle() const { return m_shaderProgram; }
-
-    void setUniform(const char* name, const UniformVariant& var, UniformType type, int textureIndex)
-    {
-        bind();
-        int location = getUniformLocation(name);
-        if (location != -1) {
-            setUniform(location, var, type, textureIndex);
-        } else {
-            LOGE("Invalid name");
-        }
-    }
-    void setUniform(int location, const UniformVariant& var, UniformType type, int textureIndex);
-
-    const UniformList& getUniforms() { return m_uniforms; }
 
     void bind();
+    void setUniform(const std::string& name, const UniformVariant& var);
+    int getHandle() const { return m_shaderProgram; }
+    bool valid() const { return m_shaderProgram != 0; }
+    const UniformVariables& getUniforms() const { return m_defaultVariables; }
 
 private:
-    void initialize(uint32_t shaderProgram, const std::vector<UniformInfo>& uniforms)
-    {
-        m_shaderProgram = shaderProgram;
-        m_uniforms = uniforms;
-    }
-
-    int getUniformLocation(const char* name);
+    int getUniformLocation(const std::string& name) const;
+    void setUniform(int location, const UniformVariant& var);
 
 private: // DATA
     uint32_t m_shaderProgram {};
-    UniformList m_uniforms;
+
+    const UniformVariables m_defaultVariables;
 
 private:
     static uint32_t s_currentBindedShaderHandle;
     friend class GLShaderManager;
 };
-
-//////////////////////// SHADER INSTANCE //////////////////////////
 
 //////////////////////// SHADER MANAGER //////////////////////////
 
@@ -163,25 +147,25 @@ public:
         static GLShaderManager shaderGeneratorStatic;
         return shaderGeneratorStatic;
     }
-    GLShader* addShader(
+    GLShaderPtr addShader(
         const char* uniqueName,
         const char* vertexShaderCode,
         const char* fragmentShaderCode);
 
-    GLShader* addShader(
+    GLShaderPtr addShader(
         const char* uniqueName,
         const fs::path& vertexShaderPath,
         const fs::path& fragmentShaderPath);
 
-    GLShader* getDefaultShader2d();
-
-    GLShader* getByName(HashString str);
+    GLShaderPtr getDefaultShader2d();
+    GLShaderPtr getByName(const std::string& name);
 
 private:
     GLShaderManager() = default;
     ~GLShaderManager() = default;
 
-    static std::unordered_map<HashString, GLShader> s_staticShaders;
+    static std::unordered_map<std::string, GLShaderPtr> s_staticShaders;
 };
+inline std::unordered_map<std::string, GLShaderPtr> GLShaderManager::s_staticShaders;
 
 #endif // SHADER_H
