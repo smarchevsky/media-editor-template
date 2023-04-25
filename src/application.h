@@ -1,7 +1,7 @@
 #ifndef APP_ABSTRACT_H
 #define APP_ABSTRACT_H
 
-#include "graphics/orthocamera.h"
+#include "graphics/camera.h"
 
 #include "helper_general.h"
 #include "openfileinfo.h"

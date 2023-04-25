@@ -2,7 +2,7 @@
 #include "application.h"
 
 #include "graphics/gl_shader.h"
-#include "graphics/sprite2d.h"
+#include "graphics/drawable.h"
 
 namespace fs = std::filesystem;
 static fs::path projectDir(PROJECT_DIR);
