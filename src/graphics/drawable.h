@@ -1,5 +1,5 @@
-#ifndef SPRITE2D_H
-#define SPRITE2D_H
+#ifndef DRAWABLE_H
+#define DRAWABLE_H
 
 #include "gl_mesh.h"
 #include "gl_shader.h"
@@ -9,8 +9,13 @@
 
 class GLFrameBufferBase;
 
-class Sprite2d // square sprite -1 to 1
-{
+class DrawableBase {
+public:
+    virtual ~DrawableBase() = default;
+};
+
+// square sprite -1 to 1
+class Sprite2d : public DrawableBase {
     const GLMesh& m_mesh;
     GLShader::Instance m_shaderInstance;
 

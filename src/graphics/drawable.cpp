@@ -1,4 +1,4 @@
-#include "sprite2d.h"
+#include "drawable.h"
 #include "gl_framebuffer.h"
 #include "gl_shader.h"
 #include <glm/gtc/matrix_transform.hpp>

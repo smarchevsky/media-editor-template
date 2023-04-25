@@ -1,10 +1,14 @@
-#ifndef ORTHOCAMERA_H
-#define ORTHOCAMERA_H
+#ifndef CAMERA_H
+#define CAMERA_H
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 
-class OrthoCamera {
+class CameraBase {
+public:
+    virtual ~CameraBase() = default;
+};
+class OrthoCamera : public CameraBase {
     glm::mat4 m_viewProjection = glm::mat4(1);
 
 private:
