@@ -4,7 +4,7 @@
 #include <filesystem>
 
 #include "gl_texture.h"
-// #include "hashstring.h"
+#include "hashstring.h"
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
@@ -73,7 +73,7 @@ public:
         bool isValid() { return (m_location != -1); }
     };
 
-    typedef std::unordered_map<std::string, Variable> UniformVariables;
+    typedef std::unordered_map<HashString, Variable> UniformVariables;
 
     //////////////////////// VARIABLE LIST //////////////////////////
 
@@ -92,15 +92,15 @@ public:
                 }
             }
         }
-        // void set(const std::string& name, const std::shared_ptr<GLTexture>& texture);
+
         template <class T>
-        void set(const std::string& name, const T& data)
+        void set(const HashString& name, const T& data)
         {
             auto it = m_variables.find(name);
             if (it != m_variables.end()) {
                 it->second.setData(data);
             } else {
-                LOG("You are trying to set data with unexisted name: " << name);
+                LOGE("You are trying to set data with unexisted name: " << name.getString());
             }
         }
 
@@ -114,7 +114,7 @@ public:
                 }
             }
         }
-        GLShader* getShader() { return m_shader.get(); };
+        GLShader* getShader() { return m_shader.get(); }
         UniformVariables m_variables;
     };
 
@@ -122,7 +122,7 @@ public:
     ~GLShader();
 
     void bind();
-    void setUniform(const std::string& name, const UniformVariant& var);
+    void setUniform(const HashString& name, const UniformVariant& var);
 
     int getHandle() const { return m_shaderProgram; }
     bool valid() const { return m_shaderProgram != 0; }
@@ -138,7 +138,7 @@ public:
     const UniformVariables& getUniforms() const { return m_defaultVariables; }
 
 private:
-    int getUniformLocation(const std::string& name) const;
+    int getUniformLocation(const HashString& name) const;
     void setUniform(int location, const UniformVariant& var);
 
 private: // DATA
@@ -172,14 +172,14 @@ public:
         const fs::path& fragmentShaderPath);
 
     GLShaderPtr getDefaultShader2d();
-    GLShaderPtr getByName(const std::string& name);
+    GLShaderPtr getByName(const HashString& name);
 
 private:
     GLShaderManager() = default;
     ~GLShaderManager() = default;
 
-    static std::unordered_map<std::string, GLShaderPtr> s_staticShaders;
+    static std::unordered_map<HashString, GLShaderPtr> s_staticShaders;
 };
-inline std::unordered_map<std::string, GLShaderPtr> GLShaderManager::s_staticShaders;
+inline std::unordered_map<HashString, GLShaderPtr> GLShaderManager::s_staticShaders;
 
 #endif // SHADER_H
