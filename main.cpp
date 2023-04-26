@@ -1,8 +1,10 @@
 
 #include "application.h"
 
-#include "graphics/gl_shader.h"
 #include "graphics/drawable.h"
+#include "graphics/gl_shader.h"
+
+#include "graphics/gl_rendermanager.h"
 
 namespace fs = std::filesystem;
 static fs::path projectDir(PROJECT_DIR);
@@ -16,7 +18,7 @@ public:
     {
         Application::init();
         m_fb.create({ 2048, 2048 });
-        m_fb.getTexture()->setFiltering(GLTexture::Filtering::Linear);
+        m_fb.getTexture()->setFiltering(GLTexture::Filtering::LinearMipmap);
         m_fb.getTexture()->setWrapping(GLTexture::Wrapping::ClampEdge);
         auto texChecker = SHARED_TEXTURE(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
         // auto texLiza = SHARED_TEXTURE(Image(projectDir / "resources" / "mona_liza.jpg"));
@@ -38,22 +40,14 @@ public:
 
     void updateWindow(float dt) override
     {
-        m_fb.clear(0, 0, 0, 1);
-
-        GLShaderManager::get().getDefaultShader2d()->setUniform(
-            "view_matViewProjection", glm::mat4(1));
-
-        m_sprites[0].draw(m_fb);
+        GLRenderManager rm;
         m_sprites[0].addRotation(dt * 0.1f);
 
+        m_fb.clear(0, 0, 0, 1);
+        rm.draw(&m_fb, nullptr, &m_sprites[0]);
+
         m_window.clear(0.16f, 0.16f, 0.16f, 1);
-        glm::mat4 viewProjection;
-
-        GLShaderManager::get().getDefaultShader2d()->setUniform(
-            "view_matViewProjection",
-            m_camera.getViewProjection());
-
-        m_sprites[1].draw(m_window);
+        rm.draw(&m_window, &m_camera, &m_sprites[1]);
     }
 };
 

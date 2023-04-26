@@ -120,10 +120,19 @@ bool GLTexture::setWrapping(Wrapping wrapping)
         return false;
     }
 
+    m_wrapping = wrapping;
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappingGLformat);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingGLformat);
     return true;
+}
+
+void GLTexture::generateMipMap()
+{
+    if (m_textureHandle && m_filtering == Filtering::LinearMipmap) {
+        glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
 }
 
 bool GLTexture::setFiltering(Filtering filtering)

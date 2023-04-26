@@ -1,12 +1,13 @@
 #include "drawable.h"
-#include "gl_framebuffer.h"
 #include "gl_shader.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 Sprite2d::Sprite2d()
     : m_mesh(GLMeshStatics::get().getQuad2d())
-    , m_shaderInstance(GLShaderManager::get().getDefaultShader2d(), UniformDependency::Object)
 {
+    m_shaderInstance = GLShader::Instance(
+        GLShaderManager::get().getDefaultShader2d(),
+        UniformDependency::Object);
 }
 
 Sprite2d& Sprite2d::setPos(glm::vec2 pos)
@@ -35,9 +36,8 @@ Sprite2d& Sprite2d::addRotation(float angleOffset)
     return setRotation(m_angle + angleOffset);
 }
 
-void Sprite2d::draw(const GLFrameBufferBase& where)
+void Sprite2d::draw(bool forceBindShader)
 {
-    where.bind();
     if (m_dirty) {
         glm::mat4 mat(1);
         mat = glm::scale(mat, glm::vec3(m_size.x, m_size.y, 0.f));
@@ -48,6 +48,6 @@ void Sprite2d::draw(const GLFrameBufferBase& where)
         m_shaderInstance.set("matModel", mat);
         m_dirty = false;
     }
-    m_shaderInstance.apply();
+    m_shaderInstance.applyUniforms(forceBindShader);
     m_mesh.draw();
 }

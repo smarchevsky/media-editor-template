@@ -3,13 +3,24 @@
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
+#include <string>
+#include <unordered_map>
 
 class CameraBase {
+protected:
+    glm::mat4 m_viewProjection;
+
 public:
+    CameraBase();
     virtual ~CameraBase() = default;
+    virtual void updateTransforms() { }
+
+    static void updateShaderUniforms(CameraBase* camera, class GLShader* shader);
 };
+
+//////////////// ORTHO CHAMERA //////////////////////
+
 class OrthoCamera : public CameraBase {
-    glm::mat4 m_viewProjection = glm::mat4(1);
 
 private:
     glm::vec2 m_posWorld = glm::vec2(0);
@@ -42,6 +53,8 @@ public:
 
     //    glm::mat4 getViewProjection();
     const glm::mat4& getViewProjection();
+
+    virtual void updateTransforms() override;
 };
 
 #endif // ORTHOCAMERA_H
