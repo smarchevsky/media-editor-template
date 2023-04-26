@@ -6,6 +6,8 @@
 #include <string>
 #include <unordered_map>
 
+class GLShader;
+
 class CameraBase {
 protected:
     glm::mat4 m_viewProjection;
@@ -13,9 +15,9 @@ protected:
 public:
     CameraBase();
     virtual ~CameraBase() = default;
-    virtual void updateTransforms() { }
+    virtual void updateTransforms(GLShader* shader) { }
 
-    static void updateShaderUniforms(CameraBase* camera, class GLShader* shader);
+    static void updateShaderUniforms(CameraBase* camera, GLShader* shader);
 };
 
 //////////////// ORTHO CHAMERA //////////////////////
@@ -27,23 +29,23 @@ private:
     glm::vec2 m_viewportSize = glm::vec2(1000, 1000);
     float m_scaleMultiplier = 0.003f;
 
-    bool m_isDirty = true;
+    bool m_isViewProjectionDirty = true;
 
 public:
     OrthoCamera();
 
     // clang-format off
-    void setScale(float scale)            { m_scaleMultiplier = scale,        m_isDirty = true; }
-    void multiplyScale(float scaleOffset) { m_scaleMultiplier *= scaleOffset, m_isDirty = true; }
+    void setScale(float scale)            { m_scaleMultiplier = scale,        m_isViewProjectionDirty = true; }
+    void multiplyScale(float scaleOffset) { m_scaleMultiplier *= scaleOffset, m_isViewProjectionDirty = true; }
     void multiplyScaleOffseted(float scaleFactor, glm::vec2 viewSpaceOffset)
     {
         glm::vec2 mousePosOffset = (viewSpaceOffset - 0.5f * m_viewportSize) * m_scaleMultiplier;
         m_posWorld += mousePosOffset * (1 - scaleFactor);
         multiplyScale(scaleFactor);
     }
-    void setViewportSize(glm::vec2 vs)    { m_viewportSize = vs,              m_isDirty = true; }
-    void setPosition_WS(glm::vec2 pos)    { m_posWorld = pos,                 m_isDirty = true; }
-    void addOffset_WS(glm::vec2 offset)   { m_posWorld += offset,             m_isDirty = true; }
+    void setViewportSize(glm::vec2 vs)    { m_viewportSize = vs,              m_isViewProjectionDirty = true; }
+    void setPosition_WS(glm::vec2 pos)    { m_posWorld = pos,                 m_isViewProjectionDirty = true; }
+    void addOffset_WS(glm::vec2 offset)   { m_posWorld += offset,             m_isViewProjectionDirty = true; }
 
     void addOffset_View(glm::vec2 offset) {addOffset_WS(offset * m_scaleMultiplier); }
 
@@ -51,10 +53,7 @@ public:
     float getScale()          const       { return m_scaleMultiplier; }
     // clang-format on
 
-    //    glm::mat4 getViewProjection();
-    const glm::mat4& getViewProjection();
-
-    virtual void updateTransforms() override;
+    virtual void updateTransforms(GLShader* shader) override;
 };
 
 #endif // ORTHOCAMERA_H
