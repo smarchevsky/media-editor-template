@@ -18,6 +18,17 @@ void GLFrameBuffer::create(glm::vec2 size)
         m_textureInstance->getHandle(), 0);
 }
 
+GLFrameBuffer::~GLFrameBuffer() { reset(); }
+
+void GLFrameBuffer::reset()
+{
+    if (m_fbo) {
+        glDeleteFramebuffers(1, &m_fbo);
+        m_fbo = 0;
+    }
+    m_textureInstance.reset();
+}
+
 void GLFrameBuffer::bind() const
 {
     if (m_currentBuffer != m_fbo) {
