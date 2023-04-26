@@ -1,15 +1,14 @@
 #ifndef GL_RENDERMANAGER_H
 #define GL_RENDERMANAGER_H
 
-#include "gl_framebuffer.h"
 #include "camera.h"
 #include "drawable.h"
+#include "gl_framebuffer.h"
 
 class GLRenderManager {
 public:
-    void draw(GLFrameBufferBase* frameBuffer, CameraBase* camera, const std::vector<DrawableBase*>& drawable);
-
-private:
+    void draw(GLFrameBufferBase* frameBuffer, CameraBase* camera, const std::vector<std::unique_ptr<DrawableBase>>& drawable);
+    void draw(GLFrameBufferBase* frameBuffer, CameraBase* camera, DrawableBase* drawable);
 };
 
-#endif // GRAPHICS_COMMON_H
+#endif // GL_RENDERMANAGER_H

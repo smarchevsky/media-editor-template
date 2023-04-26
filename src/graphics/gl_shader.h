@@ -20,6 +20,7 @@
 namespace fs = std::filesystem;
 
 typedef std::tuple<std::shared_ptr<GLTexture>, int> Texture2Ddata;
+
 typedef std::variant<
     char, // is invalid, dont set char :)
     float,
@@ -28,6 +29,7 @@ typedef std::variant<
     glm::vec4,
     glm::mat4,
     Texture2Ddata>
+
     UniformVariant;
 
 enum class UniformDependency : uint8_t {
@@ -76,9 +78,10 @@ public:
     //////////////////////// VARIABLE LIST //////////////////////////
 
     class Instance {
-        const GLShaderPtr m_shader;
+        GLShaderPtr m_shader;
 
     public:
+        Instance() = default;
         Instance(const GLShaderPtr& shader, UniformDependency dependency)
             : m_shader(shader)
         {
@@ -101,16 +104,17 @@ public:
             }
         }
 
-        void apply()
+        void applyUniforms(bool forceBindShader = true)
         {
             if (m_shader) {
-                m_shader->bind();
+                if (forceBindShader)
+                    m_shader->bind();
                 for (const auto& v : m_variables) {
                     m_shader->setUniform(v.second.getLocation(), v.second.getData());
                 }
             }
         }
-
+        GLShader* getShader() { return m_shader.get(); };
         UniformVariables m_variables;
     };
 

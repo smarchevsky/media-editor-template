@@ -24,7 +24,7 @@ void GLFrameBuffer::bind() const
         m_currentBuffer = m_fbo;
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-        if (m_textureInstance.get()) {
+        if (m_textureInstance) {
             auto size = m_textureInstance->getSize();
             glViewport(0, 0, size.x, size.y);
         }
@@ -33,8 +33,15 @@ void GLFrameBuffer::bind() const
     }
 }
 
+void GLFrameBuffer::generateMipMap()
+{
+    if (m_textureInstance) {
+        m_textureInstance->generateMipMap();
+    }
+}
+
 void GLFrameBufferBase::unbind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
-void GLFrameBufferBase::setViewport(int x, int y, int width, int height){    glViewport(x, y, width, height);}
+void GLFrameBufferBase::setViewport(int x, int y, int width, int height) { glViewport(x, y, width, height); }
 
 void GLFrameBufferBase::clear(float r, float g, float b, float a)
 {
