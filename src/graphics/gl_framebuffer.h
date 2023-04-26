@@ -14,14 +14,16 @@ public:
 
 public:
     virtual void bind() const = 0;
+    void clear(float, float, float, float = 1.f);
 
     virtual ~GLFrameBufferBase() { }
-    void clear(float, float, float, float);
 };
 
 class GLFrameBuffer : public GLFrameBufferBase {
 public:
+    ~GLFrameBuffer();
     void create(glm::vec2 size);
+    void reset();
 
     void bind() const override;
     void generateMipMap();
@@ -29,8 +31,8 @@ public:
     auto& getTexture() { return m_textureInstance; }
 
 private:
-    unsigned int m_fbo {};
-    std::shared_ptr<GLTexture> m_textureInstance {};
+    unsigned int m_fbo = 0;
+    std::shared_ptr<GLTexture> m_textureInstance;
 };
 
 #endif // GLFRAMEBUFFER_H
