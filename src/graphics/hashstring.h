@@ -19,7 +19,7 @@ struct HashString {
     }
     constexpr HashString(const HashString& other) = default;
     constexpr bool operator==(const HashString& rhs) const { return m_hash == rhs.m_hash; }
-    const std::string& getString() { return s_strings[m_hash]; }
+    const std::string& getString() const { return s_strings[m_hash]; }
 
     const std::size_t m_hash;
     static std::unordered_map<size_t, std::string> s_strings;

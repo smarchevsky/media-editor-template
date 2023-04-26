@@ -191,9 +191,9 @@ GLShader::GLShader(const char* vertexShaderCode, const char* fragmentShaderCode)
     }
 }
 
-int GLShader::getUniformLocation(const std::string& name) const
+int GLShader::getUniformLocation(const HashString &name) const
 {
-    return glGetUniformLocation(m_shaderProgram, name.c_str());
+    return glGetUniformLocation(m_shaderProgram, name.getString().c_str());
 }
 
 GLShader::~GLShader()
@@ -204,7 +204,7 @@ GLShader::~GLShader()
     }
 }
 
-void GLShader::setUniform(const std::string& name, const UniformVariant& var)
+void GLShader::setUniform(const HashString &name, const UniformVariant& var)
 {
     bind();
     auto it = m_defaultVariables.find(name);
@@ -212,7 +212,7 @@ void GLShader::setUniform(const std::string& name, const UniformVariant& var)
         int location = it->second.getLocation();
         setUniform(location, var);
     } else {
-        LOGE("Variable: " << name << " did not find in shader.");
+        LOGE("Variable: " << name.getString() << " did not find in shader.");
     }
 }
 
@@ -376,7 +376,7 @@ GLShaderPtr GLShaderManager::getDefaultShader2d()
             GLShaderSources::getDefault2d_FS());
 }
 
-GLShaderPtr GLShaderManager::getByName(const std::string& name)
+GLShaderPtr GLShaderManager::getByName(const HashString &name)
 {
     auto it = s_staticShaders.find(name);
     if (it != s_staticShaders.end()) {
