@@ -9,7 +9,7 @@ public:
     // clang-format off
     enum class Format : uint8_t { RGB, RGBA };
     enum class Wrapping : uint8_t { Repeat, MirrorRepeat, ClampEdge, ClampBorder };
-    enum class Filtering : uint8_t { Nearset, Linear, LinearMipmap };
+    enum class Filtering : uint8_t { Nearset, NearestMipmap, Linear, LinearMipmap };
     // clang-format on
 
 public:
