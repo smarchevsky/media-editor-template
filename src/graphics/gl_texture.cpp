@@ -126,10 +126,16 @@ bool GLTexture::setWrapping(Wrapping wrapping)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingGLformat);
     return true;
 }
+static bool isMipMap(GLTexture::Filtering filtering)
+{
+    return filtering == GLTexture::Filtering::NearestMipmap
+        || filtering == GLTexture::Filtering::LinearMipmap;
+}
 
 void GLTexture::generateMipMap()
 {
-    if (m_textureHandle && m_filtering == Filtering::LinearMipmap) {
+    // glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST /*GL_FASTEST*/);
+    if (m_textureHandle && isMipMap(m_filtering)) {
         glBindTexture(GL_TEXTURE_2D, m_textureHandle);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
@@ -145,24 +151,33 @@ bool GLTexture::setFiltering(Filtering filtering)
     int minFilter, magFilter;
     switch (filtering) {
     case Filtering::Nearset: {
-        minFilter = magFilter = GL_NEAREST;
+        minFilter = GL_NEAREST;
+        magFilter = GL_NEAREST;
     } break;
+
+    case Filtering::NearestMipmap: {
+        minFilter = GL_NEAREST_MIPMAP_LINEAR;
+        magFilter = GL_NEAREST;
+    } break;
+
     case Filtering::Linear: {
-        minFilter = magFilter = GL_LINEAR;
+        minFilter = GL_LINEAR;
+        magFilter = GL_LINEAR;
     } break;
+
     case Filtering::LinearMipmap: {
         minFilter = GL_LINEAR_MIPMAP_LINEAR;
         magFilter = GL_LINEAR;
 
-        // glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST /*GL_FASTEST*/);
-        if (m_textureHandle)
-            glGenerateMipmap(GL_TEXTURE_2D);
     } break;
     default:
         LOGE("Unsupportering texture filtering type");
         return false;
     }
+
     m_filtering = filtering;
+
+    generateMipMap();
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
