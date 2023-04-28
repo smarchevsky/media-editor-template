@@ -24,18 +24,20 @@ public:
         m_fb.getTexture()->setFiltering(GLTexture::Filtering::LinearMipmap);
         m_fb.getTexture()->setWrapping(GLTexture::Wrapping::ClampEdge);
         auto texChecker = SHARED_TEXTURE(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
-        // auto texLiza = SHARED_TEXTURE(Image(projectDir / "resources" / "mona_liza.jpg"));
+        auto texLiza = SHARED_TEXTURE(Image(projectDir / "resources" / "mona_liza.jpg"));
         //  m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
         {
             Sprite2d s; // 0
             s.setPos({ 0.5f, 0.f });
             s.setUniform("texture0", texChecker);
+            s.setUniform("texture1", texLiza);
             m_sprites.push_back(s);
         }
         {
             Sprite2d s; // 1
             s.setPos({ -0.5f, -0.3f });
-            s.setUniform("texture0", m_fb.getTexture());
+            s.setUniform("texture0", texChecker);
+            s.setUniform("texture1", m_fb.getTexture());
             m_sprites.push_back(s);
         }
         // fb.create({ 512, 512 });

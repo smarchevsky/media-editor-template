@@ -83,7 +83,7 @@ UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
     return {};
 }
 
-GLShader::UniformVariables getUniformList(GLShader* shader)
+std::vector<GLShader::Variable> getUniformList(GLShader* shader)
 {
     const auto program = shader->getHandle();
 
@@ -105,7 +105,7 @@ GLShader::UniformVariables getUniformList(GLShader* shader)
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
     printf("Active Uniforms: %d\n", count);
 
-    GLShader::UniformVariables result;
+    std::vector<GLShader::Variable> result;
 
     int texture2DIndex = 0;
     for (int i = 0; i < count; i++) {
@@ -115,7 +115,7 @@ GLShader::UniformVariables getUniformList(GLShader* shader)
         GLShader::Variable var(i, nameStr,
             createDefaultUniformData(type, size, texture2DIndex));
 
-        result.insert({ name, std::move(var) });
+        result.push_back(std::move(var));
 
         printf("Uniform #%d Type: %u Name: %s\n", i, type, name);
 
@@ -175,8 +175,11 @@ GLShader::GLShader(const char* vertexShaderCode, const char* fragmentShaderCode)
         glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
 
         if (success == GL_TRUE) {
-
-            const_cast<UniformVariables&>(m_defaultVariables) = getUniformList(this);
+            const_cast<std::vector<Variable>&>(m_defaultUniforms) = getUniformList(this);
+            auto& locations = const_cast<std::unordered_map<HashString, int>&>(m_locations);
+            for (const auto& d : m_defaultUniforms) {
+                locations.insert({ d.getName().c_str(), d.getLocation() });
+            }
 
         } else {
 
@@ -202,76 +205,83 @@ GLShader::~GLShader()
     }
 }
 
-void GLShader::setUniform(const HashString& name, const UniformVariant& var)
+#define GET_INDEX(type) variant_index<UniformVariant, type>()
+void GLShader::setUniform(const HashString& name, const UniformVariant& newVar)
 {
-    bind();
-    auto it = m_defaultVariables.find(name);
-    if (it != m_defaultVariables.end()) {
-        int location = it->second.getLocation();
-        setUniform(location, var);
+    auto it = m_locations.find(name);
+    if (it != m_locations.end()) {
+        setUniform(it->second, newVar);
     } else {
         LOGE("Variable: " << name.getString() << " did not find in shader.");
     }
 }
 
-#define GET_INDEX(type) variant_index<UniformVariant, type>()
 void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
 {
-    if (uniformVariable.index())
-        switch (uniformVariable.index()) {
+    const auto& currentDefaultUniform = m_defaultUniforms[location].getData();
+    assert(uniformVariable.index() == currentDefaultUniform.index() && "Variable must match shader type");
+    switch (uniformVariable.index()) {
 
-        case GET_INDEX(Texture2Ddata): {
-            const auto& var = std::get<Texture2Ddata>(uniformVariable);
+    case GET_INDEX(Texture2Ddata): {
+        const auto& var = std::get<Texture2Ddata>(uniformVariable);
 
-            const auto& sharedTexture = var.m_texture;
-            int textureIndex = sharedTexture ? var.m_index : 0;
-            int textureHandle = sharedTexture ? sharedTexture->getHandle() : 0;
+        const auto& sharedTexture = var.m_texture;
 
-            if (textureIndex < 0 || textureIndex >= 32) {
-                LOGE("Invalid texture index: " << textureIndex);
-                textureIndex = 0;
-            }
+        int textureIndex = var.m_index;
+        if (var.m_index < 0) {
+            const auto& defaultVar = std::get<Texture2Ddata>(currentDefaultUniform);
+            textureIndex = defaultVar.m_index;
+        }
 
-            glBindTextureUnit(textureIndex, textureHandle);
-            glUniform1i(location, textureIndex);
+        textureIndex = sharedTexture ? textureIndex : 0;
+
+        int textureHandle = sharedTexture ? sharedTexture->getHandle() : 0;
+
+        if (textureIndex < 0 || textureIndex >= 32) {
+            LOGE("Invalid texture index: " << textureIndex);
+            textureIndex = 0;
+        }
+
+        glBindTextureUnit(textureIndex, textureHandle);
+        glUniform1i(location, textureIndex);
 
 // #define VERBOSE_LOG
 #ifdef VERBOSE_LOG
-            LOG("Texture set: location: " << location << ", handle: "
-                                          << textureHandle << ", index: "
-                                          << (int)textureIndex);
+        LOG("Texture set: location: " << location << ", handle: "
+                                      << textureHandle << ", index: "
+                                      << (int)textureIndex);
 #endif
-        } break;
+    } break;
 
-        case GET_INDEX(float): {
-            const auto& var = std::get<float>(uniformVariable);
-            glUniform1f(location, var);
-        } break;
+    case GET_INDEX(float): {
+        const auto& var = std::get<float>(uniformVariable);
+        glUniform1f(location, var);
+    } break;
 
-        case GET_INDEX(glm::vec2): {
-            const auto& var = std::get<glm::vec2>(uniformVariable);
-            glUniform2fv(location, 1, &var[0]);
-        } break;
+    case GET_INDEX(glm::vec2): {
+        const auto& var = std::get<glm::vec2>(uniformVariable);
+        glUniform2fv(location, 1, &var[0]);
+    } break;
 
-        case GET_INDEX(glm::vec3): {
-            const auto& var = std::get<glm::vec3>(uniformVariable);
-            glUniform3fv(location, 1, &var[0]);
-        } break;
+    case GET_INDEX(glm::vec3): {
+        const auto& var = std::get<glm::vec3>(uniformVariable);
+        glUniform3fv(location, 1, &var[0]);
+    } break;
 
-        case GET_INDEX(glm::vec4): {
-            const auto& var = std::get<glm::vec4>(uniformVariable);
-            glUniform4fv(location, 1, &var[0]);
-        } break;
+    case GET_INDEX(glm::vec4): {
+        const auto& var = std::get<glm::vec4>(uniformVariable);
+        glUniform4fv(location, 1, &var[0]);
+    } break;
 
-        case GET_INDEX(glm::mat4): {
-            const auto& var = std::get<glm::mat4>(uniformVariable);
-            glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]);
-        } break;
+    case GET_INDEX(glm::mat4): {
+        const auto& var = std::get<glm::mat4>(uniformVariable);
+        glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]);
+    } break;
 
-        default: {
-            LOGE("Unsupported uniform variable type");
-        }
-        }
+    default: {
+        LOGE("Unsupported uniform variable type");
+    }
+    }
 }
 
 void GLShader::Variable::setData(const std::shared_ptr<GLTexture>& newTexture)

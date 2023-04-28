@@ -21,13 +21,13 @@ namespace fs = std::filesystem;
 
 struct Texture2Ddata {
     Texture2Ddata() = default;
-    Texture2Ddata(const std::shared_ptr<GLTexture> texture, int index = 0)
+    Texture2Ddata(const std::shared_ptr<GLTexture> texture, int index = -1)
         : m_texture(texture)
         , m_index(index)
     {
     }
     std::shared_ptr<GLTexture> m_texture;
-    int m_index;
+    int m_index = -1; // -1 means use shader's default location
 };
 
 typedef std::variant<
@@ -47,7 +47,6 @@ typedef std::shared_ptr<class GLShader> GLShaderPtr;
 class GLShader : NoCopy<GLShader> {
 public:
     class Variable {
-        GLShader* m_shader;
         int m_location = -1;
         std::string m_name;
         UniformVariant m_data;
@@ -72,28 +71,21 @@ public:
         bool isValid() { return (m_location != -1); }
     };
 
-    typedef std::unordered_map<HashString, Variable> UniformVariables;
-
-    //////////////////////// VARIABLE LIST //////////////////////////
-
     GLShader(const char* vertexShaderCode, const char* fragmentShaderCode);
     ~GLShader();
 
     void bind();
-    void setUniform(const HashString& name, const UniformVariant& var);
+    void setUniform(const HashString& name, const UniformVariant& newVar);
 
     int getHandle() const { return m_shaderProgram; }
     bool valid() const { return m_shaderProgram != 0; }
 
     void resetVariables()
     {
-        for (const auto& defaultUniformPair : m_defaultVariables) {
-            const auto& u = defaultUniformPair.second;
+        for (const auto& u : m_defaultUniforms) {
             setUniform(u.getLocation(), u.getData());
         }
     }
-
-    const UniformVariables& getUniforms() const { return m_defaultVariables; }
 
 private:
     int getUniformLocation(const HashString& name) const;
@@ -102,7 +94,8 @@ private:
 private: // DATA
     uint32_t m_shaderProgram {};
 
-    const UniformVariables m_defaultVariables;
+    const std::unordered_map<HashString, int> m_locations;
+    const std::vector<Variable> m_defaultUniforms;
 
 private:
     static uint32_t s_currentBindedShaderHandle;
