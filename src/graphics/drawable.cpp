@@ -7,6 +7,7 @@ Sprite2d::Sprite2d()
 {
     initializeUniform("matModel", glm::mat4(1));
     initializeUniform("texture0", Texture2Ddata());
+    initializeUniform("texture1", Texture2Ddata());
 }
 
 Sprite2d& Sprite2d::setPos(glm::vec2 pos)
