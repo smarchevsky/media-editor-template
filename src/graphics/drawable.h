@@ -10,15 +10,25 @@
 class GLFrameBufferBase;
 
 class DrawableBase {
+    std::unordered_map<HashString, UniformVariant> m_uniforms;
+
 protected:
-    GLShader::Instance m_shaderInstance;
+    // warning! initialize uniform with proper type
+    void initializeUniform(HashString str, const UniformVariant& var) { m_uniforms[str] = var; }
 
 public:
-    GLShader::Instance& getShaderInstance() { return m_shaderInstance; }
-    const GLShader::Instance& getShaderInstance() const { return m_shaderInstance; }
-
-    virtual void draw(bool forceBindShader = true) { }
+    const std::unordered_map<HashString, UniformVariant>& getUniforms() { return m_uniforms; }
+    virtual void applyUniformsAndDraw(GLShader* shader) { }
     virtual ~DrawableBase() = default;
+    void setUniform(HashString str, const UniformVariant& var)
+    {
+        auto it = m_uniforms.find(str);
+        if (it != m_uniforms.end()) {
+            it->second = var;
+        } else {
+            assert(false && "No such uniform");
+        }
+    }
 };
 
 // square sprite -1 to 1
@@ -38,7 +48,7 @@ public:
     Sprite2d& setRotation(float angleRad);
     Sprite2d& addRotation(float angleOffset);
 
-    void draw(bool forceBindShader = true) override;
+    void applyUniformsAndDraw(GLShader* shader) override;
 };
 
 #endif // SPRITE2D_H

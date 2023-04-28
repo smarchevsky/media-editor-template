@@ -32,15 +32,15 @@ constexpr size_t variant_index()
     }
 }
 
-static UniformDependency getDependencyTypeFromName(const std::string& name)
-{
-    UniformDependency dependency = UniformDependency::Object;
-    if (name.find("view_") == 0)
-        dependency = UniformDependency::View;
-    else if (name.find("free_") == 0)
-        dependency = UniformDependency::Free;
-    return dependency;
-}
+// static UniformDependency getDependencyTypeFromName(const std::string& name)
+//{
+//     UniformDependency dependency = UniformDependency::Object;
+//     if (name.find("view_") == 0)
+//         dependency = UniformDependency::View;
+//     else if (name.find("free_") == 0)
+//         dependency = UniformDependency::Free;
+//     return dependency;
+// }
 
 UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
 {
@@ -85,6 +85,7 @@ UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
 
 GLShader::UniformVariables getUniformList(GLShader* shader)
 {
+    const auto program = shader->getHandle();
 
     GLint count;
     GLint size; // size of the variable
@@ -94,15 +95,13 @@ GLShader::UniformVariables getUniformList(GLShader* shader)
     GLchar name[bufSize] {}; // variable name in GLSL
     GLsizei length; // name length
 
-    /* glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &count);
+    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &count);
     printf("Active Attributes: %d\n", count);
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++) {
         glGetActiveAttrib(program, (GLuint)i, bufSize, &length, &size, &type, name);
         printf("Attribute #%d Type: %u Name: %s\n", i, type, name);
-    }*/
+    }
 
-    const auto program = shader->getHandle();
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
     printf("Active Uniforms: %d\n", count);
 
@@ -114,7 +113,6 @@ GLShader::UniformVariables getUniformList(GLShader* shader)
         std::string nameStr(name);
 
         GLShader::Variable var(i, nameStr,
-            getDependencyTypeFromName(nameStr),
             createDefaultUniformData(type, size, texture2DIndex));
 
         result.insert({ name, std::move(var) });
@@ -191,7 +189,7 @@ GLShader::GLShader(const char* vertexShaderCode, const char* fragmentShaderCode)
     }
 }
 
-int GLShader::getUniformLocation(const HashString &name) const
+int GLShader::getUniformLocation(const HashString& name) const
 {
     return glGetUniformLocation(m_shaderProgram, name.getString().c_str());
 }
@@ -204,7 +202,7 @@ GLShader::~GLShader()
     }
 }
 
-void GLShader::setUniform(const HashString &name, const UniformVariant& var)
+void GLShader::setUniform(const HashString& name, const UniformVariant& var)
 {
     bind();
     auto it = m_defaultVariables.find(name);
@@ -216,8 +214,6 @@ void GLShader::setUniform(const HashString &name, const UniformVariant& var)
     }
 }
 
-
-
 #define GET_INDEX(type) variant_index<UniformVariant, type>()
 void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
 {
@@ -227,8 +223,8 @@ void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
         case GET_INDEX(Texture2Ddata): {
             const auto& var = std::get<Texture2Ddata>(uniformVariable);
 
-            const auto& sharedTexture = std::get<0>(var);
-            int textureIndex = sharedTexture ? std::get<1>(var) : 0;
+            const auto& sharedTexture = var.m_texture;
+            int textureIndex = sharedTexture ? var.m_index : 0;
             int textureHandle = sharedTexture ? sharedTexture->getHandle() : 0;
 
             if (textureIndex < 0 || textureIndex >= 32) {
@@ -282,7 +278,7 @@ void GLShader::Variable::setData(const std::shared_ptr<GLTexture>& newTexture)
 {
     if (m_data.index() == GET_INDEX(Texture2Ddata)) {
         Texture2Ddata& existedTexture = std::get<Texture2Ddata>(m_data);
-        std::get<0>(existedTexture) = newTexture;
+        existedTexture.m_texture = newTexture;
     }
 }
 
@@ -376,7 +372,7 @@ GLShaderPtr GLShaderManager::getDefaultShader2d()
             GLShaderSources::getDefault2d_FS());
 }
 
-GLShaderPtr GLShaderManager::getByName(const HashString &name)
+GLShaderPtr GLShaderManager::getByName(const HashString& name)
 {
     auto it = s_staticShaders.find(name);
     if (it != s_staticShaders.end()) {

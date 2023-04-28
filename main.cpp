@@ -11,12 +11,15 @@ static fs::path projectDir(PROJECT_DIR);
 
 class OpenGLApp : public Application {
     std::vector<Sprite2d> m_sprites;
+    std::shared_ptr<GLShader> m_shaderDefault2d;
     GLFrameBuffer m_fb;
 
 public:
     void init() override
     {
         Application::init();
+        m_shaderDefault2d = GLShaderManager::get().getDefaultShader2d();
+
         m_fb.create({ 2048, 2048 });
         m_fb.getTexture()->setFiltering(GLTexture::Filtering::LinearMipmap);
         m_fb.getTexture()->setWrapping(GLTexture::Wrapping::ClampEdge);
@@ -26,13 +29,13 @@ public:
         {
             Sprite2d s; // 0
             s.setPos({ 0.5f, 0.f });
-            s.getShaderInstance().set("texture0", texChecker);
+            s.setUniform("texture0", texChecker);
             m_sprites.push_back(s);
         }
         {
             Sprite2d s; // 1
             s.setPos({ -0.5f, -0.3f });
-            s.getShaderInstance().set("texture0", m_fb.getTexture());
+            s.setUniform("texture0", m_fb.getTexture());
             m_sprites.push_back(s);
         }
         // fb.create({ 512, 512 });
@@ -44,10 +47,10 @@ public:
         m_sprites[0].addRotation(dt * 0.1f);
 
         m_fb.clear(0, 0, 0, 1);
-        rm.draw(&m_fb, nullptr, &m_sprites[0]);
+        rm.draw(*m_shaderDefault2d, m_fb, nullptr, &m_sprites[0]);
 
         m_window.clear(0.16f, 0.16f, 0.16f, 1);
-        rm.draw(&m_window, &m_camera, &m_sprites[1]);
+        rm.draw(*m_shaderDefault2d, m_window, &m_camera, &m_sprites[1]);
     }
 };
 

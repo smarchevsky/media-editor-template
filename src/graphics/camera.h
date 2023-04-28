@@ -15,9 +15,7 @@ protected:
 public:
     CameraBase();
     virtual ~CameraBase() = default;
-    virtual void updateTransforms(GLShader* shader) { }
-
-    static void updateShaderUniforms(CameraBase* camera, GLShader* shader);
+    virtual void updateUniforms(GLShader* shader) { }
 };
 
 //////////////// ORTHO CHAMERA //////////////////////
@@ -53,7 +51,7 @@ public:
     float getScale()          const       { return m_scaleMultiplier; }
     // clang-format on
 
-    virtual void updateTransforms(GLShader* shader) override;
+    virtual void updateUniforms(GLShader* shader) override;
 };
 
 #endif // ORTHOCAMERA_H

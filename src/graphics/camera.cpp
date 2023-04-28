@@ -7,19 +7,11 @@ CameraBase::CameraBase()
 {
 }
 
-void CameraBase::updateShaderUniforms(CameraBase* camera, GLShader* shader)
-{
-    shader->resetVariables(UniformDependency::View);
-    if (camera) {
-        camera->updateTransforms(shader);
-    }
-}
-
 OrthoCamera::OrthoCamera()
 {
 }
 
-void OrthoCamera::updateTransforms(GLShader* shader)
+void OrthoCamera::updateUniforms(GLShader* shader)
 {
     if (m_isViewProjectionDirty) {
         m_isViewProjectionDirty = false;
@@ -30,6 +22,6 @@ void OrthoCamera::updateTransforms(GLShader* shader)
         m_viewProjection = glm::ortho(p0.x, p1.x, p1.y, p0.y, -1.f, 1.f);
     }
     if (shader) {
-        shader->setUniform("view_matViewProjection", m_viewProjection);
+        shader->setUniform("matView", m_viewProjection);
     }
 }

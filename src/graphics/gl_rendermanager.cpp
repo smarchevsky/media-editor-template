@@ -16,53 +16,39 @@ void generateMipMap(GLFrameBufferBase* fb)
 } // namespace
 
 void GLRenderManager::draw(
-    GLFrameBufferBase* frameBuffer,
+    GLShader& shader,
+    GLFrameBufferBase& frameBuffer,
     CameraBase* camera,
     const std::vector<std::unique_ptr<DrawableBase>>& allContext)
 {
-    std::unordered_map<GLShader*, std::vector<DrawableBase*>> shadersObjectMap;
+    frameBuffer.bind();
 
-    for (const auto& contextObject : allContext) {
-        if (contextObject) {
-            if (auto shader = contextObject->getShaderInstance().getShader()) {
-                auto& s = shadersObjectMap[shader];
-                s.push_back(contextObject.get());
-            }
-        }
-    }
+    shader.bind();
+    shader.resetVariables(); // clear view-related stuff before camera apply
 
-    frameBuffer->bind();
-    for (const auto& shadersObjectPair : shadersObjectMap) {
-        GLShader* shader = shadersObjectPair.first;
-        auto& shaderRelatedContext = shadersObjectPair.second;
-        shader->bind();
-        shader->resetVariables(UniformDependency::View); // clear view-related stuff before camera apply
+    if (camera)
+        camera->updateUniforms(&shader);
 
-        CameraBase::updateShaderUniforms(camera, shader);
+    for (const auto& obj : allContext)
+        obj->applyUniformsAndDraw(&shader);
 
-        for (auto& drawableObject : shaderRelatedContext) {
-            drawableObject->draw(false);
-        }
-    }
-
-    generateMipMap(frameBuffer);
+    generateMipMap(&frameBuffer);
 }
 
 void GLRenderManager::draw(
-    GLFrameBufferBase* frameBuffer,
+    GLShader& shader,
+    GLFrameBufferBase& frameBuffer,
     CameraBase* camera,
     DrawableBase* drawable)
 {
-    frameBuffer->bind();
-    GLShader* shader = drawable->getShaderInstance().getShader();
-    shader->bind();
-    shader->resetVariables(UniformDependency::View);
-    if (camera) {
-    }
+    frameBuffer.bind();
 
-    CameraBase::updateShaderUniforms(camera, shader);
+    shader.bind();
+    shader.resetVariables();
+    if (camera)
+        camera->updateUniforms(&shader);
 
-    drawable->draw(false);
+    drawable->applyUniformsAndDraw(&shader);
 
-    generateMipMap(frameBuffer);
+    generateMipMap(&frameBuffer);
 }

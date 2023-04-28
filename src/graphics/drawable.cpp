@@ -5,9 +5,8 @@
 Sprite2d::Sprite2d()
     : m_mesh(GLMeshStatics::get().getQuad2d())
 {
-    m_shaderInstance = GLShader::Instance(
-        GLShaderManager::get().getDefaultShader2d(),
-        UniformDependency::Object);
+    initializeUniform("matModel", glm::mat4(1));
+    initializeUniform("texture0", Texture2Ddata());
 }
 
 Sprite2d& Sprite2d::setPos(glm::vec2 pos)
@@ -36,7 +35,7 @@ Sprite2d& Sprite2d::addRotation(float angleOffset)
     return setRotation(m_angle + angleOffset);
 }
 
-void Sprite2d::draw(bool forceBindShader)
+void Sprite2d::applyUniformsAndDraw(GLShader* shader)
 {
     if (m_dirty) {
         glm::mat4 mat(1);
@@ -45,9 +44,12 @@ void Sprite2d::draw(bool forceBindShader)
         mat[3][0] = m_pos.x;
         mat[3][1] = m_pos.y;
 
-        m_shaderInstance.set("matModel", mat);
+        setUniform("matModel", mat);
         m_dirty = false;
     }
-    m_shaderInstance.applyUniforms(forceBindShader);
+    for (const auto& u : getUniforms()) {
+        shader->setUniform(u.first, u.second);
+    }
+
     m_mesh.draw();
 }

@@ -19,7 +19,16 @@
 
 namespace fs = std::filesystem;
 
-typedef std::tuple<std::shared_ptr<GLTexture>, int> Texture2Ddata;
+struct Texture2Ddata {
+    Texture2Ddata() = default;
+    Texture2Ddata(const std::shared_ptr<GLTexture> texture, int index = 0)
+        : m_texture(texture)
+        , m_index(index)
+    {
+    }
+    std::shared_ptr<GLTexture> m_texture;
+    int m_index;
+};
 
 typedef std::variant<
     char, // is invalid, dont set char :)
@@ -32,12 +41,6 @@ typedef std::variant<
 
     UniformVariant;
 
-enum class UniformDependency : uint8_t {
-    Object, // object-related variables
-    View, // view-related variables
-    Free // non-related shader-wise variables
-};
-
 //////////////////////// SHADER //////////////////////////
 
 typedef std::shared_ptr<class GLShader> GLShaderPtr;
@@ -47,23 +50,19 @@ public:
         GLShader* m_shader;
         int m_location = -1;
         std::string m_name;
-        UniformDependency m_dependency;
         UniformVariant m_data;
 
     public:
         const std::string& getName() const { return m_name; }
         const int getLocation() const { return m_location; }
-        UniformDependency getDependency() const { return m_dependency; }
 
         Variable() = default;
         Variable(
             int location,
             const std::string& m_name,
-            UniformDependency m_dependency,
             UniformVariant m_data)
             : m_location(location)
             , m_name(m_name)
-            , m_dependency(m_dependency)
             , m_data(m_data)
         {
         }
@@ -77,47 +76,6 @@ public:
 
     //////////////////////// VARIABLE LIST //////////////////////////
 
-    class Instance {
-        GLShaderPtr m_shader;
-
-    public:
-        Instance() = default;
-        Instance(const GLShaderPtr& shader, UniformDependency dependency)
-            : m_shader(shader)
-        {
-            assert(m_shader);
-            for (const auto& u : shader->getUniforms()) {
-                if (u.second.getDependency() == dependency) {
-                    m_variables.insert(u);
-                }
-            }
-        }
-
-        template <class T>
-        void set(const HashString& name, const T& data)
-        {
-            auto it = m_variables.find(name);
-            if (it != m_variables.end()) {
-                it->second.setData(data);
-            } else {
-                LOGE("You are trying to set data with unexisted name: " << name.getString());
-            }
-        }
-
-        void applyUniforms(bool forceBindShader = true)
-        {
-            if (m_shader) {
-                if (forceBindShader)
-                    m_shader->bind();
-                for (const auto& v : m_variables) {
-                    m_shader->setUniform(v.second.getLocation(), v.second.getData());
-                }
-            }
-        }
-        GLShader* getShader() { return m_shader.get(); }
-        UniformVariables m_variables;
-    };
-
     GLShader(const char* vertexShaderCode, const char* fragmentShaderCode);
     ~GLShader();
 
@@ -127,14 +85,14 @@ public:
     int getHandle() const { return m_shaderProgram; }
     bool valid() const { return m_shaderProgram != 0; }
 
-    void resetVariables(UniformDependency dependency)
+    void resetVariables()
     {
-        for (const auto& vPair : m_defaultVariables) {
-            const auto& v = vPair.second;
-            if (v.getDependency() == dependency)
-                setUniform(v.getLocation(), v.getData());
+        for (const auto& defaultUniformPair : m_defaultVariables) {
+            const auto& u = defaultUniformPair.second;
+            setUniform(u.getLocation(), u.getData());
         }
     }
+
     const UniformVariables& getUniforms() const { return m_defaultVariables; }
 
 private:

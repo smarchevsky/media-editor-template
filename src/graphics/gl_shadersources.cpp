@@ -29,15 +29,12 @@ layout (location = 1) in vec2 inUV;
 
 out vec2 UV;
 
-// all view-dependent variables must be marked as "view_" in the beginning
-// all independent shader-wise variables must be marked as "free_" in the beginning
-
-uniform mat4 view_matViewProjection = IDENTITY;
+uniform mat4 matView = IDENTITY;
 uniform mat4 matModel = IDENTITY;
 
 void main()
 {
-   gl_Position = view_matViewProjection * matModel * vec4(inPos, 1.0);
+   gl_Position = matView * matModel * vec4(inPos, 1.0);
    UV = inUV;
 }
 )";
