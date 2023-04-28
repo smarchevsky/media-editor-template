@@ -52,9 +52,6 @@ public:
         UniformVariant m_data;
 
     public:
-        const std::string& getName() const { return m_name; }
-        const int getLocation() const { return m_location; }
-
         Variable() = default;
         Variable(
             int location,
@@ -65,21 +62,19 @@ public:
             , m_data(m_data)
         {
         }
+
+        const std::string& getName() const { return m_name; }
+        const int getLocation() const { return m_location; }
         const UniformVariant& getData() const { return m_data; }
-        void setData(const UniformVariant& data);
-        void setData(const std::shared_ptr<GLTexture>& newTexture);
-        bool isValid() { return (m_location != -1); }
     };
 
     GLShader(const char* vertexShaderCode, const char* fragmentShaderCode);
     ~GLShader();
 
+    bool valid() const { return m_shaderProgram != 0; }
     void bind();
     void setUniform(const HashString& name, const UniformVariant& newVar);
-
     int getHandle() const { return m_shaderProgram; }
-    bool valid() const { return m_shaderProgram != 0; }
-
     void resetVariables()
     {
         for (const auto& u : m_defaultUniforms) {
