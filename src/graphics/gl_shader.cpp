@@ -284,14 +284,6 @@ void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
     }
 }
 
-void GLShader::Variable::setData(const std::shared_ptr<GLTexture>& newTexture)
-{
-    if (m_data.index() == GET_INDEX(Texture2Ddata)) {
-        Texture2Ddata& existedTexture = std::get<Texture2Ddata>(m_data);
-        existedTexture.m_texture = newTexture;
-    }
-}
-
 void GLShader::bind()
 {
     // #define ALWAYS_BIND
@@ -389,17 +381,4 @@ GLShaderPtr GLShaderManager::getByName(const HashString& name)
         return it->second;
     }
     return nullptr;
-}
-
-void GLShader::Variable::setData(const UniformVariant& data)
-{
-    if (isValid()) {
-        if (m_data.index() == data.index()) {
-            m_data = data;
-        } else {
-            LOGE("You are trying to set invalid data type for variable: " << m_name);
-        }
-    } else {
-        LOGE("Variable: " << m_name << " does not exist in this shader");
-    }
 }
