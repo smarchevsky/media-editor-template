@@ -7,11 +7,11 @@ CameraBase::CameraBase()
 {
 }
 
-OrthoCamera::OrthoCamera()
+CameraOrtho::CameraOrtho()
 {
 }
 
-void OrthoCamera::updateUniforms(GLShader* shader)
+void CameraOrtho::updateUniforms(GLShader* shader)
 {
     if (m_isViewProjectionDirty) {
         m_isViewProjectionDirty = false;

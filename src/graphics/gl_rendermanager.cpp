@@ -24,7 +24,7 @@ void GLRenderManager::draw(
     frameBuffer.bind();
 
     shader.bind();
-    shader.resetVariables(); // clear view-related stuff before camera apply
+    shader.resetVariables(); // clear shader stuff before applying uniforms
 
     if (camera)
         camera->updateUniforms(&shader);
@@ -45,6 +45,7 @@ void GLRenderManager::draw(
 
     shader.bind();
     shader.resetVariables();
+
     if (camera)
         camera->updateUniforms(&shader);
 
