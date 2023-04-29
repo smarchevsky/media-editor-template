@@ -18,22 +18,18 @@ protected:
 
 public:
     const std::unordered_map<HashString, UniformVariant>& getUniforms() { return m_uniforms; }
-    virtual void applyUniformsAndDraw(GLShader* shader) { }
+    void setUniform(HashString str, const UniformVariant& var);
+    void applyUniforms(GLShader* shader);
+    virtual void applyUniformsAndDraw(GLShader* shader) = 0;
+
     virtual ~DrawableBase() = default;
-    void setUniform(HashString str, const UniformVariant& var)
-    {
-        auto it = m_uniforms.find(str);
-        if (it != m_uniforms.end()) {
-            it->second = var;
-        } else {
-            assert(false && "No such uniform");
-        }
-    }
 };
 
+/////////////////////////////// SPRITE 2D ////////////////////////////
+
 // square sprite -1 to 1
-class Sprite2d : public DrawableBase {
-    const GLMesh& m_mesh;
+class Sprite2D : public DrawableBase {
+    const GLMeshTriArray& m_meshQuad;
 
     glm::vec2 m_pos = glm::vec2(0);
     glm::vec2 m_size = glm::vec2(1);
@@ -41,13 +37,23 @@ class Sprite2d : public DrawableBase {
     bool m_dirty = true;
 
 public:
-    Sprite2d();
+    Sprite2D();
 
-    Sprite2d& setPos(glm::vec2 pos);
-    Sprite2d& setSize(glm::vec2 size);
-    Sprite2d& setRotation(float angleRad);
-    Sprite2d& addRotation(float angleOffset);
+    void setPos(glm::vec2 pos) { m_pos = pos, m_dirty = true; }
+    void setSize(glm::vec2 size) { m_size = size, m_dirty = true; }
+    void setRotation(float angleRad) { m_angle = angleRad, m_dirty = true; }
+    void addRotation(float angleOffset) { setRotation(m_angle + angleOffset); }
+    void applyUniformsAndDraw(GLShader* shader) override;
+};
 
+/////////////////////////////// MESH 3D ////////////////////////////
+
+class Mesh3D : public DrawableBase {
+    std::shared_ptr<GLMeshTriIndices> m_mesh;
+
+public:
+    Mesh3D();
+    void setTransform(const glm::mat4& transform);
     void applyUniformsAndDraw(GLShader* shader) override;
 };
 
