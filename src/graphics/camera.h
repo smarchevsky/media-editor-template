@@ -20,7 +20,7 @@ public:
 
 //////////////// ORTHO CHAMERA //////////////////////
 
-class OrthoCamera : public CameraBase {
+class CameraOrtho : public CameraBase {
 
 private:
     glm::vec2 m_posWorld = glm::vec2(0);
@@ -30,7 +30,7 @@ private:
     bool m_isViewProjectionDirty = true;
 
 public:
-    OrthoCamera();
+    CameraOrtho();
 
     // clang-format off
     void setScale(float scale)            { m_scaleMultiplier = scale,        m_isViewProjectionDirty = true; }
