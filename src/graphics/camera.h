@@ -11,8 +11,9 @@ class CameraBase {
 public:
     virtual ~CameraBase() = default;
     virtual void updateUniforms(GLShader* shader) = 0;
-    class CameraOrtho* asOrtho();
-    class CameraPerspective* asPerspective();
+
+    template <class CameraType>
+    CameraType* as() { return dynamic_cast<CameraType*>(this); }
 };
 
 ////////////////////////// CAMERA ORTHO //////////////////////////////
@@ -93,8 +94,5 @@ private:
     float m_fov = 1.f /*radians*/, m_ar = 1.f;
     bool m_viewDirty = true, m_projectionDirty = true;
 };
-
-inline CameraOrtho* CameraBase::asOrtho() { return dynamic_cast<CameraOrtho*>(this); }
-inline CameraPerspective* CameraBase::asPerspective() { return dynamic_cast<CameraPerspective*>(this); }
 
 #endif // ORTHOCAMERA_H

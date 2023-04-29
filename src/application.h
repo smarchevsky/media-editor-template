@@ -1,8 +1,6 @@
 #ifndef APP_ABSTRACT_H
 #define APP_ABSTRACT_H
 
-#include "graphics/camera.h"
-
 #include "helper_general.h"
 #include "openfileinfo.h"
 #include "window.h"
@@ -19,22 +17,19 @@ class Window;
 
 class Application : NoCopy<Application> {
 protected:
+    Window m_window;
     std::map<std::string, OpenFileInfo> m_openFileData;
+    std::unique_ptr<ImguiUtils::FileSystemNavigator> m_fsNavigator;
 
 protected:
-    std::unique_ptr<CameraBase> m_camera;
-
-    Window m_window;
-    std::unique_ptr<ImguiUtils::FileSystemNavigator> m_fsNavigator;
     void addFileInteractionInfo(const std::string& name, const std::string& supportedExtensions,
         FileInteractionFunction fileReader, FileInteractionFunction fileWriter);
 
 public:
     void openFileDialog(const std::string& openFileName);
-    // if m_openedFileName (and !forceDialogWindow) force save current file
     void saveFileOptionalDialog(const std::string& openFileDataName, bool forceDialogWindow = false);
 
-    virtual void updateWindow(float dt);
+    virtual void updateWindow(float dt) { }
     virtual void drawImGuiLayer();
     virtual void printWarningMessage(const std::string& msg);
     virtual void printNotificationMessage(const std::string& msg);

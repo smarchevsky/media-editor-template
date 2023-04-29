@@ -5,20 +5,44 @@
 #include <cstdint> // uintXX_t
 #include <vector>
 
-typedef std::vector<uint8_t> ByteArray;
+class Model3D;
 
-class GLMesh : NoCopy<GLMesh> {
-    friend class GLMeshStatics;
+//////////////////////// GL MESH BASE /////////////////////////
+
+class GLMeshBase : NoCopy<GLMeshBase> {
     static uint32_t s_currentBindedMeshHandle;
-    unsigned int m_VBO {}, m_VAO {}, m_vertCount {};
+
+protected:
+    void bind(uint32_t handle) const;
+    virtual ~GLMeshBase() = default;
+    virtual void draw() const = 0;
+};
+
+//////////////////////// GL MESH TRI ARRAY /////////////////////////
+
+class GLMeshTriArray : public GLMeshBase {
+    friend class GLMeshStatics;
+    uint32_t m_VBO {}, m_VAO {}, m_vertCount {};
 
 public:
-    GLMesh();
-    ~GLMesh();
+    GLMeshTriArray() = default;
+    ~GLMeshTriArray();
 
-    void draw() const;
-    void bind() const;
+    void draw() const override;
 };
+
+//////////////////////// GL MESH TRI INDICES /////////////////////////
+
+class GLMeshTriIndices : public GLMeshBase {
+    uint32_t m_VAO {}, m_VBO {}, m_EBO {};
+    uint32_t m_meshElementArraySize {};
+
+public:
+    // GLMeshTriIndices(const Model3D& model);
+    void draw() const override;
+};
+
+//////////////////////// STATIC FUNCTIONS /////////////////////////
 
 class GLMeshStatics {
 public:
@@ -27,11 +51,11 @@ public:
         static GLMeshStatics instance;
         return instance;
     }
-    GLMesh& getQuad2d() { return get().s_quad; };
+    GLMeshTriArray& getQuad2d() { return get().s_quad; };
 
 private:
     GLMeshStatics();
-    static GLMesh s_quad;
+    static GLMeshTriArray s_quad;
 };
 
 #endif // MESH_H

@@ -10,6 +10,8 @@ Application::Application()
 {
 }
 
+Application::~Application() { }
+
 void Application::addFileInteractionInfo(const std::string& name, const std::string& supportedExtensions,
     FileInteractionFunction fileReader, FileInteractionFunction fileWriter)
 {
@@ -38,18 +40,8 @@ void Application::saveFileOptionalDialog(const std::string& openFileDataName, bo
         printWarningMessage("Invalid open file data name");
 }
 
-void Application::updateWindow(float dt)
-{
-    // m_window->clear();
-}
-
 void Application::init()
 {
-    // auto& mode = sf::VideoMode::getFullscreenModes()[0];
-    // m_window.emplace(mode, "", sf::Style::Fullscreen);
-    m_camera = std::make_unique<CameraOrtho>();
-    m_camera.get()->asOrtho()->setViewportSize(m_window.getSize());
-
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
 
     // open file
@@ -63,22 +55,6 @@ void Application::init()
     // save file as
     m_window.addKeyDownEvent(SDLK_s, KMOD_CTRL | KMOD_SHIFT,
         std::bind(&Application::saveFileOptionalDialog, this, "Primary", true));
-
-    m_window.setMouseScrollEvent( // zoom on scroll
-        [this](float diff, glm::ivec2 mousePos) {
-            float scaleFactor = pow(1.1f, -diff);
-
-            m_camera.get()->asOrtho()->multiplyScaleOffseted(scaleFactor, mousePos);
-        });
-
-    m_window.setMouseDragEvent(MouseButton::Middle, // drag on MMB
-        [this](glm::ivec2 startPos, glm::ivec2 currentPos, glm::ivec2 currentDelta, DragState dragState) {
-            m_camera.get()->asOrtho()->addOffset_View(glm::vec2(-currentDelta));
-        });
-
-    m_window.setScreenResizeEvent([this](glm::ivec2 oldSize, glm::ivec2 newSize) {
-        m_camera.get()->asOrtho()->setViewportSize(glm::vec2(newSize));
-    });
 }
 
 void Application::drawImGuiLayer()
@@ -95,15 +71,14 @@ void Application::mainLoop()
     m_currentTimeStamp = SDL_GetPerformanceCounter();
 
     while (m_window.isOpen()) {
+
         uint64_t timeNow = SDL_GetPerformanceCounter();
         float dt = (float)((timeNow - m_currentTimeStamp) / (double)SDL_GetPerformanceFrequency());
-        // dt = std::clamp(dt, 1 / 500.f, 1 / 10.f);
         dt = dt > 0 ? dt : 1 / 60.f;
         m_currentTimeStamp = timeNow;
 
         m_window.processEvents();
 
-        // m_window.bind();
         updateWindow(dt);
 
         m_window.display();
@@ -114,8 +89,4 @@ void Application::printWarningMessage(const std::string& msg) { LOG(msg); }
 void Application::printNotificationMessage(const std::string& msg)
 {
     m_window.setTitle(msg);
-}
-
-Application::~Application()
-{
 }
