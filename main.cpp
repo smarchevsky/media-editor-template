@@ -52,7 +52,7 @@ public:
         rm.draw(*m_shaderDefault2d, m_fb, nullptr, &m_sprites[0]);
 
         m_window.clear(0.16f, 0.16f, 0.16f, 1);
-        rm.draw(*m_shaderDefault2d, m_window, &m_camera, &m_sprites[1]);
+        rm.draw(*m_shaderDefault2d, m_window, m_camera.get(), &m_sprites[1]);
     }
 };
 
