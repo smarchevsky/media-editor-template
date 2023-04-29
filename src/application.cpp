@@ -1,5 +1,4 @@
 #include "application.h"
-#include "graphics/gl_shader.h"
 #include "imgui_filesystem.h"
 #include <SDL2/SDL.h>
 
@@ -48,8 +47,8 @@ void Application::init()
 {
     // auto& mode = sf::VideoMode::getFullscreenModes()[0];
     // m_window.emplace(mode, "", sf::Style::Fullscreen);
-
-    m_camera.setViewportSize(m_window.getSize());
+    m_camera = std::make_unique<CameraOrtho>();
+    m_camera.get()->asOrtho()->setViewportSize(m_window.getSize());
 
     addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
 
@@ -69,16 +68,16 @@ void Application::init()
         [this](float diff, glm::ivec2 mousePos) {
             float scaleFactor = pow(1.1f, -diff);
 
-            m_camera.multiplyScaleOffseted(scaleFactor, mousePos);
+            m_camera.get()->asOrtho()->multiplyScaleOffseted(scaleFactor, mousePos);
         });
 
     m_window.setMouseDragEvent(MouseButton::Middle, // drag on MMB
         [this](glm::ivec2 startPos, glm::ivec2 currentPos, glm::ivec2 currentDelta, DragState dragState) {
-            m_camera.addOffset_View(glm::vec2(-currentDelta));
+            m_camera.get()->asOrtho()->addOffset_View(glm::vec2(-currentDelta));
         });
 
     m_window.setScreenResizeEvent([this](glm::ivec2 oldSize, glm::ivec2 newSize) {
-        m_camera.setViewportSize(glm::vec2(newSize));
+        m_camera.get()->asOrtho()->setViewportSize(glm::vec2(newSize));
     });
 }
 
@@ -103,7 +102,6 @@ void Application::mainLoop()
         m_currentTimeStamp = timeNow;
 
         m_window.processEvents();
-
 
         // m_window.bind();
         updateWindow(dt);

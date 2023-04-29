@@ -22,7 +22,7 @@ protected:
     std::map<std::string, OpenFileInfo> m_openFileData;
 
 protected:
-    CameraOrtho m_camera;
+    std::unique_ptr<CameraBase> m_camera;
 
     Window m_window;
     std::unique_ptr<ImguiUtils::FileSystemNavigator> m_fsNavigator;
