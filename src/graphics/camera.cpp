@@ -1,7 +1,10 @@
 #include "camera.h"
-#include <glm/gtc/matrix_transform.hpp>
 
 #include "gl_shader.h"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 ////////////////////////// CAMERA ORTHO //////////////////////////////
 
@@ -32,6 +35,8 @@ const glm::mat4& CameraPerspective::getView()
     if (m_viewDirty) {
         m_matView = glm::lookAt(m_pos, m_aim, m_up);
         m_viewDirty = false;
+        // LOG("MatView" << glm::to_string(m_matView));
+        // LOG("MatProjection" << glm::to_string(m_matProjection));
     }
     return m_matView;
 }
@@ -48,7 +53,7 @@ const glm::mat4& CameraPerspective::getProjection()
 void CameraPerspective::updateUniforms(GLShader* shader)
 {
     if (shader) {
-        shader->setUniform("matView", getView());
-        shader->setUniform("matProjection", getProjection());
+        shader->setUniform("cameraView", getView());
+        shader->setUniform("cameraProjection", getProjection());
     }
 }

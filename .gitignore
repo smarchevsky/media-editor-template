@@ -74,3 +74,5 @@ Thumbs.db
 CMakeLists.txt.*
 *.uvbsp
 
+!resources/models3d/*.obj
+!resources/models3d/*.mtl

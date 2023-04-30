@@ -39,8 +39,6 @@ void GLFrameBuffer::bind() const
             auto size = m_textureInstance->getSize();
             glViewport(0, 0, size.x, size.y);
         }
-
-        // LOGE("FBO: " << m_fbo << " binded");
     }
 }
 
@@ -54,11 +52,16 @@ void GLFrameBuffer::generateMipMap()
 void GLFrameBufferBase::unbind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 void GLFrameBufferBase::setViewport(int x, int y, int width, int height) { glViewport(x, y, width, height); }
 
+void GLFrameBufferBase::enableDepthTest()
+{
+    glEnable(GL_DEPTH_TEST);
+}
+
 void GLFrameBufferBase::clear(float r, float g, float b, float a)
 {
     bind();
 
     // glViewport(0, 0, width, height);
     glClearColor(r, g, b, a);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

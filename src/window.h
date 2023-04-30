@@ -16,9 +16,9 @@ typedef void* SDL_GLContext;
 
 static SDL_Keymod operator|(SDL_Keymod a, SDL_Keymod b) { return SDL_Keymod((int)a | (int)b); }
 enum class MouseButton : uint8_t {
-    Left = SDL_BUTTON(SDL_BUTTON_LEFT),
-    Middle = SDL_BUTTON(SDL_BUTTON_MIDDLE),
-    Right = SDL_BUTTON(SDL_BUTTON_RIGHT),
+    Left = SDL_BUTTON_LEFT,
+    Middle = SDL_BUTTON_MIDDLE,
+    Right = SDL_BUTTON_RIGHT,
 };
 
 struct KeyWithModifier {

@@ -118,6 +118,7 @@ public:
         const fs::path& fragmentShaderPath);
 
     GLShaderPtr getDefaultShader2d();
+    GLShaderPtr getDefaultShader3d();
     GLShaderPtr getByName(const HashString& name);
 
 private:

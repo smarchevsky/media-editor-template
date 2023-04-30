@@ -37,7 +37,7 @@ void Sprite2D::applyUniformsAndDraw(GLShader* shader)
         mat[3][0] = m_pos.x;
         mat[3][1] = m_pos.y;
 
-        setUniform("matModel", mat);
+        setUniform("modelWorld", mat);
         m_dirty = false;
     }
 
@@ -47,9 +47,13 @@ void Sprite2D::applyUniformsAndDraw(GLShader* shader)
 
 /////////////////////////////// MESH 3D ////////////////////////////
 
-Mesh3D::Mesh3D() { initializeUniform("matModel", glm::mat4(1)); }
+Mesh3D::Mesh3D()
+{
+    initializeUniform("modelWorld", glm::mat4(1));
+    initializeUniform("texture0", Texture2Ddata());
+}
 
-void Mesh3D::setTransform(const glm::mat4& transform) { setUniform("matModel", transform); }
+void Mesh3D::setTransform(const glm::mat4& transform) { setUniform("modelWorld", transform); }
 
 void Mesh3D::applyUniformsAndDraw(GLShader* shader)
 {

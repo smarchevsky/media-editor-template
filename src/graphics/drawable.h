@@ -49,10 +49,13 @@ public:
 /////////////////////////////// MESH 3D ////////////////////////////
 
 class Mesh3D : public DrawableBase {
+protected:
     std::shared_ptr<GLMeshTriIndices> m_mesh;
 
 public:
     Mesh3D();
+    void setMesh(const std::shared_ptr<GLMeshTriIndices>& mesh) { m_mesh = mesh; }
+
     void setTransform(const glm::mat4& transform);
     void applyUniformsAndDraw(GLShader* shader) override;
 };
