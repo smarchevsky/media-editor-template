@@ -374,6 +374,18 @@ GLShaderPtr GLShaderManager::getDefaultShader2d()
             GLShaderSources::getDefault2d_FS());
 }
 
+GLShaderPtr GLShaderManager::getDefaultShader3d()
+{
+    static constexpr const char* defaultShaderName = "DefaultShader3d";
+    auto shader = getByName(defaultShaderName);
+    if (shader)
+        return shader;
+    else
+        return addShader(defaultShaderName,
+            GLShaderSources::getDefault3d_VS(),
+            GLShaderSources::getDefault3d_FS());
+}
+
 GLShaderPtr GLShaderManager::getByName(const HashString& name)
 {
     auto it = s_staticShaders.find(name);

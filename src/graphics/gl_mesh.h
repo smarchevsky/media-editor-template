@@ -38,7 +38,8 @@ class GLMeshTriIndices : public GLMeshBase {
     uint32_t m_meshElementArraySize {};
 
 public:
-    // GLMeshTriIndices(const Model3D& model);
+    ~GLMeshTriIndices ();
+    GLMeshTriIndices(const Model3D& model);
     void draw() const override;
 };
 

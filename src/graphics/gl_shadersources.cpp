@@ -45,3 +45,55 @@ void main()
 }
 )";
 }
+
+const char* GLShaderSources::getDefault3d_VS()
+{
+    return R"(\
+#version 330 core
+#define IDENTITY mat4(1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1)
+
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec3 normal;
+layout (location = 2) in vec2 uv;
+
+out VS_OUT {
+    vec3 n;     // normal
+    vec2 uv;    // texture coordinate
+} vs;
+
+uniform mat4 cameraView = IDENTITY;
+uniform mat4 cameraProjection = IDENTITY;
+uniform mat4 modelWorld = IDENTITY;
+
+void main()
+{
+    gl_Position = cameraProjection * cameraView * modelWorld * vec4(position, 1.0);
+    vs.n = mat3(modelWorld) * normal;
+    vs.uv = uv;
+}
+)";
+}
+
+const char* GLShaderSources::getDefault3d_FS()
+{
+    return R"(\
+#version 330 core
+
+in VS_OUT {
+    vec3 n;
+    vec2 uv;
+} vs;
+
+uniform sampler2D texture0;
+
+out vec4 FragColor;
+
+void main()
+{
+    vec2 uv = vs.uv;
+    uv.y = 1. - uv.y;
+    // FragColor = vec4(cos(vs.n * 3.14 + vec3(vs.uv, 0.)) * 0.5 + 0.5, 1);
+    FragColor = texture2D(texture0, uv);
+}
+)";
+}

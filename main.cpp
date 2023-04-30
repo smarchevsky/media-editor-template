@@ -1,8 +1,8 @@
-#include "openglapp2d.h"
+#include "openglapp3d.h"
 
 int main()
 {
-    OpenGLApp2D app;
+    App app;
     app.init();
     app.mainLoop();
 

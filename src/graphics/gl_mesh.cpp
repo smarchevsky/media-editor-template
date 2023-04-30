@@ -1,6 +1,6 @@
 #include "gl_mesh.h"
 
-// #include "model3d.h"
+#include "model3d.h"
 
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
@@ -81,39 +81,49 @@ GLMeshStatics::GLMeshStatics()
 
 //////////////////////// GL MESH TRI INDICES /////////////////////////
 
-// GLMeshTriIndices::GLMeshTriIndices(const Model3D& model)
-//{
-//     m_meshElementArraySize = model.triangles.size() * 3;
+GLMeshTriIndices::~GLMeshTriIndices()
+{
+    if (m_VAO) {
+        glDeleteBuffers(1, &m_VBO);
+        glDeleteBuffers(1, &m_EBO);
+        glDeleteVertexArrays(1, &m_VAO);
+        m_VAO = 0;
+    }
+}
 
-//    glGenVertexArrays(1, &m_VAO);
-//    glGenBuffers(1, &m_VBO);
-//    glGenBuffers(1, &m_EBO);
-//    glBindVertexArray(m_VAO);
+GLMeshTriIndices::GLMeshTriIndices(const Model3D& model)
+{
+    m_meshElementArraySize = model.triangles.size() * 3;
 
-//    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-//    glBufferData(GL_ARRAY_BUFFER,
-//        model.vertices.size() * sizeof(Vertex), model.vertices.data(), GL_STATIC_DRAW);
+    glGenVertexArrays(1, &m_VAO);
+    glGenBuffers(1, &m_VBO);
+    glGenBuffers(1, &m_EBO);
+    glBindVertexArray(m_VAO);
 
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-//        model.triangles.size() * sizeof(Triangle), model.triangles.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER,
+        model.vertices.size() * sizeof(Vertex), model.vertices.data(), GL_STATIC_DRAW);
 
-//    //  (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
-//    static constexpr int positionSize = sizeof(decltype(Vertex::position));
-//    static constexpr int normalSize = sizeof(decltype(Vertex::normal));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+        model.triangles.size() * sizeof(Triangle), model.triangles.data(), GL_STATIC_DRAW);
 
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-//    glEnableVertexAttribArray(0);
+    //  (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
+    static constexpr int positionSize = sizeof(decltype(Vertex::position));
+    static constexpr int normalSize = sizeof(decltype(Vertex::normal));
 
-//    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)positionSize);
-//    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    glEnableVertexAttribArray(0);
 
-//    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(positionSize + normalSize));
-//    glEnableVertexAttribArray(2);
-//}
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)positionSize);
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(positionSize + normalSize));
+    glEnableVertexAttribArray(2);
+}
 
 void GLMeshTriIndices::draw() const
 {
     bind(m_VAO);
-    // glDrawElements(GL_TRIANGLES, m_meshElementArraySize, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, m_meshElementArraySize, GL_UNSIGNED_INT, 0);
 }

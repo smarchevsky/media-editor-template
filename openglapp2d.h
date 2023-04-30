@@ -76,5 +76,5 @@ public:
         rm.draw(*m_shaderDefault2d, m_window, &m_camera, &m_sprites[1]);
     }
 };
-
+typedef OpenGLApp2D App;
 #endif // OPENGLAPP2D_H

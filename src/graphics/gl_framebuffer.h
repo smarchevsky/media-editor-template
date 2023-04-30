@@ -11,10 +11,12 @@ protected:
 public:
     static void unbind();
     static void setViewport(int x, int y, int width, int height);
+    static void enableDepthTest();
 
 public:
     virtual void bind() const = 0;
     void clear(float, float, float, float = 1.f);
+    //virtual void enableDepth() = 0;
 
     virtual ~GLFrameBufferBase() { }
 };
