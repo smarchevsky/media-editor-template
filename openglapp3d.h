@@ -89,7 +89,7 @@ public:
         m_mesh3d.setMesh(glMesh3d);
         m_mesh3d.setUniform("texture0", textureAO);
 
-        GLFrameBufferBase::enableDepthTest();
+        m_window.enableDepthTest(true);
     }
 
     void updateWindow(float dt) override
