@@ -21,12 +21,12 @@ namespace fs = std::filesystem;
 
 struct Texture2Ddata {
     Texture2Ddata() = default;
-    Texture2Ddata(const std::shared_ptr<GLTexture> texture, int index = -1)
+    Texture2Ddata(const std::shared_ptr<GLTexture2D> texture, int index = -1)
         : m_texture(texture)
         , m_index(index)
     {
     }
-    std::shared_ptr<GLTexture> m_texture;
+    std::shared_ptr<GLTexture2D> m_texture;
     int m_index = -1; // -1 means use shader's default location
 };
 

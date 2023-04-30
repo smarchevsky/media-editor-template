@@ -4,14 +4,14 @@
 #include <SDL2/SDL_opengl.h>
 #include <iostream>
 
-uint32_t GLTexture::s_currentBindedTexture = 0;
+uint32_t GLTexture2D::s_currentBindedTexture = 0;
 
-static int getGLTextureFormatInternal(GLTexture::Format format)
+static int getGLTextureFormatInternal(GLTexture2D::Format format)
 {
     switch (format) {
-    case GLTexture::Format::RGB:
+    case GLTexture2D::Format::RGB:
         return GL_RGB;
-    case GLTexture::Format::RGBA:
+    case GLTexture2D::Format::RGBA:
         return GL_RGBA;
     default:
         LOGE("Texture internal format: " << (int)format << " not supported");
@@ -31,12 +31,12 @@ static int getGLTextureFormatExternal(int nrChannels)
     }
 }
 
-GLTexture::~GLTexture()
+GLTexture2D::~GLTexture2D()
 {
     clear();
 }
 
-bool GLTexture::createEmpty(glm::ivec2 size)
+bool GLTexture2D::createEmpty(glm::ivec2 size)
 {
     if (size.x <= 0 || size.y <= 0)
         return false;
@@ -55,7 +55,7 @@ bool GLTexture::createEmpty(glm::ivec2 size)
     return true;
 }
 
-bool GLTexture::fromImage(const Image& img)
+bool GLTexture2D::fromImage(const Image& img)
 {
     if (!img.isValid()) {
         LOGE("trying to load invalid texture");
@@ -84,7 +84,7 @@ bool GLTexture::fromImage(const Image& img)
     return true;
 }
 
-void GLTexture::clear()
+void GLTexture2D::clear()
 {
     if (m_textureHandle) {
         glDeleteTextures(1, &m_textureHandle);
@@ -94,7 +94,7 @@ void GLTexture::clear()
     }
 }
 
-bool GLTexture::setWrapping(Wrapping wrapping)
+bool GLTexture2D::setWrapping(Wrapping wrapping)
 {
     if (!m_textureHandle) {
         LOGE("No texture handle");
@@ -126,13 +126,13 @@ bool GLTexture::setWrapping(Wrapping wrapping)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingGLformat);
     return true;
 }
-static bool isMipMap(GLTexture::Filtering filtering)
+static bool isMipMap(GLTexture2D::Filtering filtering)
 {
-    return filtering == GLTexture::Filtering::NearestMipmap
-        || filtering == GLTexture::Filtering::LinearMipmap;
+    return filtering == GLTexture2D::Filtering::NearestMipmap
+        || filtering == GLTexture2D::Filtering::LinearMipmap;
 }
 
-void GLTexture::generateMipMap()
+void GLTexture2D::generateMipMap()
 {
     // glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST /*GL_FASTEST*/);
     if (m_textureHandle && isMipMap(m_filtering)) {
@@ -141,7 +141,7 @@ void GLTexture::generateMipMap()
     }
 }
 
-bool GLTexture::setFiltering(Filtering filtering)
+bool GLTexture2D::setFiltering(Filtering filtering)
 {
     if (!m_textureHandle) {
         LOGE("No texture handle");
