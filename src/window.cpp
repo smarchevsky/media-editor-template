@@ -121,11 +121,12 @@ void Window::bind() const
 {
     if (m_currentBuffer != (size_t)m_SDLwindow) {
         m_currentBuffer = (size_t)m_SDLwindow;
-        unbind();
-        setViewport(0, 0, m_windowSize.x, m_windowSize.y);
-        SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);
 
-        // LOGE("Window binded");
+        GLFrameBufferBase::staticUnbind();
+        GLFrameBufferBase::staticEnableDepthTest(m_depthEnabled);
+        staticSetViewport(0, 0, m_windowSize.x, m_windowSize.y);
+
+        SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);
     }
 }
 
@@ -245,7 +246,7 @@ bool Window::processEvent(const SDL_Event* event)
         case SDL_WINDOWEVENT_SIZE_CHANGED: {
             glm::ivec2 oldScreenSize = m_windowSize;
             m_windowSize = glm::ivec2(event->window.data1, event->window.data2);
-            setViewport(0, 0, m_windowSize.x, m_windowSize.y);
+            staticSetViewport(0, 0, m_windowSize.x, m_windowSize.y);
             //        m_windowSize = newSize;
             //        applyScaleAndOffset();
             //        glm::ivec2 offset = m_windowSize - oldScreenSize;

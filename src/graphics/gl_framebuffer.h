@@ -7,16 +7,17 @@
 class GLFrameBufferBase {
 protected:
     static size_t m_currentBuffer;
+    bool m_depthEnabled = false;
 
 public:
-    static void unbind();
-    static void setViewport(int x, int y, int width, int height);
-    static void enableDepthTest();
+    static void staticUnbind();
+    static void staticSetViewport(int x, int y, int width, int height);
+    static void staticEnableDepthTest(bool enable);
+    void enableDepthTest(bool enabled);
 
 public:
     virtual void bind() const = 0;
     void clear(float, float, float, float = 1.f);
-    //virtual void enableDepth() = 0;
 
     virtual ~GLFrameBufferBase() { }
 };
