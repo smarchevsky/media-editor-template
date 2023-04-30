@@ -24,7 +24,7 @@ private:
     int m_nrChannels {};
     unsigned char* m_data {};
 
-    friend class GLTexture;
+    friend class GLTexture2D;
 };
 
 #endif // IMAGE_H

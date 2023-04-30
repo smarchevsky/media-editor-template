@@ -42,8 +42,8 @@ public:
         m_shaderDefault2d = GLShaderManager::get().getDefaultShader2d();
 
         m_fb.create({ 2048, 2048 });
-        m_fb.getTexture()->setFiltering(GLTexture::Filtering::LinearMipmap);
-        m_fb.getTexture()->setWrapping(GLTexture::Wrapping::ClampEdge);
+        m_fb.getTexture()->setFiltering(GLTexture2D::Filtering::LinearMipmap);
+        m_fb.getTexture()->setWrapping(GLTexture2D::Wrapping::ClampEdge);
 
         auto texChecker = SHARED_TEXTURE(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
         auto texLiza = SHARED_TEXTURE(Image(projectDir / "resources" / "mona_liza.jpg"));

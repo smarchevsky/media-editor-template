@@ -70,7 +70,7 @@ UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
 
     case GL_SAMPLER_2D: {
         // assert(size == intSize);
-        return Texture2Ddata(std::shared_ptr<GLTexture>(), textureIndex);
+        return Texture2Ddata(std::shared_ptr<GLTexture2D>(), textureIndex);
     }
 
     case GL_FLOAT_MAT4: {
@@ -212,7 +212,7 @@ void GLShader::setUniform(const HashString& name, const UniformVariant& newVar)
     if (it != m_locations.end()) {
         setUniform(it->second, newVar);
     } else {
-        LOGE("Variable: " << name.getString() << " did not find in shader.");
+        // LOGE("Variable: " << name.getString() << " did not find in shader.");
     }
 }
 

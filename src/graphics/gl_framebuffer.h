@@ -35,7 +35,7 @@ public:
 
 private:
     unsigned int m_fbo = 0;
-    std::shared_ptr<GLTexture> m_textureInstance;
+    std::shared_ptr<GLTexture2D> m_textureInstance;
 };
 
 #endif // GLFRAMEBUFFER_H

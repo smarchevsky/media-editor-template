@@ -4,7 +4,13 @@
 #include "image.h"
 
 class GLTextureInstance;
-class GLTexture : NoCopy<GLTexture> {
+
+class GLTextureBase : NoCopy<GLTextureBase> {
+public:
+    virtual ~GLTextureBase() = default;
+};
+
+class GLTexture2D : public GLTextureBase {
 public:
     // clang-format off
     enum class Format : uint8_t { RGB, RGBA };
@@ -13,9 +19,9 @@ public:
     // clang-format on
 
 public:
-    GLTexture() = default;
-    GLTexture(const Image& img) { fromImage(img); }
-    ~GLTexture();
+    GLTexture2D() = default;
+    GLTexture2D(const Image& img) { fromImage(img); }
+    ~GLTexture2D();
 
     bool setWrapping(Wrapping);
     bool setFiltering(Filtering);
@@ -42,6 +48,6 @@ protected:
     friend class GLFrameBuffer;
 };
 
-#define SHARED_TEXTURE(x) std::make_shared<GLTexture>(x)
+#define SHARED_TEXTURE(x) std::make_shared<GLTexture2D>(x)
 
 #endif // GLTEXTURE_H
