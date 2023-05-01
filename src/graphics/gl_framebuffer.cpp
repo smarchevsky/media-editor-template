@@ -40,8 +40,7 @@ void GLFrameBuffer::create(glm::vec2 size)
     glGenFramebuffers(1, &m_fbo);
     bind();
 
-    m_textureInstance = SHARED_TEXTURE();
-    m_textureInstance->createEmpty(size);
+    m_textureInstance = std::make_shared<GLTexture2D>(size);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
         m_textureInstance->getHandle(), 0);

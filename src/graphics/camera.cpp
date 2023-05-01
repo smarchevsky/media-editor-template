@@ -25,7 +25,7 @@ const glm::mat4& CameraOrtho::getView()
 void CameraOrtho::updateUniforms(GLShader* shader)
 {
     if (shader) {
-        shader->setUniform("matView", getView());
+        shader->setUniform("cameraView", getView());
     }
 }
 
@@ -85,5 +85,9 @@ void CameraPerspective::updateUniforms(GLShader* shader)
 
 CameraPerspective::CameraPerspective()
 {
+    m_sceneRotation = glm::vec2(1.8f, .5f);
+    m_cameraPosition = { -2.f, 0.f, 0.7f };
+    m_aimPosition = { 0.f, 0.f, 0.7f };
+    m_up = { 0.f, 0.f, 1.f };
     rotateAroundAim(glm::vec2(0));
 }

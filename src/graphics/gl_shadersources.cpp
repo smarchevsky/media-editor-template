@@ -6,18 +6,18 @@ const char* GLShaderSources::getDefault2d_VS()
 #version 330 core
 #define IDENTITY mat4(1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1)
 
-layout (location = 0) in vec3 inPos;
-layout (location = 1) in vec2 inUV;
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec2 uv;
 
 out vec2 UV;
 
-uniform mat4 matView = IDENTITY;
-uniform mat4 matModel = IDENTITY;
+uniform mat4 cameraView = IDENTITY;
+uniform mat4 modelWorld = IDENTITY;
 
 void main()
 {
-   gl_Position = matView * matModel * vec4(inPos, 1.0);
-   UV = inUV;
+   gl_Position = cameraView * modelWorld * vec4(position, 1.0);
+   UV = uv;
 }
 )";
 }
@@ -28,6 +28,7 @@ const char* GLShaderSources::getDefault2d_FS()
 #version 330 core
 
 in vec2 UV;
+
 out vec4 FragColor;
 
 uniform sampler2D texture0;

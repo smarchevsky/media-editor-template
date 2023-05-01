@@ -24,6 +24,7 @@ public:
 public:
     GLTexture2D() = default;
     GLTexture2D(const Image& img) { fromImage(img); }
+    GLTexture2D(glm::ivec2 size) { create(size); }
     ~GLTexture2D();
 
     bool setWrapping(Wrapping);
@@ -35,7 +36,7 @@ public:
 
 protected:
     void generateMipMap();
-    bool createEmpty(glm::ivec2 size);
+    bool create(glm::ivec2 size);
     bool fromImage(const Image& img);
     void clear();
 
@@ -50,7 +51,5 @@ protected:
     friend class GLTextureInstance;
     friend class GLFrameBuffer;
 };
-
-#define SHARED_TEXTURE(x) std::make_shared<GLTexture2D>(x)
 
 #endif // GLTEXTURE_H

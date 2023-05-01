@@ -3,7 +3,7 @@
 
 #include "application.h"
 
-#include "graphics/drawable.h"
+#include "graphics/entity.h"
 #include "graphics/gl_shader.h"
 
 #include "graphics/gl_rendermanager.h"
@@ -45,8 +45,8 @@ public:
         m_fb.getTexture()->setFiltering(GLTexture2D::Filtering::LinearMipmap);
         m_fb.getTexture()->setWrapping(GLTexture2D::Wrapping::ClampEdge);
 
-        auto texChecker = SHARED_TEXTURE(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
-        auto texLiza = SHARED_TEXTURE(Image(projectDir / "resources" / "mona_liza.jpg"));
+        auto texChecker = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
+        auto texLiza = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "mona_liza.jpg"));
         //  m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
         {
             EntitySprite2D s; // 0
