@@ -19,7 +19,7 @@ void GLRenderManager::draw(
     GLShader& shader,
     GLFrameBufferBase& frameBuffer,
     CameraBase* camera,
-    const std::vector<std::unique_ptr<DrawableBase>>& allContext)
+    const std::vector<std::unique_ptr<EntityBase>>& allContext)
 {
     frameBuffer.bind();
 
@@ -39,7 +39,7 @@ void GLRenderManager::draw(
     GLShader& shader,
     GLFrameBufferBase& frameBuffer,
     CameraBase* camera,
-    DrawableBase* drawable)
+    EntityBase* drawable)
 {
     frameBuffer.bind();
 

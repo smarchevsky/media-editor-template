@@ -149,6 +149,7 @@ public:
 
     glm::vec2 toCoordonates01(const glm::vec2 p) { return p / glm::vec2(m_windowSize); }
     glm::vec2 toCoordonatesM11(const glm::vec2 p) { return toCoordonates01(p) * 2.f - 1.f; }
+    // glm::vec2 toOffsetM11(const glm::vec2 p) { return toCoordonates01(p) * 2.f; }
     glm::ivec2 getSize() { return m_windowSize; }
 
 private:

@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 static fs::path projectDir(PROJECT_DIR);
 
 class OpenGLApp2D : public Application {
-    std::vector<Sprite2D> m_sprites;
+    std::vector<EntitySprite2D> m_sprites;
     std::shared_ptr<GLShader> m_shaderDefault2d;
     GLFrameBuffer m_fb;
     CameraOrtho m_camera;
@@ -49,14 +49,14 @@ public:
         auto texLiza = SHARED_TEXTURE(Image(projectDir / "resources" / "mona_liza.jpg"));
         //  m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
         {
-            Sprite2D s; // 0
+            EntitySprite2D s; // 0
             s.setPos({ 0.5f, 0.f });
             s.setUniform("texture0", texChecker);
             s.setUniform("texture1", texLiza);
             m_sprites.push_back(s);
         }
         {
-            Sprite2D s; // 1
+            EntitySprite2D s; // 1
             s.setPos({ -0.5f, -0.3f });
             s.setUniform("texture0", texChecker);
             s.setUniform("texture1", m_fb.getTexture());

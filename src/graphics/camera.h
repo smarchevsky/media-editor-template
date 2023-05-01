@@ -57,29 +57,33 @@ public:
 
 class CameraPerspective : public CameraBase {
 public:
+    CameraPerspective();
     void setFOV(float fov) { m_fov = fov, m_projectionDirty = true; }
     void setAR(float ar) { m_ar = ar, m_projectionDirty = true; }
 
-    void setPos(glm::vec3 pos) { m_pos = pos, m_viewDirty = true; }
-    void offsetPos(glm::vec3 delta_pos) { setPos(m_pos + delta_pos); }
+    // void setPos(glm::vec3 pos) { m_cameraPosition = pos, m_viewDirty = true; }
+    // void offsetPos(glm::vec3 delta_pos) { setPos(m_cameraPosition + delta_pos); }
 
-    void setAim(glm::vec3 aim) { m_aim = aim, m_viewDirty = true; }
-    void offsetAim(glm::vec3 delta_aim) { setAim(m_pos + delta_aim); }
+    void setAim(glm::vec3 aim) { m_aimPosition = aim, m_viewDirty = true; }
+    void offsetAim(glm::vec3 delta_aim) { setAim(m_cameraPosition + delta_aim); }
 
     void setUp(glm::vec3 up) { m_up = up, m_viewDirty = true; }
 
-    void setDistance(float newDistance)
+    void setDistanceFromAim(float newDistance)
     {
-        auto offset = m_pos - m_aim;
+        auto offset = m_cameraPosition - m_aimPosition;
         auto dir = offset / glm::length(offset);
-        m_pos = m_aim + dir * newDistance;
+        m_cameraPosition = m_aimPosition + dir * newDistance;
         m_viewDirty = true;
     }
 
-    glm::vec3 getPos() const { return m_pos; }
-    glm::vec3 getAim() const { return m_aim; }
+    void rotateAroundAim(glm::vec2 offsetDeltaRadians);
+    void pan(glm::vec2 delta);
+
+    glm::vec3 getPos() const { return m_cameraPosition; }
+    glm::vec3 getAim() const { return m_aimPosition; }
     glm::vec3 getUp() const { return m_up; }
-    float getDistance() const { return glm::distance(m_pos, m_aim); }
+    float getDistance() const { return glm::distance(m_cameraPosition, m_aimPosition); }
 
     const glm::mat4& getView();
     const glm::mat4& getProjection();
@@ -87,12 +91,16 @@ public:
     virtual void updateUniforms(GLShader* shader) override;
 
 private:
-    glm::mat4 m_matView;
-    glm::mat4 m_matProjection;
-    glm::vec3 m_pos = { 0.f, -10.f, 3.f }, m_aim = { 0.f, 0.f, 0.f }, m_up = { 0.f, 0.f, 1.f };
+    glm::vec2 m_sceneRotation;
+    glm::mat4 m_cameraView;
+    glm::mat4 m_cameraProjection;
+
+    glm::vec3 m_cameraPosition = { 0.f, -10.f, 3.f }, m_aimPosition = { 0.f, 0.f, 0.f }, m_up = { 0.f, 0.f, 1.f };
     float m_near = .1f, m_far = 2000.f;
     float m_fov = 1.f /*radians*/, m_ar = 1.f;
     bool m_viewDirty = true, m_projectionDirty = true;
 };
+
+
 
 #endif // ORTHOCAMERA_H

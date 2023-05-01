@@ -9,6 +9,9 @@ class GLTextureBase : NoCopy<GLTextureBase> {
 public:
     virtual ~GLTextureBase() = default;
 };
+/////////////////// RENDER (DEPTH) BUFFER /////////////////
+
+/////////////////// GLTexture2D ////////////////////
 
 class GLTexture2D : public GLTextureBase {
 public:

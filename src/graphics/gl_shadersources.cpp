@@ -88,12 +88,16 @@ uniform sampler2D texture0;
 
 out vec4 FragColor;
 
+#define FLIP_Y(c) vec2(c.x, 1.0 - c.y)
+
 void main()
 {
     vec2 uv = vs.uv;
-    uv.y = 1. - uv.y;
-    // FragColor = vec4(cos(vs.n * 3.14 + vec3(vs.uv, 0.)) * 0.5 + 0.5, 1);
-    FragColor = texture2D(texture0, uv);
+    vec4 c1 = vec4(cos(vs.n * 3.14) * 0.5 + 0.5, 1);
+    vec4 c2 = texture2D(texture0, FLIP_Y(uv));
+    vec4 c3 = vec4(.2, .2, .2, 1);
+    FragColor = mix(c1, c3, c2 * c2);
+    // FragColor = vec4(uv, 0, 1);
 }
 )";
 }

@@ -1,8 +1,8 @@
-#include "drawable.h"
+#include "entity.h"
 #include "gl_shader.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-void DrawableBase::setUniform(HashString str, const UniformVariant& var)
+void EntityBase::setUniform(HashString str, const UniformVariant& var)
 {
     auto it = m_uniforms.find(str);
     if (it != m_uniforms.end()) {
@@ -12,7 +12,7 @@ void DrawableBase::setUniform(HashString str, const UniformVariant& var)
     }
 }
 
-void DrawableBase::applyUniforms(GLShader* shader)
+void EntityBase::applyUniforms(GLShader* shader)
 {
     for (const auto& u : getUniforms())
         shader->setUniform(u.first, u.second);
@@ -20,7 +20,7 @@ void DrawableBase::applyUniforms(GLShader* shader)
 
 /////////////////////////////// SPRITE 2D ////////////////////////////
 
-Sprite2D::Sprite2D()
+EntitySprite2D::EntitySprite2D()
     : m_meshQuad(GLMeshStatics::get().getQuad2d())
 {
     initializeUniform("matModel", glm::mat4(1));
@@ -28,7 +28,7 @@ Sprite2D::Sprite2D()
     initializeUniform("texture1", Texture2Ddata());
 }
 
-void Sprite2D::applyUniformsAndDraw(GLShader* shader)
+void EntitySprite2D::applyUniformsAndDraw(GLShader* shader)
 {
     if (m_dirty) {
         glm::mat4 mat(1);
@@ -47,15 +47,15 @@ void Sprite2D::applyUniformsAndDraw(GLShader* shader)
 
 /////////////////////////////// MESH 3D ////////////////////////////
 
-Mesh3D::Mesh3D()
+EntityMesh3D::EntityMesh3D()
 {
     initializeUniform("modelWorld", glm::mat4(1));
     initializeUniform("texture0", Texture2Ddata());
 }
 
-void Mesh3D::setTransform(const glm::mat4& transform) { setUniform("modelWorld", transform); }
+void EntityMesh3D::setTransform(const glm::mat4& transform) { setUniform("modelWorld", transform); }
 
-void Mesh3D::applyUniformsAndDraw(GLShader* shader)
+void EntityMesh3D::applyUniformsAndDraw(GLShader* shader)
 {
     applyUniforms(shader);
     m_mesh->draw();
