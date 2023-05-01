@@ -36,7 +36,7 @@ GLTexture2D::~GLTexture2D()
     clear();
 }
 
-bool GLTexture2D::createEmpty(glm::ivec2 size)
+bool GLTexture2D::create(glm::ivec2 size)
 {
     if (size.x <= 0 || size.y <= 0)
         return false;

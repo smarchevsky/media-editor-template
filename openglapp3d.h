@@ -56,8 +56,7 @@ public:
         // Application::init();
         m_shaderDefault3D = GLShaderManager::get().getDefaultShader3d();
 
-        auto textureAO = SHARED_TEXTURE(
-            Image(resourceDir / "models3d" / "AO.png"));
+        auto textureAO = std::make_shared<GLTexture2D>(Image(resourceDir / "models3d" / "AO.png"));
 
         auto models = MeshReader::read(resourceDir / "models3d" / "stanford_dragon.obj");
         assert(models.size());

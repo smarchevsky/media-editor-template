@@ -1,4 +1,4 @@
-#include "openglapp3d.h"
+#include "openglapp2d.h"
 
 int main()
 {

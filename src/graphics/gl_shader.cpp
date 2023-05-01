@@ -70,7 +70,7 @@ UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
 
     case GL_SAMPLER_2D: {
         // assert(size == intSize);
-        return Texture2Ddata(std::shared_ptr<GLTexture2D>(), textureIndex);
+        return Texture2Ddata(nullptr, textureIndex);
     }
 
     case GL_FLOAT_MAT4: {

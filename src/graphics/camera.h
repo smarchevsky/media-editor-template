@@ -91,16 +91,14 @@ public:
     virtual void updateUniforms(GLShader* shader) override;
 
 private:
-    glm::vec2 m_sceneRotation;
     glm::mat4 m_cameraView;
     glm::mat4 m_cameraProjection;
 
-    glm::vec3 m_cameraPosition = { 0.f, -10.f, 3.f }, m_aimPosition = { 0.f, 0.f, 0.f }, m_up = { 0.f, 0.f, 1.f };
+    glm::vec2 m_sceneRotation; // set in constructor
+    glm::vec3 m_cameraPosition, m_aimPosition, m_up;
     float m_near = .1f, m_far = 2000.f;
     float m_fov = 1.f /*radians*/, m_ar = 1.f;
     bool m_viewDirty = true, m_projectionDirty = true;
 };
-
-
 
 #endif // ORTHOCAMERA_H

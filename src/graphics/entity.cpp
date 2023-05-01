@@ -23,7 +23,7 @@ void EntityBase::applyUniforms(GLShader* shader)
 EntitySprite2D::EntitySprite2D()
     : m_meshQuad(GLMeshStatics::get().getQuad2d())
 {
-    initializeUniform("matModel", glm::mat4(1));
+    initializeUniform("modelWorld", glm::mat4(1));
     initializeUniform("texture0", Texture2Ddata());
     initializeUniform("texture1", Texture2Ddata());
 }
@@ -53,7 +53,10 @@ EntityMesh3D::EntityMesh3D()
     initializeUniform("texture0", Texture2Ddata());
 }
 
-void EntityMesh3D::setTransform(const glm::mat4& transform) { setUniform("modelWorld", transform); }
+void EntityMesh3D::setTransform(const glm::mat4& transform)
+{
+    setUniform("modelWorld", transform);
+}
 
 void EntityMesh3D::applyUniformsAndDraw(GLShader* shader)
 {
