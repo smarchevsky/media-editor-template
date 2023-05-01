@@ -2,22 +2,23 @@
 #define GLFRAMEBUFFER_H
 
 #include "gl_texture.h"
+#include <glm/vec4.hpp>
 #include <memory>
 
 class GLFrameBufferBase {
 protected:
     static size_t s_currentBuffer;
-    bool m_depthEnabled = false;
+    glm::vec4 m_clearColor = glm::vec4(0, 0, 0, 1);
 
 public:
     static void staticUnbind();
     static void staticSetViewport(int x, int y, int width, int height);
     static void staticEnableDepthTest(bool enable);
-    void enableDepthTest(bool enabled);
 
 public:
     virtual void bind() const = 0;
-    void clear(float, float, float, float = 1.f);
+    void clear(bool withDepth = false);
+    void setClearColor(const glm::vec4& color) { m_clearColor = color; }
 
     virtual ~GLFrameBufferBase() { }
 };

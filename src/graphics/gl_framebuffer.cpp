@@ -10,29 +10,11 @@ size_t GLFrameBufferBase::s_currentBuffer = 0;
 void GLFrameBufferBase::staticUnbind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 void GLFrameBufferBase::staticSetViewport(int x, int y, int width, int height) { glViewport(x, y, width, height); }
 
-void GLFrameBufferBase::staticEnableDepthTest(bool enable)
-{
-    if (enable)
-        glEnable(GL_DEPTH_TEST);
-    else
-        glDisable(GL_DEPTH_TEST);
-}
-
-void GLFrameBufferBase::enableDepthTest(bool enabled)
+void GLFrameBufferBase::clear(bool withDepth)
 {
     bind();
-    m_depthEnabled = enabled;
-    staticEnableDepthTest(m_depthEnabled);
-    if (m_depthEnabled) {
-        glClear(GL_DEPTH_BUFFER_BIT);
-    }
-}
-
-void GLFrameBufferBase::clear(float r, float g, float b, float a)
-{
-    bind();
-    glClearColor(r, g, b, a);
-    glClear(GL_COLOR_BUFFER_BIT | (m_depthEnabled ? GL_DEPTH_BUFFER_BIT : 0));
+    glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+    glClear(GL_COLOR_BUFFER_BIT | (withDepth ? GL_DEPTH_BUFFER_BIT : 0));
 }
 
 void GLFrameBuffer::create(glm::vec2 size)
@@ -68,7 +50,6 @@ void GLFrameBuffer::bind() const
         s_currentBuffer = m_fbo;
 
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-        staticEnableDepthTest(m_depthEnabled);
 
         if (m_colorTexture) {
             auto size = m_colorTexture->getSize();

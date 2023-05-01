@@ -123,7 +123,6 @@ void Window::bind() const
         s_currentBuffer = (size_t)m_SDLwindow;
 
         GLFrameBufferBase::staticUnbind();
-        GLFrameBufferBase::staticEnableDepthTest(m_depthEnabled);
         staticSetViewport(0, 0, m_windowSize.x, m_windowSize.y);
 
         SDL_GL_MakeCurrent(m_SDLwindow, m_GLcontext);

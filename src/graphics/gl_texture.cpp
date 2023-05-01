@@ -6,20 +6,24 @@
 // #include <cassert>
 
 uint32_t GLTexture2D::s_currentBindedTexture = 0;
+struct InternalTextureFormat{
+    int colors;
 
-static int getGLTextureFormatInternal(GLTexture2D::Format format)
+};
+namespace {
+int getGLTextureFormatInternal(GLTexture2D::Format format)
 {
     switch (format) {
     case GLTexture2D::Format::R8G8B8:
-        return GL_RGB;
+        return GL_RGB8;
     case GLTexture2D::Format::R8G8B8A8:
-        return GL_RGBA;
+        return GL_RGBA8;
     default:
         LOGE("Texture internal format: " << (int)format << " not supported");
         return 0;
     }
 }
-static int getGLTextureFormatExternal(int nrChannels)
+int getGLTextureFormatExternal(int nrChannels)
 {
     switch (nrChannels) {
     case 3:
@@ -31,13 +35,12 @@ static int getGLTextureFormatExternal(int nrChannels)
         return 0;
     }
 }
-
+}
 GLDepthBuffer2D::GLDepthBuffer2D(glm::vec2 size)
 {
     glGenRenderbuffers(1, &m_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
-
 }
 
 GLDepthBuffer2D::~GLDepthBuffer2D()
