@@ -5,16 +5,15 @@
 #include "entity.h"
 #include "gl_framebuffer.h"
 
+// clang-format off
+enum class GLBlend : uint8_t { Disabled, OneMinusAlpha };
+enum class GLDepth : uint8_t { Disabled, Enabled };
+// clang-format on
+
 struct GLRenderParameters {
     GLRenderParameters() = default;
-
-    // clang-format off
-    enum class Blend : uint8_t { Disabled, OneMinusAlpha }
-        blend = Blend::Disabled;
-
-    enum class Depth : uint8_t { Disabled, Enabled }
-        depth = Depth::Disabled;
-    // clang-format on
+    GLBlend blend = GLBlend::Disabled;
+    GLDepth depth = GLDepth::Disabled;
 
     void apply();
 };

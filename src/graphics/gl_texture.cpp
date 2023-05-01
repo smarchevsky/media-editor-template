@@ -6,18 +6,17 @@
 // #include <cassert>
 
 uint32_t GLTexture2D::s_currentBindedTexture = 0;
-struct InternalTextureFormat{
-    int colors;
 
-};
 namespace {
 int getGLTextureFormatInternal(GLTexture2D::Format format)
 {
     switch (format) {
-    case GLTexture2D::Format::R8G8B8:
+    case GLTexture2D::Format::RGB_8:
         return GL_RGB8;
-    case GLTexture2D::Format::R8G8B8A8:
+    case GLTexture2D::Format::RGBA_8:
         return GL_RGBA8;
+    case GLTexture2D::Format::RGB_16:
+        return GL_RGB16;
     default:
         LOGE("Texture internal format: " << (int)format << " not supported");
         return 0;
@@ -57,17 +56,19 @@ GLTexture2D::~GLTexture2D()
     clear();
 }
 
-bool GLTexture2D::create(glm::ivec2 size)
+bool GLTexture2D::create(glm::ivec2 size, Format format)
 {
     if (size.x <= 0 || size.y <= 0)
         return false;
 
     m_size = size;
+    m_internalFormat = format;
+    int internalTextureFormat = getGLTextureFormatInternal(m_internalFormat);
 
     clear();
     glGenTextures(1, &m_textureHandle);
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, internalTextureFormat, size.x, size.y, 0,
         GL_RGB, GL_UNSIGNED_BYTE, nullptr); // input data seems useless
 
     setFiltering(Filtering::Nearset);
@@ -84,12 +85,10 @@ bool GLTexture2D::fromImage(const Image& img)
     }
 
     int internalTextureFormat = getGLTextureFormatInternal(m_internalFormat);
-    if (!internalTextureFormat)
-        return false;
+    assert(internalTextureFormat);
 
     int externalTextureFormat = getGLTextureFormatExternal(img.m_nrChannels);
-    if (!externalTextureFormat)
-        return false;
+    assert(externalTextureFormat);
 
     clear();
     glGenTextures(1, &m_textureHandle);
