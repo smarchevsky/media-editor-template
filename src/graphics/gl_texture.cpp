@@ -3,15 +3,16 @@
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
 #include <iostream>
+// #include <cassert>
 
 uint32_t GLTexture2D::s_currentBindedTexture = 0;
 
 static int getGLTextureFormatInternal(GLTexture2D::Format format)
 {
     switch (format) {
-    case GLTexture2D::Format::RGB:
+    case GLTexture2D::Format::R8G8B8:
         return GL_RGB;
-    case GLTexture2D::Format::RGBA:
+    case GLTexture2D::Format::R8G8B8A8:
         return GL_RGBA;
     default:
         LOGE("Texture internal format: " << (int)format << " not supported");
@@ -31,6 +32,23 @@ static int getGLTextureFormatExternal(int nrChannels)
     }
 }
 
+GLDepthBuffer2D::GLDepthBuffer2D(glm::vec2 size)
+{
+    glGenRenderbuffers(1, &m_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
+
+}
+
+GLDepthBuffer2D::~GLDepthBuffer2D()
+{
+    if (m_rbo) {
+        glDeleteTextures(1, &m_rbo);
+        m_rbo = 0;
+        LOG("Render (depth) buffer destroyed");
+    }
+}
+
 GLTexture2D::~GLTexture2D()
 {
     clear();
@@ -41,11 +59,11 @@ bool GLTexture2D::create(glm::ivec2 size)
     if (size.x <= 0 || size.y <= 0)
         return false;
 
+    m_size = size;
+
     clear();
     glGenTextures(1, &m_textureHandle);
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
-
-    m_size = size;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0,
         GL_RGB, GL_UNSIGNED_BYTE, nullptr); // input data seems useless
 

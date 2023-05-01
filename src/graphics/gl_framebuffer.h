@@ -6,7 +6,7 @@
 
 class GLFrameBufferBase {
 protected:
-    static size_t m_currentBuffer;
+    static size_t s_currentBuffer;
     bool m_depthEnabled = false;
 
 public:
@@ -31,11 +31,12 @@ public:
     void bind() const override;
     void generateMipMap();
 
-    auto& getTexture() { return m_textureInstance; }
+    auto& getTexture() { return m_colorTexture; }
 
 private:
     unsigned int m_fbo = 0;
-    std::shared_ptr<GLTexture2D> m_textureInstance;
+    std::shared_ptr<GLTexture2D> m_colorTexture;
+    std::shared_ptr<GLDepthBuffer2D> m_depthTexture;
 };
 
 #endif // GLFRAMEBUFFER_H

@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-size_t GLFrameBufferBase::m_currentBuffer = 0;
+size_t GLFrameBufferBase::s_currentBuffer = 0;
 
 void GLFrameBufferBase::staticUnbind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 void GLFrameBufferBase::staticSetViewport(int x, int y, int width, int height) { glViewport(x, y, width, height); }
@@ -38,12 +38,17 @@ void GLFrameBufferBase::clear(float r, float g, float b, float a)
 void GLFrameBuffer::create(glm::vec2 size)
 {
     glGenFramebuffers(1, &m_fbo);
-    bind();
+    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-    m_textureInstance = std::make_shared<GLTexture2D>(size);
+    m_colorTexture = std::make_shared<GLTexture2D>(size);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colorTexture->getHandle(), 0);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-        m_textureInstance->getHandle(), 0);
+    m_depthTexture = std::make_shared<GLDepthBuffer2D>(size);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_depthTexture->getHandle());
+
+    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
+        && "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 GLFrameBuffer::~GLFrameBuffer() { reset(); }
@@ -54,19 +59,19 @@ void GLFrameBuffer::reset()
         glDeleteFramebuffers(1, &m_fbo);
         m_fbo = 0;
     }
-    m_textureInstance.reset();
+    m_colorTexture.reset();
 }
 
 void GLFrameBuffer::bind() const
 {
-    if (m_currentBuffer != m_fbo) {
-        m_currentBuffer = m_fbo;
+    if (s_currentBuffer != m_fbo) {
+        s_currentBuffer = m_fbo;
 
         glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
         staticEnableDepthTest(m_depthEnabled);
 
-        if (m_textureInstance) {
-            auto size = m_textureInstance->getSize();
+        if (m_colorTexture) {
+            auto size = m_colorTexture->getSize();
             glViewport(0, 0, size.x, size.y);
         }
     }
@@ -74,7 +79,7 @@ void GLFrameBuffer::bind() const
 
 void GLFrameBuffer::generateMipMap()
 {
-    if (m_textureInstance) {
-        m_textureInstance->generateMipMap();
+    if (m_colorTexture) {
+        m_colorTexture->generateMipMap();
     }
 }
