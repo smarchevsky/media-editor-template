@@ -1,5 +1,5 @@
-#ifndef DRAWABLE_H
-#define DRAWABLE_H
+#ifndef ENTITY_H
+#define ENTITY_H
 
 #include "gl_mesh.h"
 #include "gl_shader.h"
@@ -9,7 +9,7 @@
 
 class GLFrameBufferBase;
 
-class DrawableBase {
+class EntityBase {
     std::unordered_map<HashString, UniformVariant> m_uniforms;
 
 protected:
@@ -22,13 +22,13 @@ public:
     void applyUniforms(GLShader* shader);
     virtual void applyUniformsAndDraw(GLShader* shader) = 0;
 
-    virtual ~DrawableBase() = default;
+    virtual ~EntityBase() = default;
 };
 
 /////////////////////////////// SPRITE 2D ////////////////////////////
 
 // square sprite -1 to 1
-class Sprite2D : public DrawableBase {
+class EntitySprite2D : public EntityBase {
     const GLMeshTriArray& m_meshQuad;
 
     glm::vec2 m_pos = glm::vec2(0);
@@ -37,7 +37,7 @@ class Sprite2D : public DrawableBase {
     bool m_dirty = true;
 
 public:
-    Sprite2D();
+    EntitySprite2D();
 
     void setPos(glm::vec2 pos) { m_pos = pos, m_dirty = true; }
     void setSize(glm::vec2 size) { m_size = size, m_dirty = true; }
@@ -48,12 +48,12 @@ public:
 
 /////////////////////////////// MESH 3D ////////////////////////////
 
-class Mesh3D : public DrawableBase {
+class EntityMesh3D : public EntityBase {
 protected:
     std::shared_ptr<GLMeshTriIndices> m_mesh;
 
 public:
-    Mesh3D();
+    EntityMesh3D();
     void setMesh(const std::shared_ptr<GLMeshTriIndices>& mesh) { m_mesh = mesh; }
 
     void setTransform(const glm::mat4& transform);
