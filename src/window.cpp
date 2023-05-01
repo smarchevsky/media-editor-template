@@ -119,8 +119,8 @@ void Window::display() { SDL_GL_SwapWindow(m_SDLwindow); }
 
 void Window::bind() const
 {
-    if (m_currentBuffer != (size_t)m_SDLwindow) {
-        m_currentBuffer = (size_t)m_SDLwindow;
+    if (s_currentBuffer != (size_t)m_SDLwindow) {
+        s_currentBuffer = (size_t)m_SDLwindow;
 
         GLFrameBufferBase::staticUnbind();
         GLFrameBufferBase::staticEnableDepthTest(m_depthEnabled);

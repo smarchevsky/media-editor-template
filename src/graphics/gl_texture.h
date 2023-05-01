@@ -11,15 +11,30 @@ public:
 };
 /////////////////// RENDER (DEPTH) BUFFER /////////////////
 
+class GLDepthBuffer2D : public GLTextureBase {
+    uint32_t m_rbo {};
+
+public:
+    uint32_t getHandle() const { return m_rbo; }
+    GLDepthBuffer2D(glm::vec2 size);
+    ~GLDepthBuffer2D();
+};
+
 /////////////////// GLTexture2D ////////////////////
 
 class GLTexture2D : public GLTextureBase {
 public:
     // clang-format off
-    enum class Format : uint8_t { RGB, RGBA };
+    enum class Format : uint8_t { R8G8B8, R8G8B8A8 };
     enum class Wrapping : uint8_t { Repeat, MirrorRepeat, ClampEdge, ClampBorder };
     enum class Filtering : uint8_t { Nearset, NearestMipmap, Linear, LinearMipmap };
     // clang-format on
+protected:
+    uint32_t m_textureHandle {};
+    glm::ivec2 m_size = glm::ivec2(0);
+    Format m_internalFormat = Format::R8G8B8A8;
+    Filtering m_filtering = Filtering::Nearset;
+    Wrapping m_wrapping = Wrapping ::Repeat;
 
 public:
     GLTexture2D() = default;
@@ -39,13 +54,6 @@ protected:
     bool create(glm::ivec2 size);
     bool fromImage(const Image& img);
     void clear();
-
-protected:
-    glm::ivec2 m_size = glm::ivec2(0);
-    uint32_t m_textureHandle {};
-    Format m_internalFormat = Format::RGBA;
-    Filtering m_filtering = Filtering::Nearset;
-    Wrapping m_wrapping = Wrapping ::Repeat;
 
     static uint32_t s_currentBindedTexture;
     friend class GLTextureInstance;
