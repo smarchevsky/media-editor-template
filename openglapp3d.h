@@ -15,8 +15,8 @@ static fs::path resourceDir(RESOURCE_DIR);
 
 class OpenGLApp3D : public Application {
     EntityMesh3D m_mesh3d;
-    EntitySprite2D m_sprite3d;
-    GLFrameBuffer m_frameBuffer3d;
+    EntitySprite2D m_sprite3d, m_spriteAccumulator;
+    GLFrameBuffer m_frameBuffer3d, m_frameBufferAccumulator;
 
     std::shared_ptr<GLShader> m_shaderDefault2D, m_shaderDefault3D;
     CameraPerspective m_camera;
@@ -60,8 +60,10 @@ public:
         m_shaderDefault3D = GLShaderManager::get().getDefaultShader3d();
 
         m_frameBuffer3d.create({ 256, 128 });
+        m_frameBufferAccumulator.create({ 256, 128 }, GLTexture2D::Format::RGB_16);
 
         m_sprite3d.setUniform("texture0", m_frameBuffer3d.getTexture());
+        m_spriteAccumulator.setUniform("texture0", m_frameBufferAccumulator.getTexture());
 
         auto textureAO = std::make_shared<GLTexture2D>(Image(resourceDir / "models3d" / "AO.png"));
         auto models = MeshReader::read(resourceDir / "models3d" / "stanford_dragon.obj");
@@ -74,12 +76,16 @@ public:
     void updateWindow(float dt) override
     {
         // render 3d to framebuffer 3d
-        GLRenderParameters params3d { GLRenderParameters::Blend::Disabled, GLRenderParameters::Depth::Enabled };
+        GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled };
         GLRenderManager::draw(m_shaderDefault3D.get(), &m_frameBuffer3d, &m_camera, &m_mesh3d, true, params3d);
 
         // render framebuffer to accumulator with alpha
-        GLRenderParameters paramsAccumulate { GLRenderParameters::Blend::Disabled, GLRenderParameters::Depth::Disabled };
-        GLRenderManager::draw(m_shaderDefault2D.get(), &m_window, nullptr, &m_sprite3d, false, paramsAccumulate);
+        GLRenderParameters paramsAccumulate { GLBlend::OneMinusAlpha, GLDepth::Disabled };
+        GLRenderManager::draw(m_shaderDefault2D.get(), &m_frameBufferAccumulator, nullptr, &m_sprite3d, false, paramsAccumulate);
+
+        // render accumulator to screen
+        GLRenderParameters paramsPresent { GLBlend::Disabled, GLDepth::Disabled };
+        GLRenderManager::draw(m_shaderDefault2D.get(), &m_window, nullptr, &m_spriteAccumulator, false, paramsPresent);
     }
 };
 typedef OpenGLApp3D App;

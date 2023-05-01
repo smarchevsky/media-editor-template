@@ -17,12 +17,12 @@ void GLFrameBufferBase::clear(bool withDepth)
     glClear(GL_COLOR_BUFFER_BIT | (withDepth ? GL_DEPTH_BUFFER_BIT : 0));
 }
 
-void GLFrameBuffer::create(glm::vec2 size)
+void GLFrameBuffer::create(glm::vec2 size, GLTexture2D::Format format)
 {
     glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 
-    m_colorTexture = std::make_shared<GLTexture2D>(size);
+    m_colorTexture = std::make_shared<GLTexture2D>(size, format);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colorTexture->getHandle(), 0);
 
     m_depthTexture = std::make_shared<GLDepthBuffer2D>(size);

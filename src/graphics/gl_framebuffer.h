@@ -26,7 +26,10 @@ public:
 class GLFrameBuffer : public GLFrameBufferBase {
 public:
     ~GLFrameBuffer();
-    void create(glm::vec2 size);
+
+    void create(glm::vec2 size,
+        GLTexture2D::Format format = GLTexture2D::Format::RGB_8);
+
     void reset();
 
     void bind() const override;

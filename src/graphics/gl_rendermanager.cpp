@@ -26,7 +26,7 @@ void GLRenderManager::draw(GLShader* shader,
     frameBuffer->bind();
 
     if (clear) {
-        bool withDepth = (params.depth == GLRenderParameters::Depth::Enabled);
+        bool withDepth = (params.depth == GLDepth::Enabled);
         frameBuffer->clear(withDepth);
     }
 
@@ -46,10 +46,10 @@ void GLRenderManager::draw(GLShader* shader,
 void GLRenderParameters::apply()
 {
     switch (blend) {
-    case Blend::Disabled: {
+    case GLBlend::Disabled: {
         glDisable(GL_BLEND);
     } break;
-    case Blend::OneMinusAlpha: {
+    case GLBlend::OneMinusAlpha: {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } break;
@@ -60,10 +60,10 @@ void GLRenderParameters::apply()
     }
 
     switch (depth) {
-    case Depth ::Disabled: {
+    case GLDepth ::Disabled: {
         glDisable(GL_DEPTH_TEST);
     } break;
-    case Depth ::Enabled: {
+    case GLDepth ::Enabled: {
         glEnable(GL_DEPTH_TEST);
     } break;
     default:
