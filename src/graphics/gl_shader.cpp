@@ -299,98 +299,54 @@ void GLShader::bind()
 
 //////////////////////// SHADER MANAGER //////////////////////////
 
-GLShaderPtr GLShaderManager::addShader(
-    const char* uniqueName,
-    const fs::path& vertexShaderPath,
-    const fs::path& fragmentShaderPath)
-{
+// GLShaderPtr GLShaderManager::addShader(const fs::path& vertexShaderPath,
+//     const fs::path& fragmentShaderPath)
+//{
 
-    bool success = true;
-    std::string vertexShaderCode;
-    std::ifstream vertexShaderStream(vertexShaderPath, std::ios::in);
+//    bool success = true;
+//    std::string vertexShaderCode;
+//    std::ifstream vertexShaderStream(vertexShaderPath, std::ios::in);
 
-    if (vertexShaderStream.is_open()) {
-        std::stringstream sstr;
-        sstr << vertexShaderStream.rdbuf();
-        vertexShaderCode = sstr.str();
-        vertexShaderStream.close();
-    } else {
-        success = false;
-        LOGE("Can't open file: " << vertexShaderPath);
-    }
+//    if (vertexShaderStream.is_open()) {
+//        std::stringstream sstr;
+//        sstr << vertexShaderStream.rdbuf();
+//        vertexShaderCode = sstr.str();
+//        vertexShaderStream.close();
+//    } else {
+//        success = false;
+//        LOGE("Can't open file: " << vertexShaderPath);
+//    }
 
-    std::string fragmentShaderCode;
-    std::ifstream fragmentShaderStream(fragmentShaderPath, std::ios::in);
-    if (fragmentShaderStream.is_open()) {
-        std::stringstream sstr;
-        sstr << fragmentShaderStream.rdbuf();
-        fragmentShaderCode = sstr.str();
-        fragmentShaderStream.close();
-    } else {
-        success = false;
-        LOGE("Can't open file: " << fragmentShaderPath);
-    }
+//    std::string fragmentShaderCode;
+//    std::ifstream fragmentShaderStream(fragmentShaderPath, std::ios::in);
+//    if (fragmentShaderStream.is_open()) {
+//        std::stringstream sstr;
+//        sstr << fragmentShaderStream.rdbuf();
+//        fragmentShaderCode = sstr.str();
+//        fragmentShaderStream.close();
+//    } else {
+//        success = false;
+//        LOGE("Can't open file: " << fragmentShaderPath);
+//    }
 
-    if (success) {
-        return addShader(uniqueName, vertexShaderCode, fragmentShaderCode);
-    }
-    return nullptr;
-}
-
-GLShaderPtr GLShaderManager::addShader(
-    const char* uniqueName,
-    const char* vertexShaderCode,
-    const char* fragmentShaderCode)
-{
-
-    auto foundShader = getByName(uniqueName);
-    if (foundShader) {
-        LOGE("Shader with this name already exists, get from cache");
-        return foundShader;
-    } else {
-        GLShaderPtr shader = std::make_shared<GLShader>(vertexShaderCode, fragmentShaderCode);
-        if (shader->valid()) {
-            s_staticShaders[uniqueName] = shader;
-            LOG("Shader: \"" << uniqueName << "\" created successfully.");
-            return shader;
-        } else {
-            LOGE("Failed to compile shader");
-            return nullptr;
-        }
-    }
-
-    return nullptr;
-}
+//    if (success) {
+//        return addShader(vertexShaderCode, fragmentShaderCode);
+//    }
+//    return nullptr;
+//}
 
 GLShaderPtr GLShaderManager::getDefaultShader2d()
 {
-    static constexpr const char* defaultShaderName = "DefaultShader2d";
-    auto shader = getByName(defaultShaderName);
-    if (shader)
-        return shader;
-    else
-        return addShader(defaultShaderName,
-            GLShaderSources::getDefault2d_VS(),
-            GLShaderSources::getDefault2d_FS());
+
+    return std::make_shared<GLShader>(
+        GLShaderSources::getDefault2d_VS(),
+        GLShaderSources::getDefault2d_FS());
 }
 
 GLShaderPtr GLShaderManager::getDefaultShader3d()
 {
-    static constexpr const char* defaultShaderName = "DefaultShader3d";
-    auto shader = getByName(defaultShaderName);
-    if (shader)
-        return shader;
-    else
-        return addShader(defaultShaderName,
-            GLShaderSources::getDefault3d_VS(),
-            GLShaderSources::getDefault3d_FS());
-}
 
-GLShaderPtr GLShaderManager::getByName(const HashString& name)
-{
-    auto it = s_staticShaders.find(name);
-    if (it != s_staticShaders.end()) {
-        return it->second;
-    }
-    return nullptr;
+    return std::make_shared<GLShader>(
+        GLShaderSources::getDefault3d_VS(),
+        GLShaderSources::getDefault3d_FS());
 }

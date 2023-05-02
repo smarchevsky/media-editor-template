@@ -107,26 +107,17 @@ public:
         static GLShaderManager shaderGeneratorStatic;
         return shaderGeneratorStatic;
     }
-    GLShaderPtr addShader(
-        const char* uniqueName,
-        const char* vertexShaderCode,
-        const char* fragmentShaderCode);
 
-    GLShaderPtr addShader(
-        const char* uniqueName,
-        const fs::path& vertexShaderPath,
-        const fs::path& fragmentShaderPath);
+    //    GLShaderPtr addShader(
+    //        const fs::path& vertexShaderPath,
+    //        const fs::path& fragmentShaderPath);
 
     GLShaderPtr getDefaultShader2d();
     GLShaderPtr getDefaultShader3d();
-    GLShaderPtr getByName(const HashString& name);
 
 private:
     GLShaderManager() = default;
     ~GLShaderManager() = default;
-
-    static std::unordered_map<HashString, GLShaderPtr> s_staticShaders;
 };
-inline std::unordered_map<HashString, GLShaderPtr> GLShaderManager::s_staticShaders;
 
 #endif // SHADER_H
