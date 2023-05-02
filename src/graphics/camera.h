@@ -85,8 +85,13 @@ public:
     glm::vec3 getUp() const { return m_up; }
     float getDistance() const { return glm::distance(m_cameraPosition, m_aimPosition); }
 
+    void setJitterAA(glm::vec2 jitter) { m_jitterSizeAA = jitter; }
+    void setJitterDOV(float radius) { m_jitterSizeDOF = radius; }
+    void setJitterEnabled(bool enabled) { m_jitterEnabled = enabled; }
+
     const glm::mat4& getView();
     const glm::mat4& getProjection();
+    const glm::mat4& getProjectionJittered();
 
     virtual void updateUniforms(GLShader* shader) override;
 
@@ -96,9 +101,14 @@ private:
 
     glm::vec2 m_sceneRotation; // set in constructor
     glm::vec3 m_cameraPosition, m_aimPosition, m_up;
+
+    glm::vec2 m_jitterSizeAA = glm::vec2(0);
+    float m_jitterSizeDOF = 0.1f;
+
     float m_near = .1f, m_far = 2000.f;
     float m_fov = 1.f /*radians*/, m_ar = 1.f;
     bool m_viewDirty = true, m_projectionDirty = true;
+    bool m_jitterEnabled = false;
 };
 
 #endif // ORTHOCAMERA_H
