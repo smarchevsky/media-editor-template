@@ -4,6 +4,7 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/random.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/string_cast.hpp>
 
@@ -74,12 +75,36 @@ const glm::mat4& CameraPerspective::getProjection()
     return m_cameraProjection;
 }
 
+const glm::mat4& CameraPerspective::getProjectionJittered()
+{
+    glm::vec2 jitterAA = glm::diskRand(1.f) * m_jitterSizeAA;
+    glm::vec2 jitterDOF = glm::diskRand(1.f) * m_jitterSizeDOF;
+    // glm::vec4 j(jitter.x, jitter.y, 0.f, 0.f);
+    m_cameraProjection = glm::perspective(m_fov, m_ar, m_near, m_far);
+    auto projectedDistance = glm::vec4(0, 0, -getDistance(), 0) * m_cameraProjection;
+
+    glm::vec4& z = m_cameraProjection[2];
+    glm::vec4& w = m_cameraProjection[3];
+
+    z.x += jitterDOF.x / projectedDistance.z;
+    z.y += jitterDOF.y / projectedDistance.z;
+    w.x += jitterDOF.x;
+    w.y += jitterDOF.y;
+
+    z.x += jitterAA.x;
+    z.y += jitterAA.y;
+
+    m_projectionDirty = true;
+    return m_cameraProjection;
+}
+
 void CameraPerspective::updateUniforms(GLShader* shader)
 {
     if (shader) {
         shader->setUniform("cameraView", getView());
         shader->setUniform("cameraPosition", m_cameraPosition);
-        shader->setUniform("cameraProjection", getProjection());
+        shader->setUniform("cameraProjection",
+            m_jitterEnabled ? getProjectionJittered() : getProjection());
     }
 }
 

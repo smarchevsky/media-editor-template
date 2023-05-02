@@ -15,13 +15,15 @@ static fs::path resourceDir(RESOURCE_DIR);
 
 class OpenGLApp3D : public Application {
     EntityMesh3D m_mesh3d;
-    EntitySprite2D m_sprite3d, m_spriteAccumulator;
-    GLFrameBuffer m_frameBuffer3d, m_frameBufferAccumulator;
+    EntitySprite2D m_spriteReceive3D, m_spriteAccumulator;
+    GLFrameBuffer m_frameBufferReceive3D, m_frameBufferAccumulator;
 
     std::shared_ptr<GLShader> m_shaderDefault2D, m_shaderDefault3D;
     CameraPerspective m_camera;
+    int m_dirtyLevel = 0;
 
 public:
+    void resetDirty() { m_dirtyLevel = 0; }
     void init() override
     {
         m_camera.setAR((float)m_window.getSize().x / m_window.getSize().y);
@@ -34,6 +36,7 @@ public:
                 distance *= scaleFactor;
                 distance = glm::clamp(distance, 0.1f, 1000.f);
                 m_camera.setDistanceFromAim(distance);
+                resetDirty();
             });
 
         m_window.setMouseDragEvent(MouseButton::Middle, // drag on MMB
@@ -41,7 +44,7 @@ public:
                 glm::ivec2 delta, DragState dragState) {
                 const float offsetScale = 2.f / m_window.getSize().x;
                 m_camera.pan(glm::vec2(delta) * offsetScale);
-                // camera pan
+                resetDirty();
             });
 
         m_window.setMouseDragEvent(MouseButton::Left, // rotate on LMB
@@ -49,20 +52,25 @@ public:
                 glm::ivec2 delta, DragState dragState) {
                 const float offsetScale = M_PI * 2.f / m_window.getSize().x;
                 m_camera.rotateAroundAim(glm::vec2(delta) * offsetScale);
+                resetDirty();
             });
 
         m_window.setScreenResizeEvent( // window resize
             [this](glm::ivec2 oldSize, glm::ivec2 newSize) {
                 m_camera.setAR((float)newSize.x / newSize.y);
+                resetDirty();
             });
 
         m_shaderDefault2D = GLShaderManager::get().getDefaultShader2d();
         m_shaderDefault3D = GLShaderManager::get().getDefaultShader3d();
 
-        m_frameBuffer3d.create({ 256, 128 });
-        m_frameBufferAccumulator.create({ 256, 128 }, GLTexture2D::Format::RGB_16);
+        glm::vec2 frameBufferSize(512, 256);
+        m_frameBufferReceive3D.create(frameBufferSize);
+        m_frameBufferAccumulator.create(frameBufferSize, GLTexture2D::Format::RGB_16);
 
-        m_sprite3d.setUniform("texture0", m_frameBuffer3d.getTexture());
+        m_camera.setJitterAA(1.f / frameBufferSize);
+
+        m_spriteReceive3D.setUniform("texture0", m_frameBufferReceive3D.getTexture());
         m_spriteAccumulator.setUniform("texture0", m_frameBufferAccumulator.getTexture());
 
         auto textureAO = std::make_shared<GLTexture2D>(Image(resourceDir / "models3d" / "AO.png"));
@@ -76,12 +84,18 @@ public:
     void updateWindow(float dt) override
     {
         // render 3d to framebuffer 3d
-        GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled };
-        GLRenderManager::draw(m_shaderDefault3D.get(), &m_frameBuffer3d, &m_camera, &m_mesh3d, true, params3d);
+        if (m_dirtyLevel < 300) {
+            m_camera.setJitterEnabled(m_dirtyLevel != 0);
+            m_spriteReceive3D.setUniform("opacity", 1.f / (m_dirtyLevel + 1));
 
-        // render framebuffer to accumulator with alpha
-        GLRenderParameters paramsAccumulate { GLBlend::OneMinusAlpha, GLDepth::Disabled };
-        GLRenderManager::draw(m_shaderDefault2D.get(), &m_frameBufferAccumulator, nullptr, &m_sprite3d, false, paramsAccumulate);
+            GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled };
+            GLRenderManager::draw(m_shaderDefault3D.get(), &m_frameBufferReceive3D, &m_camera, &m_mesh3d, true, params3d);
+
+            // render framebuffer to accumulator with alpha
+            GLRenderParameters paramsAccumulate { GLBlend::OneMinusAlpha, GLDepth::Disabled };
+            GLRenderManager::draw(m_shaderDefault2D.get(), &m_frameBufferAccumulator, nullptr, &m_spriteReceive3D, false, paramsAccumulate);
+            m_dirtyLevel++;
+        }
 
         // render accumulator to screen
         GLRenderParameters paramsPresent { GLBlend::Disabled, GLDepth::Disabled };

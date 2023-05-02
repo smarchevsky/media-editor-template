@@ -25,6 +25,7 @@ EntitySprite2D::EntitySprite2D()
 {
     initializeUniform("modelWorld", glm::mat4(1));
     initializeUniform("texture0", Texture2Ddata());
+    initializeUniform("opacity", 1.f);
 }
 
 void EntitySprite2D::applyUniformsAndDraw(GLShader* shader)

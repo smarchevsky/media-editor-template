@@ -33,6 +33,7 @@ out vec4 FragColor;
 
 uniform sampler2D texture0;
 // uniform sampler2D texture1;
+uniform float opacity;
 
 void main()
 {
@@ -43,7 +44,7 @@ void main()
 
     // FragColor = mix(t0, t1, vec4(0.75));
     FragColor = t0;
-    FragColor.a = 0.02;
+    FragColor.a = opacity;
 }
 )";
 }
