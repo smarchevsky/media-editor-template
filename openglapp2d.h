@@ -37,8 +37,8 @@ public:
             [this](glm::ivec2 oldSize, glm::ivec2 newSize) {
                 m_camera.setViewportSize(glm::vec2(newSize));
             });
+        m_window.setClearColor({ .13f, .14f, .15f, 1.f });
 
-        // Application::init();
         m_shaderDefault2d = GLShaderManager::get().getDefaultShader2d();
 
         m_fb.create({ 2048, 2048 });
@@ -52,14 +52,12 @@ public:
             EntitySprite2D s; // 0
             s.setPos({ 0.5f, 0.f });
             s.setUniform("texture0", texChecker);
-            s.setUniform("texture1", texLiza);
             m_sprites.push_back(s);
         }
         {
             EntitySprite2D s; // 1
             s.setPos({ -0.5f, -0.3f });
-            s.setUniform("texture0", texChecker);
-            s.setUniform("texture1", m_fb.getTexture());
+            s.setUniform("texture0", m_fb.getTexture());
             m_sprites.push_back(s);
         }
     }
@@ -69,11 +67,9 @@ public:
         GLRenderManager rm;
         m_sprites[0].addRotation(dt * 0.1f);
 
-        m_fb.clear(0, 0, 0, 1);
-        rm.draw(*m_shaderDefault2d, m_fb, nullptr, &m_sprites[0]);
+        rm.draw(m_shaderDefault2d.get(), &m_fb, nullptr, &m_sprites[0], true);
 
-        m_window.clear(0.16f, 0.16f, 0.16f, 1);
-        rm.draw(*m_shaderDefault2d, m_window, &m_camera, &m_sprites[1]);
+        rm.draw(m_shaderDefault2d.get(), &m_window, &m_camera, &m_sprites[1], true);
     }
 };
 typedef OpenGLApp2D App;
