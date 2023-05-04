@@ -9,6 +9,8 @@
 #include "graphics/gl_rendermanager.h"
 #include "graphics/model3d.h"
 
+#include <SDL2/SDL.h>
+
 namespace fs = std::filesystem;
 static fs::path projectDir(PROJECT_DIR);
 static fs::path resourceDir(RESOURCE_DIR);
@@ -64,9 +66,11 @@ public:
         m_shaderDefault2D = GLShaderManager::get().getDefaultShader2d();
         m_shaderDefault3D = GLShaderManager::get().getDefaultShader3d();
 
-        glm::vec2 frameBufferSize(512, 256);
+        glm::vec2 frameBufferSize(1000, 500);
         m_frameBufferReceive3D.create(frameBufferSize);
-        m_frameBufferAccumulator.create(frameBufferSize, GLTexture2D::Format::RGB_16);
+        m_frameBufferAccumulator.create(frameBufferSize, GLTexture2D::Format::RGB_32F);
+
+        m_frameBufferReceive3D.setClearColor({ .08f, .09f, .1f, 1.f });
 
         m_camera.setJitterAA(1.f / frameBufferSize);
 
@@ -84,7 +88,9 @@ public:
     void updateWindow(float dt) override
     {
         // render 3d to framebuffer 3d
-        if (m_dirtyLevel < 300) {
+        auto startFrameTime = SDL_GetPerformanceCounter();
+        float freq = SDL_GetPerformanceFrequency();
+        while (true) {
             m_camera.setJitterEnabled(m_dirtyLevel != 0);
             m_spriteReceive3D.setUniform("opacity", 1.f / (m_dirtyLevel + 1));
 
@@ -95,6 +101,11 @@ public:
             GLRenderParameters paramsAccumulate { GLBlend::OneMinusAlpha, GLDepth::Disabled };
             GLRenderManager::draw(m_shaderDefault2D.get(), &m_frameBufferAccumulator, nullptr, &m_spriteReceive3D, false, paramsAccumulate);
             m_dirtyLevel++;
+
+            float frameTime = (float)((SDL_GetPerformanceCounter() - startFrameTime)                / freq);
+
+            if (m_dirtyLevel > 4000 || frameTime > 0.01f)
+                break;
         }
 
         // render accumulator to screen

@@ -15,8 +15,8 @@ int getGLTextureFormatInternal(GLTexture2D::Format format)
         return GL_RGB8;
     case GLTexture2D::Format::RGBA_8:
         return GL_RGBA8;
-    case GLTexture2D::Format::RGB_16:
-        return GL_RGB16;
+    case GLTexture2D::Format::RGB_32F:
+        return GL_RGB32F;
     default:
         LOGE("Texture internal format: " << (int)format << " not supported");
         return 0;
