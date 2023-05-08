@@ -8,12 +8,17 @@
 // clang-format off
 enum class GLBlend : uint8_t { Disabled, OneMinusAlpha };
 enum class GLDepth : uint8_t { Disabled, Enabled };
+enum class GLPolyMode : uint8_t { Fill, Lines };
 // clang-format on
 
-struct GLRenderParameters {
+class GLRenderParameters {
+    static GLRenderParameters s_currentParams;
+
+public:
     GLRenderParameters() = default;
-    GLBlend blend = GLBlend::Disabled;
-    GLDepth depth = GLDepth::Disabled;
+    GLBlend blendMode = GLBlend::Disabled;
+    GLDepth depthMode = GLDepth::Disabled;
+    GLPolyMode polyMode = GLPolyMode::Fill;
 
     void apply();
 };

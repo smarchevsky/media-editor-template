@@ -94,7 +94,7 @@ public:
             m_camera.setJitterEnabled(m_dirtyLevel != 0);
             m_spriteReceive3D.setUniform("opacity", 1.f / (m_dirtyLevel + 1));
 
-            GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled };
+            GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled, GLPolyMode::Lines };
             GLRenderManager::draw(m_shaderDefault3D.get(), &m_frameBufferReceive3D, &m_camera, &m_mesh3d, true, params3d);
 
             // render framebuffer to accumulator with alpha
@@ -102,7 +102,7 @@ public:
             GLRenderManager::draw(m_shaderDefault2D.get(), &m_frameBufferAccumulator, nullptr, &m_spriteReceive3D, false, paramsAccumulate);
             m_dirtyLevel++;
 
-            float frameTime = (float)((SDL_GetPerformanceCounter() - startFrameTime)                / freq);
+            float frameTime = (float)((SDL_GetPerformanceCounter() - startFrameTime) / freq);
 
             if (m_dirtyLevel > 4000 || frameTime > 0.01f)
                 break;
