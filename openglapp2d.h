@@ -22,6 +22,23 @@ public:
     {
         m_camera.setViewportSize(m_window.getSize());
 
+        ///////////////////////////////////////////////////
+
+        addFileInteractionInfo("Primary", "png,jpg", nullptr, nullptr);
+
+        // open file
+        m_window.addKeyDownEvent(SDLK_o, KMOD_CTRL,
+            std::bind(&Application::openFileDialog, this, "Primary"));
+
+        // save file
+        m_window.addKeyDownEvent(SDLK_s, KMOD_CTRL,
+            std::bind(&Application::saveFileOptionalDialog, this, "Primary", false));
+
+        // save file as
+        m_window.addKeyDownEvent(SDLK_s, KMOD_CTRL | KMOD_SHIFT,
+            std::bind(&Application::saveFileOptionalDialog, this, "Primary", true));
+
+        ///////////////////////////////////////////////////
         m_window.setMouseScrollEvent( // zoom on scroll
             [this](float diff, glm::ivec2 mousePos) {
                 float scaleFactor = pow(1.1f, -diff);
@@ -41,7 +58,7 @@ public:
 
         m_shaderDefault2d = GLShaderManager::get().getDefaultShader2d();
 
-        m_fb.create({ 2048, 2048 });
+        m_fb.create({ 2048, 2048 }, GLTexture2D::Format::RGBA_8);
         m_fb.getTexture()->setFiltering(GLTexture2D::Filtering::LinearMipmap);
         m_fb.getTexture()->setWrapping(GLTexture2D::Wrapping::ClampEdge);
 
@@ -67,7 +84,7 @@ public:
         GLRenderManager rm;
         m_sprites[0].addRotation(dt * 0.1f);
 
-        rm.draw(m_shaderDefault2d.get(), &m_fb, nullptr, &m_sprites[0], true);
+        rm.draw(m_shaderDefault2d.get(), &m_fb, nullptr, &m_sprites[0], false);
 
         rm.draw(m_shaderDefault2d.get(), &m_window, &m_camera, &m_sprites[1], true);
     }

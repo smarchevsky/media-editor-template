@@ -17,7 +17,8 @@ public:
 
 public:
     virtual void bind() const = 0;
-    void clear(bool withDepth = false);
+    virtual bool hasDepth() const = 0;
+    void clear(bool withDepth = true);
     void setClearColor(const glm::vec4& color) { m_clearColor = color; }
 
     virtual ~GLFrameBufferBase() { }
@@ -28,11 +29,11 @@ public:
     ~GLFrameBuffer();
 
     void create(glm::vec2 size,
-        GLTexture2D::Format format = GLTexture2D::Format::RGB_8);
+        GLTexture2D::Format format, bool withDepthBuffer = false);
 
     void reset();
-
     void bind() const override;
+    bool hasDepth() const override { return !!m_depthTexture; }
     void generateMipMap();
 
     auto& getTexture() { return m_colorTexture; }

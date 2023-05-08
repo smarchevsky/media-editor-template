@@ -139,7 +139,9 @@ public:
 
     void drawImGuiContext(ImGuiContextFunctions imguiFunctions);
     void display();
+
     void bind() const override;
+    bool hasDepth() const override { return true; }
 
     bool isOpen();
     void exit();
