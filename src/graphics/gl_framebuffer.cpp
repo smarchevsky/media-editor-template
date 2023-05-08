@@ -14,10 +14,13 @@ void GLFrameBufferBase::clear(bool withDepth)
 {
     bind();
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
-    glClear(GL_COLOR_BUFFER_BIT | (withDepth ? GL_DEPTH_BUFFER_BIT : 0));
+    glClear(GL_COLOR_BUFFER_BIT | ((hasDepth() && withDepth) ? GL_DEPTH_BUFFER_BIT : 0));
+    // if(!hasDepth() && withDepth){
+    //     LOGE("Trying to clear depth of framebuffer without depth. Probably it must have depth?");
+    // }
 }
 
-void GLFrameBuffer::create(glm::vec2 size, GLTexture2D::Format format)
+void GLFrameBuffer::create(glm::vec2 size, GLTexture2D::Format format, bool withDepthBuffer)
 {
     glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
@@ -25,11 +28,14 @@ void GLFrameBuffer::create(glm::vec2 size, GLTexture2D::Format format)
     m_colorTexture = std::make_shared<GLTexture2D>(size, format);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colorTexture->getHandle(), 0);
 
-    m_depthTexture = std::make_shared<GLDepthBuffer2D>(size);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_depthTexture->getHandle());
+    if (withDepthBuffer) {
+        m_depthTexture = std::make_shared<GLDepthBuffer2D>(size);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_depthTexture->getHandle());
 
-    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
-        && "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
+            && "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
