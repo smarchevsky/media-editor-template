@@ -14,10 +14,11 @@ add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
 add_definitions(-DHOME_DIR="$ENV{HOME}")
 
 include_directories(src/)
-include_directories(third_party/)
+include_directories(3party/)
 
 FILE(GLOB_RECURSE ALL_HEADERS ${CMAKE_SOURCE_DIR}/*.h)
-FILE(GLOB_RECURSE ALL_CPP  "src/*.cpp" "third_party/*.cpp")
+FILE(GLOB_RECURSE ALL_CPP  "src/*.cpp" "3party/*.cpp" "3party/*.c")
+# set_source_files_properties("3party/miniz.c" PROPERTIES LANGUAGE CXX )
 
 FILE(GLOB_RECURSE ALL_SHADERS "resources/shaders/*.frag")
 FILE(GLOB_RECURSE ALL_SHADERS "resources/shaders/*.vert")
@@ -40,7 +41,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC GL SDL2)
 
 # CMake in your root project:
 
-# set(MET "third_party/media-editor-template")   # something like set variable, to get it write ${MET}
+# set(MET "3party/media-editor-template")   # something like set variable, to get it write ${MET}
 # add_subdirectory(${MET})
 
 # set(SOURCE_FILES main.cpp)
