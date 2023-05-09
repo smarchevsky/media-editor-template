@@ -9,18 +9,8 @@ class GLTextureBase : NoCopy<GLTextureBase> {
 public:
     virtual ~GLTextureBase() = default;
 };
-/////////////////// RENDER (DEPTH) BUFFER /////////////////
 
-class GLDepthBuffer2D : public GLTextureBase {
-    uint32_t m_rbo {};
-
-public:
-    uint32_t getHandle() const { return m_rbo; }
-    GLDepthBuffer2D(glm::vec2 size);
-    ~GLDepthBuffer2D();
-};
-
-/////////////////// GLTexture2D ////////////////////
+/////////////////// TEXTURE 2D ////////////////////
 
 class GLTexture2D : public GLTextureBase {
 public:
@@ -39,10 +29,7 @@ protected:
 public:
     GLTexture2D() = default;
     GLTexture2D(const Image& img) { fromImage(img); }
-    GLTexture2D(glm::ivec2 size, GLTexture2D::Format format)
-    {
-        create(size, format);
-    }
+    GLTexture2D(glm::ivec2 size, GLTexture2D::Format format) { createEmpty(size, format); }
     ~GLTexture2D();
 
     bool setWrapping(Wrapping);
@@ -54,13 +41,25 @@ public:
 
 protected:
     void generateMipMap();
-    bool create(glm::ivec2 size, GLTexture2D::Format format);
+    bool createEmpty(glm::ivec2 size, GLTexture2D::Format format);
     bool fromImage(const Image& img);
+    // void toImage(Image& img) const;
     void clear();
 
     static uint32_t s_currentBindedTexture;
     friend class GLTextureInstance;
     friend class GLFrameBuffer;
+};
+
+/////////////////// RENDER (DEPTH) BUFFER /////////////////
+
+class GLDepthBuffer2D : public GLTextureBase {
+    uint32_t m_rbo {};
+
+public:
+    uint32_t getHandle() const { return m_rbo; }
+    GLDepthBuffer2D(glm::vec2 size);
+    ~GLDepthBuffer2D();
 };
 
 #endif // GLTEXTURE_H
