@@ -8,32 +8,50 @@
 uint32_t GLTexture2D::s_currentBindedTexture = 0;
 
 namespace {
-int getGLTextureFormatInternal(GLTexture2D::Format format)
-{
-    switch (format) {
-    case GLTexture2D::Format::RGB_8:
-        return GL_RGB8;
-    case GLTexture2D::Format::RGBA_8:
-        return GL_RGBA8;
-    case GLTexture2D::Format::RGB_32F:
-        return GL_RGB32F;
-    default:
-        LOGE("Texture internal format: " << (int)format << " not supported");
-        return 0;
-    }
-}
+struct TexelFormatInfo {
+    int internalFormat; // GL_RGB8
+    int externalFormat; // GL_RGB
+    int externalType; //   GL_UNSIGNED_BYTE
+    std::string name;
+};
 
-int getGLTextureFormatExternal(int nrChannels)
+TexelFormatInfo getGLTexelFormatInfo(GLTexture2D::Format format)
 {
-    switch (nrChannels) {
-    case 3:
-        return GL_RGB;
-    case 4:
-        return GL_RGBA;
+    TexelFormatInfo texelFormat;
+    switch (format) {
+    case GLTexture2D::Format::RGB_8: {
+        texelFormat.internalFormat = GL_RGB8;
+        texelFormat.externalFormat = GL_RGB;
+        texelFormat.externalType = GL_UNSIGNED_BYTE;
+        texelFormat.name = "RGB_8";
+    } break;
+
+    case GLTexture2D::Format::RGBA_8: {
+        texelFormat.internalFormat = GL_RGBA8;
+        texelFormat.externalFormat = GL_RGBA;
+        texelFormat.externalType = GL_UNSIGNED_BYTE;
+        texelFormat.name = "RGBA_8";
+    } break;
+
+    case GLTexture2D::Format::RGB_32F: {
+        texelFormat.internalFormat = GL_RGB32F;
+        texelFormat.externalFormat = GL_RGB;
+        texelFormat.externalType = GL_FLOAT;
+        texelFormat.name = "RGB_32F";
+    } break;
+
+    case GLTexture2D::Format::RGBA_32F: {
+        texelFormat.internalFormat = GL_RGBA32F;
+        texelFormat.externalFormat = GL_RGBA;
+        texelFormat.externalType = GL_FLOAT;
+        texelFormat.name = "RGBA_32F";
+    } break;
+
     default:
-        LOGE("Texture format with: " << nrChannels << " channels not supported");
-        return 0;
+        LOGE("Texture format enum: " << (int)format << " not supported");
+        assert(false && "Stop it!");
     }
+    return texelFormat;
 }
 }
 
@@ -115,23 +133,31 @@ bool GLTexture2D::setFiltering(Filtering filtering)
     return true;
 }
 
-bool GLTexture2D::createEmpty(glm::ivec2 size, GLTexture2D::Format format)
+bool GLTexture2D::createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data)
 {
     if (size.x <= 0 || size.y <= 0)
-        return false;
-
-    m_size = size;
-    m_internalFormat = format;
-    int internalTextureFormat = getGLTextureFormatInternal(m_internalFormat);
+        assert(false && "Negative texture size is not good");
 
     clear();
+    m_size = size;
+    m_format = format;
+    auto texelInfo = getGLTexelFormatInfo(m_format);
+
     glGenTextures(1, &m_textureHandle);
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
-    glTexImage2D(GL_TEXTURE_2D, 0, internalTextureFormat, size.x, size.y, 0,
-        GL_RGB, GL_UNSIGNED_BYTE, nullptr); // input data seems useless
+    glTexImage2D(GL_TEXTURE_2D, 0,
+        texelInfo.internalFormat,
+        size.x, size.y, 0,
+        texelInfo.externalFormat,
+        texelInfo.externalType,
+        data);
 
     setFiltering(Filtering::Nearset);
-    LOG("Texture successfully created empty");
+    if (data) {
+        LOG("Texture successfully created: " << texelInfo.name);
+    } else {
+        LOG("Empty texture successfully created: " << texelInfo.name);
+    }
 
     return true;
 }
@@ -143,23 +169,24 @@ bool GLTexture2D::fromImage(const Image& img)
         return false;
     }
 
-    int internalTextureFormat = getGLTextureFormatInternal(m_internalFormat);
-    assert(internalTextureFormat);
+    Format format;
+    switch (img.m_nrChannels) {
+    case 3: {
+        format = Format::RGB_8;
+    } break;
 
-    int externalTextureFormat = getGLTextureFormatExternal(img.m_nrChannels);
-    assert(externalTextureFormat);
+    case 4: {
+        format = Format::RGBA_8;
+    } break;
 
-    clear();
-    glGenTextures(1, &m_textureHandle);
-    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+    default:
+        assert(false && "Stop it");
+        break;
+    }
 
-    m_size = img.m_size;
-    glTexImage2D(GL_TEXTURE_2D, 0, internalTextureFormat, m_size.x, m_size.y,
-        0 /* border? */, externalTextureFormat, GL_UNSIGNED_BYTE, img.m_data);
-
-    setWrapping(Wrapping::Repeat);
+    createFromRawData(img.m_size, format, img.m_data);
     setFiltering(Filtering::LinearMipmap);
-    LOG("Texture successfully loaded from image");
+    setWrapping(Wrapping::Repeat);
     return true;
 }
 
@@ -190,6 +217,7 @@ void GLTexture2D::clear()
         glDeleteTextures(1, &m_textureHandle);
         m_textureHandle = 0;
         m_size = glm::ivec2(0);
+        m_format = Format::Undefined;
         LOG("Texture destroyed");
     }
 }

@@ -15,23 +15,24 @@ public:
 class GLTexture2D : public GLTextureBase {
 public:
     // clang-format off
-    enum class Format : uint8_t { RGB_8, RGBA_8, RGB_32F };
+    enum class Format : uint8_t { Undefined, RGB_8, RGBA_8, RGB_32F, RGBA_32F };
     enum class Wrapping : uint8_t { Repeat, MirrorRepeat, ClampEdge, ClampBorder };
     enum class Filtering : uint8_t { Nearset, NearestMipmap, Linear, LinearMipmap };
     // clang-format on
 protected:
     uint32_t m_textureHandle {};
     glm::ivec2 m_size = glm::ivec2(0);
-    Format m_internalFormat = Format::RGBA_8;
+    Format m_format = Format::Undefined;
     Filtering m_filtering = Filtering::Nearset;
     Wrapping m_wrapping = Wrapping ::Repeat;
 
 public:
     GLTexture2D() = default;
     GLTexture2D(const Image& img) { fromImage(img); }
-    GLTexture2D(glm::ivec2 size, GLTexture2D::Format format) { createEmpty(size, format); }
+    GLTexture2D(glm::ivec2 size, GLTexture2D::Format format) { createFromRawData(size, format); }
     ~GLTexture2D();
 
+    bool createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data = nullptr);
     bool setWrapping(Wrapping);
     bool setFiltering(Filtering);
     // Wrapping getWrapping() {return m_w}
@@ -41,7 +42,6 @@ public:
 
 protected:
     void generateMipMap();
-    bool createEmpty(glm::ivec2 size, GLTexture2D::Format format);
     bool fromImage(const Image& img);
     // void toImage(Image& img) const;
     void clear();
