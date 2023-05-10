@@ -94,7 +94,7 @@ public:
             m_camera.setJitterEnabled(m_dirtyLevel != 0);
             m_spriteReceive3D.setUniform("opacity", 1.f / (m_dirtyLevel + 1));
 
-            GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Disabled };
+            GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled, GLPolyMode::Lines };
             GLRenderManager::draw(&m_shaderDefault3D, &m_frameBufferReceive3D, &m_camera, &m_mesh3d, true, params3d);
 
             // render framebuffer to accumulator with alpha
