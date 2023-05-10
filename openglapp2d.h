@@ -13,7 +13,7 @@ static fs::path projectDir(PROJECT_DIR);
 
 class OpenGLApp2D : public Application {
     std::vector<EntitySprite2D> m_sprites;
-    std::shared_ptr<GLShader> m_shaderDefault2d;
+    GLShader m_shaderDefault2d;
     GLFrameBuffer m_fb;
     CameraOrtho m_camera;
 
@@ -56,14 +56,14 @@ public:
             });
         m_window.setClearColor({ .13f, .14f, .15f, 1.f });
 
-        m_shaderDefault2d = GLShaderManager::get().getDefaultShader2d();
+        m_shaderDefault2d = GLShader::FromFile("default2d.vert", "default2d.frag");
 
         m_fb.create({ 2048, 2048 }, GLTexture2D::Format::RGBA_8);
         m_fb.getTexture()->setFiltering(GLTexture2D::Filtering::LinearMipmap);
         m_fb.getTexture()->setWrapping(GLTexture2D::Wrapping::ClampEdge);
 
         auto texChecker = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
-        auto texLiza = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "mona_liza.jpg"));
+        //auto texLiza = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "mona_liza.jpg"));
         //  m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
         {
             EntitySprite2D s; // 0
@@ -84,9 +84,9 @@ public:
         GLRenderManager rm;
         m_sprites[0].addRotation(dt * 0.1f);
 
-        rm.draw(m_shaderDefault2d.get(), &m_fb, nullptr, &m_sprites[0], false);
+        rm.draw(&m_shaderDefault2d, &m_fb, nullptr, &m_sprites[0], false);
 
-        rm.draw(m_shaderDefault2d.get(), &m_window, &m_camera, &m_sprites[1], true);
+        rm.draw(&m_shaderDefault2d, &m_window, &m_camera, &m_sprites[1], true);
     }
 };
 typedef OpenGLApp2D App;

@@ -17,8 +17,6 @@
 #include <variant>
 #include <vector>
 
-namespace fs = std::filesystem;
-
 std::string textFromFile(const std::filesystem::path& path);
 
 struct Texture2Ddata {

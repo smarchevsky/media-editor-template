@@ -91,7 +91,7 @@ std::vector<GLShader::Variable> getUniformList(GLShader* shader)
     printf("Active Attributes: %d\n", count);
     for (int i = 0; i < count; i++) {
         glGetActiveAttrib(program, (GLuint)i, bufSize, &length, &size, &type, name);
-        printf("Attribute #%d Type: %u Name: %s\n", i, type, name);
+        printf("  - Attribute #%d Type: %u Name: %s\n", i, type, name);
     }
 
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
@@ -109,7 +109,7 @@ std::vector<GLShader::Variable> getUniformList(GLShader* shader)
 
         result.push_back(std::move(var));
 
-        printf("Uniform #%d Type: %u Name: %s\n", i, type, name);
+        printf("  - Uniform #%d Type: %u Name: %s\n", i, type, name);
 
         if (type == GL_SAMPLER_2D)
             texture2DIndex++;
@@ -197,6 +197,7 @@ GLShader GLShader::FromFile(
     const std::filesystem::path& vertRelativePath,
     const std::filesystem::path& fragRelativePath)
 {
+    printf("Loading shader: %s, %s\n", vertRelativePath.c_str(), fragRelativePath.c_str());
     return GLShader(
         textFromFile(shaderDir / vertRelativePath),
         textFromFile(shaderDir / fragRelativePath));
@@ -329,7 +330,6 @@ void GLShader::bind()
 
 std::string textFromFile(const std::filesystem::path& path)
 {
-    bool success = true;
     std::string sourceCode;
     std::ifstream codeStream(path, std::ios::in);
     if (codeStream.is_open()) {
@@ -338,7 +338,6 @@ std::string textFromFile(const std::filesystem::path& path)
         sourceCode = sstr.str();
         codeStream.close();
     } else {
-        success = false;
         LOGE("Can't open file: " << path);
     }
     return sourceCode;
