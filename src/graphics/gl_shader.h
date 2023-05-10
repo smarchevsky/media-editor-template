@@ -39,6 +39,10 @@ typedef std::variant<
     glm::vec3,
     glm::vec4,
     glm::mat4,
+    int,
+    glm::ivec2,
+    glm::ivec3,
+    glm::ivec4,
     Texture2Ddata>
 
     UniformVariant;

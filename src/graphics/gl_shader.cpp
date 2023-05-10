@@ -38,35 +38,37 @@ UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
     // constexpr int intSize = sizeof(int);
 
     switch (GLtype) {
-    case GL_FLOAT: {
-        // assert(size == floatSize);
+    case GL_FLOAT:
         return 0.f;
-    };
 
-    case GL_FLOAT_VEC2: {
-        // assert(size == floatSize * 2);
+    case GL_FLOAT_VEC2:
         return glm::vec2(0);
-    }
 
-    case GL_FLOAT_VEC3: {
-        // assert(size == floatSize * 3);
+    case GL_FLOAT_VEC3:
         return glm::vec3(0);
-    };
 
-    case GL_FLOAT_VEC4: {
-        // assert(size == floatSize * 4);
+    case GL_FLOAT_VEC4:
         return glm::vec4(0);
-    };
+
+    case GL_FLOAT_MAT4:
+        return glm::mat4(1);
+
+    case GL_INT:
+        return int(0);
+
+    case GL_INT_VEC2:
+        return glm::ivec2(0);
+
+    case GL_INT_VEC3:
+        return glm::ivec3(0);
+
+    case GL_INT_VEC4:
+        return glm::ivec4(0);
 
     case GL_SAMPLER_2D: {
         // assert(size == intSize);
         return Texture2Ddata(nullptr, textureIndex);
     }
-
-    case GL_FLOAT_MAT4: {
-        // LOGE("size of mat4 is: " << size);
-        return glm::mat4(1);
-    };
     }
 
     assert(false && "Unsupported uniform format");
@@ -284,6 +286,26 @@ void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
     case GET_INDEX(glm::mat4): {
         const auto& var = std::get<glm::mat4>(uniformVariable);
         glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]);
+    } break;
+
+    case GET_INDEX(int): {
+        const auto& var = std::get<int>(uniformVariable);
+        glUniform1i(location, var);
+    } break;
+
+    case GET_INDEX(glm::ivec2): {
+        const auto& var = std::get<glm::ivec2>(uniformVariable);
+        glUniform2iv(location, 1, &var[0]);
+    } break;
+
+    case GET_INDEX(glm::ivec3): {
+        const auto& var = std::get<glm::ivec3>(uniformVariable);
+        glUniform3iv(location, 1, &var[0]);
+    } break;
+
+    case GET_INDEX(glm::ivec4): {
+        const auto& var = std::get<glm::ivec4>(uniformVariable);
+        glUniform4iv(location, 1, &var[0]);
     } break;
 
     default: {
