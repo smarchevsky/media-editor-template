@@ -5,8 +5,11 @@ project(media-editor-template LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(SHADER_DIR "${PROJECT_SOURCE_DIR}/src/shaders")
+
 add_definitions(-DPROJECT_DIR="${PROJECT_SOURCE_DIR}")
 add_definitions(-DRESOURCE_DIR="${PROJECT_SOURCE_DIR}/resources")
+add_definitions(-DSHADER_DIR="${PROJECT_SOURCE_DIR}/src/shaders")
 
 string(LENGTH "${CMAKE_SOURCE_DIR}/" SOURCE_PATH_SIZE)
 add_definitions("-DSOURCE_PATH_SIZE=${SOURCE_PATH_SIZE}")
@@ -18,10 +21,9 @@ include_directories(3party/)
 
 FILE(GLOB_RECURSE ALL_HEADERS ${CMAKE_SOURCE_DIR}/*.h)
 FILE(GLOB_RECURSE ALL_CPP  "src/*.cpp" "3party/*.cpp" "3party/*.c")
-# set_source_files_properties("3party/miniz.c" PROPERTIES LANGUAGE CXX )
+set_source_files_properties("3party/miniz.c" PROPERTIES LANGUAGE CXX )
 
-FILE(GLOB_RECURSE ALL_SHADERS "resources/shaders/*.frag")
-FILE(GLOB_RECURSE ALL_SHADERS "resources/shaders/*.vert")
+FILE(GLOB_RECURSE ALL_SHADERS "${SHADER_DIR}/*.frag" "${SHADER_DIR}/*.vert")
 
 # add_library(${PROJECT_NAME} ${ALL_CPP} ${ALL_SHADERS} ${ALL_HEADERS})
 add_executable(${PROJECT_NAME} ${ALL_CPP} ${ALL_SHADERS} ${ALL_HEADERS} "main.cpp")

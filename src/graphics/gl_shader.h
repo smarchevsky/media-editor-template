@@ -19,6 +19,8 @@
 
 namespace fs = std::filesystem;
 
+std::string textFromFile(const std::filesystem::path& path);
+
 struct Texture2Ddata {
     Texture2Ddata() = default;
     Texture2Ddata(const std::shared_ptr<GLTexture2D> texture, int index = -1)
@@ -27,7 +29,7 @@ struct Texture2Ddata {
     {
     }
     std::shared_ptr<GLTexture2D> m_texture;
-    int m_index = -1; // -1 means use shader's default location
+    int m_index = -1;
 };
 
 typedef std::variant<
@@ -68,10 +70,15 @@ public:
         const UniformVariant& getData() const { return m_data; }
     };
 
-    GLShader(const char* vertexShaderCode, const char* fragmentShaderCode);
+    GLShader() = default;
+    GLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode);
+    GLShader& operator=(GLShader&& rhs);
     ~GLShader();
 
-    bool valid() const { return m_shaderProgram != 0; }
+    static GLShader FromFile(
+        const std::filesystem::path& vertRelativePath,
+        const std::filesystem::path& fragRelativePath);
+
     void bind();
     void setUniform(const HashString& name, const UniformVariant& newVar);
     int getHandle() const { return m_shaderProgram; }
@@ -87,37 +94,13 @@ private:
     void setUniform(int location, const UniformVariant& var);
 
 private: // DATA
-    uint32_t m_shaderProgram {};
-
+    const uint32_t m_shaderProgram {};
     const std::unordered_map<HashString, int> m_locations;
     const std::vector<Variable> m_defaultUniforms;
 
 private:
     static uint32_t s_currentBindedShaderHandle;
     friend class GLShaderManager;
-};
-
-//////////////////////// SHADER MANAGER //////////////////////////
-
-class GLShaderManager {
-
-public:
-    static GLShaderManager& get()
-    {
-        static GLShaderManager shaderGeneratorStatic;
-        return shaderGeneratorStatic;
-    }
-
-    //    GLShaderPtr addShader(
-    //        const fs::path& vertexShaderPath,
-    //        const fs::path& fragmentShaderPath);
-
-    GLShaderPtr getDefaultShader2d();
-    GLShaderPtr getDefaultShader3d();
-
-private:
-    GLShaderManager() = default;
-    ~GLShaderManager() = default;
 };
 
 #endif // SHADER_H
