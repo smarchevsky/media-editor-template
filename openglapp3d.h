@@ -20,7 +20,7 @@ class OpenGLApp3D : public Application {
     EntitySprite2D m_spriteReceive3D, m_spriteAccumulator;
     GLFrameBuffer m_frameBufferReceive3D, m_frameBufferAccumulator;
 
-    std::shared_ptr<GLShader> m_shaderDefault2D, m_shaderDefault3D;
+    GLShader m_shaderDefault2D, m_shaderDefault3D;
     CameraPerspective m_camera;
     int m_dirtyLevel = 0;
 
@@ -63,8 +63,8 @@ public:
                 resetDirty();
             });
 
-        m_shaderDefault2D = GLShaderManager::get().getDefaultShader2d();
-        m_shaderDefault3D = GLShaderManager::get().getDefaultShader3d();
+        m_shaderDefault2D = GLShader::FromFile("default2d.vert", "default2d.frag");
+        m_shaderDefault3D = GLShader::FromFile("default3d.vert", "default3d.frag");
 
         glm::vec2 frameBufferSize(1000, 500);
         m_frameBufferReceive3D.create(frameBufferSize, GLTexture2D::Format::RGB_8, true);
@@ -94,12 +94,12 @@ public:
             m_camera.setJitterEnabled(m_dirtyLevel != 0);
             m_spriteReceive3D.setUniform("opacity", 1.f / (m_dirtyLevel + 1));
 
-            GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled };
-            GLRenderManager::draw(m_shaderDefault3D.get(), &m_frameBufferReceive3D, &m_camera, &m_mesh3d, true, params3d);
+            GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Disabled };
+            GLRenderManager::draw(&m_shaderDefault3D, &m_frameBufferReceive3D, &m_camera, &m_mesh3d, true, params3d);
 
             // render framebuffer to accumulator with alpha
             GLRenderParameters paramsAccumulate { GLBlend::OneMinusAlpha, GLDepth::Disabled };
-            GLRenderManager::draw(m_shaderDefault2D.get(), &m_frameBufferAccumulator, nullptr, &m_spriteReceive3D, false, paramsAccumulate);
+            GLRenderManager::draw(&m_shaderDefault2D, &m_frameBufferAccumulator, nullptr, &m_spriteReceive3D, false, paramsAccumulate);
             m_dirtyLevel++;
 
             float frameTime = (float)((SDL_GetPerformanceCounter() - startFrameTime) / freq);
@@ -110,7 +110,7 @@ public:
 
         // render accumulator to screen
         GLRenderParameters paramsPresent { GLBlend::Disabled, GLDepth::Disabled };
-        GLRenderManager::draw(m_shaderDefault2D.get(), &m_window, nullptr, &m_spriteAccumulator, false, paramsPresent);
+        GLRenderManager::draw(&m_shaderDefault2D, &m_window, nullptr, &m_spriteAccumulator, false, paramsPresent);
     }
 };
 typedef OpenGLApp3D App;

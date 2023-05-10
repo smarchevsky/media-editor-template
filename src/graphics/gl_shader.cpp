@@ -1,5 +1,4 @@
 #include "gl_shader.h"
-#include "gl_shadersources.h"
 #include "helper_general.h"
 
 #define ERRORCHEKING
@@ -13,6 +12,7 @@
 #include <iostream>
 #include <sstream>
 
+static const std::filesystem::path shaderDir(SHADER_DIR);
 uint32_t GLShader::s_currentBindedShaderHandle = 0;
 
 namespace {
@@ -31,16 +31,6 @@ constexpr size_t variant_index()
         }
     }
 }
-
-// static UniformDependency getDependencyTypeFromName(const std::string& name)
-//{
-//     UniformDependency dependency = UniformDependency::Object;
-//     if (name.find("view_") == 0)
-//         dependency = UniformDependency::View;
-//     else if (name.find("free_") == 0)
-//         dependency = UniformDependency::Free;
-//     return dependency;
-// }
 
 UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
 {
@@ -160,13 +150,13 @@ int createShader(const char* shaderSource, int shaderType)
 
 } // namespace
 
-GLShader::GLShader(const char* vertexShaderCode, const char* fragmentShaderCode)
+GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode)
 {
     GLint success = GL_FALSE;
-    if (vertexShaderCode && fragmentShaderCode) {
-        m_shaderProgram = glCreateProgram();
-        GLuint vs = createShader(vertexShaderCode, GL_VERTEX_SHADER);
-        GLuint fs = createShader(fragmentShaderCode, GL_FRAGMENT_SHADER);
+    if (vertexShaderCode.size() && fragmentShaderCode.size()) {
+        const_cast<uint32_t&>(m_shaderProgram) = glCreateProgram();
+        GLuint vs = createShader(vertexShaderCode.c_str(), GL_VERTEX_SHADER);
+        GLuint fs = createShader(fragmentShaderCode.c_str(), GL_FRAGMENT_SHADER);
         glAttachShader(m_shaderProgram, vs);
         glAttachShader(m_shaderProgram, fs);
         glLinkProgram(m_shaderProgram);
@@ -185,11 +175,29 @@ GLShader::GLShader(const char* vertexShaderCode, const char* fragmentShaderCode)
 
             glGetProgramInfoLog(m_shaderProgram, 512, NULL, infoLog);
             std::cerr << "Linking failed: " << infoLog << std::endl;
-            m_shaderProgram = 0;
+            const_cast<uint32_t&>(m_shaderProgram) = 0;
         }
         glDeleteShader(vs);
         glDeleteShader(fs);
     }
+}
+
+GLShader& GLShader::operator=(GLShader&& rhs)
+{
+    const_cast<uint32_t&>(m_shaderProgram) = rhs.m_shaderProgram;
+    const_cast<uint32_t&>(rhs.m_shaderProgram) = 0;
+    const_cast<std::unordered_map<HashString, int>&>(m_locations) = std::move(rhs.m_locations);
+    const_cast<std::vector<Variable>&>(m_defaultUniforms) = std::move(rhs.m_defaultUniforms);
+    return *this;
+}
+
+GLShader GLShader::FromFile(
+    const std::filesystem::path& vertRelativePath,
+    const std::filesystem::path& fragRelativePath)
+{
+    return GLShader(
+        textFromFile(shaderDir / vertRelativePath),
+        textFromFile(shaderDir / fragRelativePath));
 }
 
 int GLShader::getUniformLocation(const HashString& name) const
@@ -205,7 +213,6 @@ GLShader::~GLShader()
     }
 }
 
-#define GET_INDEX(type) variant_index<UniformVariant, type>()
 void GLShader::setUniform(const HashString& name, const UniformVariant& newVar)
 {
     auto it = m_locations.find(name);
@@ -216,6 +223,7 @@ void GLShader::setUniform(const HashString& name, const UniformVariant& newVar)
     }
 }
 
+#define GET_INDEX(type) variant_index<UniformVariant, type>()
 void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
 {
     const auto& currentDefaultUniform = m_defaultUniforms[location].getData();
@@ -297,56 +305,19 @@ void GLShader::bind()
 #endif
 }
 
-//////////////////////// SHADER MANAGER //////////////////////////
-
-// GLShaderPtr GLShaderManager::addShader(const fs::path& vertexShaderPath,
-//     const fs::path& fragmentShaderPath)
-//{
-
-//    bool success = true;
-//    std::string vertexShaderCode;
-//    std::ifstream vertexShaderStream(vertexShaderPath, std::ios::in);
-
-//    if (vertexShaderStream.is_open()) {
-//        std::stringstream sstr;
-//        sstr << vertexShaderStream.rdbuf();
-//        vertexShaderCode = sstr.str();
-//        vertexShaderStream.close();
-//    } else {
-//        success = false;
-//        LOGE("Can't open file: " << vertexShaderPath);
-//    }
-
-//    std::string fragmentShaderCode;
-//    std::ifstream fragmentShaderStream(fragmentShaderPath, std::ios::in);
-//    if (fragmentShaderStream.is_open()) {
-//        std::stringstream sstr;
-//        sstr << fragmentShaderStream.rdbuf();
-//        fragmentShaderCode = sstr.str();
-//        fragmentShaderStream.close();
-//    } else {
-//        success = false;
-//        LOGE("Can't open file: " << fragmentShaderPath);
-//    }
-
-//    if (success) {
-//        return addShader(vertexShaderCode, fragmentShaderCode);
-//    }
-//    return nullptr;
-//}
-
-GLShaderPtr GLShaderManager::getDefaultShader2d()
+std::string textFromFile(const std::filesystem::path& path)
 {
-
-    return std::make_shared<GLShader>(
-        GLShaderSources::getDefault2d_VS(),
-        GLShaderSources::getDefault2d_FS());
-}
-
-GLShaderPtr GLShaderManager::getDefaultShader3d()
-{
-
-    return std::make_shared<GLShader>(
-        GLShaderSources::getDefault3d_VS(),
-        GLShaderSources::getDefault3d_FS());
+    bool success = true;
+    std::string sourceCode;
+    std::ifstream codeStream(path, std::ios::in);
+    if (codeStream.is_open()) {
+        std::stringstream sstr;
+        sstr << codeStream.rdbuf();
+        sourceCode = sstr.str();
+        codeStream.close();
+    } else {
+        success = false;
+        LOGE("Can't open file: " << path);
+    }
+    return sourceCode;
 }
