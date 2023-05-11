@@ -10,7 +10,7 @@
 
 ////////////////////////// CAMERA ORTHO //////////////////////////////
 
-const glm::mat4& CameraOrtho::getView()
+const glm::mat4& CameraOrtho::getViewInv()
 {
     if (m_viewDirty) {
         m_viewDirty = false;
@@ -26,11 +26,46 @@ const glm::mat4& CameraOrtho::getView()
 void CameraOrtho::updateUniforms(GLShader* shader)
 {
     if (shader) {
-        shader->setUniform("cameraView", getView());
+        shader->setUniform("cameraViewInv", getViewInv());
     }
 }
 
 ////////////////////// CAMERA PERSPECTIVE //////////////////////////////
+
+void CameraPerspective::updateView()
+{
+    if (m_viewDirty) {
+        m_cameraViewInv = glm::lookAt(m_cameraPosition, m_aimPosition, m_up);
+        m_cameraView = glm::inverse(m_cameraViewInv);
+        m_viewDirty = false;
+    }
+}
+
+void CameraPerspective::updateProjection()
+{
+    if (m_projectionDirty) {
+        m_cameraProjection = glm::perspective(m_fov, m_ar, m_near, m_far);
+        m_projectionDirty = false;
+    }
+}
+
+const glm::mat4& CameraPerspective::getViewInv()
+{
+    updateView();
+    return m_cameraViewInv;
+}
+
+const glm::mat4& CameraPerspective::getView()
+{
+    updateView();
+    return m_cameraView;
+}
+
+const glm::mat4& CameraPerspective::getProjection()
+{
+    updateProjection();
+    return m_cameraProjection;
+}
 
 void CameraPerspective::pan(glm::vec2 delta)
 {
@@ -57,28 +92,10 @@ void CameraPerspective::rotateAroundAim(glm::vec2 offsetDeltaRadians)
     m_viewDirty = true;
 }
 
-const glm::mat4& CameraPerspective::getView()
-{
-    if (m_viewDirty) {
-        m_cameraView = glm::lookAt(m_cameraPosition, m_aimPosition, m_up);
-        m_viewDirty = false;
-    }
-    return m_cameraView;
-}
-
-const glm::mat4& CameraPerspective::getProjection()
-{
-    if (m_projectionDirty) {
-        m_cameraProjection = glm::perspective(m_fov, m_ar, m_near, m_far);
-        m_projectionDirty = false;
-    }
-    return m_cameraProjection;
-}
-
 void CameraPerspective::updateUniforms(GLShader* shader)
 {
     if (shader) {
-        shader->setUniform("cameraView", getView());
+        shader->setUniform("cameraViewInv", getViewInv());
         shader->setUniform("cameraPosition", m_cameraPosition);
         shader->setUniform("cameraProjection", getProjection());
     }

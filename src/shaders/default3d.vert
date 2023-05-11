@@ -11,14 +11,14 @@ out VS_OUT {
     vec2 uv;    // texture coordinate
 } vs;
 
-uniform mat4 cameraView = IDENTITY;
+uniform mat4 cameraViewInv = IDENTITY;
 uniform mat4 cameraProjection = IDENTITY;
 uniform mat4 modelWorld = IDENTITY;
 
 void main()
 {
     vs.wPos = modelWorld * vec4(position, 1.0);
-    gl_Position = cameraProjection * cameraView * vs.wPos;
+    gl_Position = cameraProjection * cameraViewInv * vs.wPos;
     vs.n = mat3(modelWorld) * normal;
     vs.uv = uv;
 }

@@ -48,7 +48,7 @@ public:
     glm::vec2 getPos() const { return m_posWorld; }
     float getScale() const { return m_scaleMultiplier; }
 
-    const glm::mat4& getView();
+    const glm::mat4& getViewInv();
 
     virtual void updateUniforms(GLShader* shader) override;
 };
@@ -58,6 +58,7 @@ public:
 class CameraPerspective : public CameraBase {
 protected:
     glm::mat4 m_cameraView;
+    glm::mat4 m_cameraViewInv;
     glm::mat4 m_cameraProjection;
 
     glm::vec2 m_sceneRotation; // set in constructor
@@ -67,13 +68,14 @@ protected:
     float m_fov = 1.f /*radians*/, m_ar = 1.f;
     bool m_viewDirty = true, m_projectionDirty = true;
 
+    protected:
+    void updateView();
+    void updateProjection();
+
 public:
     CameraPerspective();
     void setFOV(float fov) { m_fov = fov, m_projectionDirty = true; }
     void setAR(float ar) { m_ar = ar, m_projectionDirty = true; }
-
-    // void setPos(glm::vec3 pos) { m_cameraPosition = pos, m_viewDirty = true; }
-    // void offsetPos(glm::vec3 delta_pos) { setPos(m_cameraPosition + delta_pos); }
 
     void setAim(glm::vec3 aim) { m_aimPosition = aim, m_viewDirty = true; }
     void offsetAim(glm::vec3 delta_aim) { setAim(m_cameraPosition + delta_aim); }
@@ -96,6 +98,7 @@ public:
     glm::vec3 getUp() const { return m_up; }
     float getDistance() const { return glm::distance(m_cameraPosition, m_aimPosition); }
 
+    const glm::mat4& getViewInv();
     const glm::mat4& getView();
     virtual const glm::mat4& getProjection();
     const glm::mat4& getProjectionJittered();
