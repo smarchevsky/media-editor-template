@@ -6,7 +6,7 @@
 #include <SDL2/SDL_opengl.h>
 #include <iostream>
 
-GLMeshTriArray GLMeshStatics::s_quad;
+std::shared_ptr<GLMeshTriArray> GLMeshStatics::s_quad;
 uint32_t GLMeshBase::s_currentBindedMeshHandle = 0;
 
 //////////////////////// GL MESH BASE /////////////////////////
@@ -74,9 +74,10 @@ GLMeshStatics::GLMeshStatics()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    s_quad.m_VAO = VAO;
-    s_quad.m_VBO = VBO;
-    s_quad.m_vertCount = 6;
+    s_quad = std::make_shared<GLMeshTriArray>();
+    s_quad->m_VAO = VAO;
+    s_quad->m_VBO = VBO;
+    s_quad->m_vertCount = 6;
 }
 
 //////////////////////// GL MESH TRI INDICES /////////////////////////
@@ -93,7 +94,7 @@ GLMeshTriIndices::~GLMeshTriIndices()
 
 GLMeshTriIndices::GLMeshTriIndices(const Model3D& model)
 {
-    m_meshElementArraySize = model.triangles.size() * 3;
+    m_indicesCount = model.triangles.size() * 3;
 
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
@@ -125,5 +126,5 @@ GLMeshTriIndices::GLMeshTriIndices(const Model3D& model)
 void GLMeshTriIndices::draw() const
 {
     bind(m_VAO);
-    glDrawElements(GL_TRIANGLES, m_meshElementArraySize, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, m_indicesCount, GL_UNSIGNED_INT, 0);
 }

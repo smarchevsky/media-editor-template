@@ -92,7 +92,7 @@ public:
     }
 
 private:
-    int getUniformLocation(const HashString& name) const;
+    // int getUniformLocation(const HashString& name) const;
     void setUniform(int location, const UniformVariant& var);
 
 private: // DATA

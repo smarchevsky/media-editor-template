@@ -3,6 +3,7 @@
 
 #include "helper_general.h"
 #include <cstdint> // uintXX_t
+#include <memory>
 #include <vector>
 
 class Model3D;
@@ -14,6 +15,8 @@ class GLMeshBase : NoCopy<GLMeshBase> {
 
 protected:
     void bind(uint32_t handle) const;
+
+public:
     virtual ~GLMeshBase() = default;
     virtual void draw() const = 0;
 };
@@ -35,11 +38,12 @@ public:
 
 class GLMeshTriIndices : public GLMeshBase {
     uint32_t m_VAO {}, m_VBO {}, m_EBO {};
-    uint32_t m_meshElementArraySize {};
+    uint32_t m_indicesCount {};
 
 public:
-    ~GLMeshTriIndices ();
     GLMeshTriIndices(const Model3D& model);
+    ~GLMeshTriIndices();
+
     void draw() const override;
 };
 
@@ -52,11 +56,11 @@ public:
         static GLMeshStatics instance;
         return instance;
     }
-    GLMeshTriArray& getQuad2d() { return get().s_quad; };
+    const std::shared_ptr<GLMeshTriArray>& getQuad2d() { return get().s_quad; };
 
 private:
     GLMeshStatics();
-    static GLMeshTriArray s_quad;
+    static std::shared_ptr<GLMeshTriArray> s_quad;
 };
 
 #endif // MESH_H
