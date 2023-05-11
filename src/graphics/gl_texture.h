@@ -29,10 +29,13 @@ protected:
 public:
     GLTexture2D() = default;
     GLTexture2D(const Image& img) { fromImage(img); }
-    GLTexture2D(glm::ivec2 size, GLTexture2D::Format format) { createFromRawData(size, format); }
+    GLTexture2D(glm::ivec2 size, GLTexture2D::Format format, void* data = nullptr)
+    {
+        createFromRawData(size, format, data);
+    }
     ~GLTexture2D();
 
-    bool createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data = nullptr);
+    bool createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data);
     bool setWrapping(Wrapping);
     bool setFiltering(Filtering);
     // Wrapping getWrapping() {return m_w}
