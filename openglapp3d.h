@@ -21,7 +21,7 @@ class OpenGLApp3D : public Application {
     GLFrameBuffer m_frameBufferReceive3D, m_frameBufferAccumulator;
 
     GLShader m_shaderDefault2D, m_shaderDefault3D;
-    CameraPerspective m_camera;
+    CameraPerspectiveJittered m_camera;
     int m_dirtyLevel = 0;
 
 public:

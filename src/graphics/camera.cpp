@@ -75,7 +75,27 @@ const glm::mat4& CameraPerspective::getProjection()
     return m_cameraProjection;
 }
 
-const glm::mat4& CameraPerspective::getProjectionJittered()
+void CameraPerspective::updateUniforms(GLShader* shader)
+{
+    if (shader) {
+        shader->setUniform("cameraView", getView());
+        shader->setUniform("cameraPosition", m_cameraPosition);
+        shader->setUniform("cameraProjection", getProjection());
+    }
+}
+
+CameraPerspective::CameraPerspective()
+{
+    m_sceneRotation = glm::vec2(1.8f, .5f);
+    m_cameraPosition = { -2.f, 0.f, 0.7f };
+    m_aimPosition = { 0.f, 0.f, 0.7f };
+    m_up = { 0.f, 0.f, 1.f };
+    rotateAroundAim(glm::vec2(0));
+}
+
+////////////////////// CAMERA PERSPECTIVE JITTERED //////////////////////////////
+
+const glm::mat4& CameraPerspectiveJittered::getProjection()
 {
     glm::vec2 jitterAA = glm::diskRand(1.f) * m_jitterSizeAA;
     glm::vec2 jitterDOF = glm::diskRand(1.f) * m_jitterSizeDOF;
@@ -96,23 +116,4 @@ const glm::mat4& CameraPerspective::getProjectionJittered()
 
     m_projectionDirty = true;
     return m_cameraProjection;
-}
-
-void CameraPerspective::updateUniforms(GLShader* shader)
-{
-    if (shader) {
-        shader->setUniform("cameraView", getView());
-        shader->setUniform("cameraPosition", m_cameraPosition);
-        shader->setUniform("cameraProjection",
-            m_jitterEnabled ? getProjectionJittered() : getProjection());
-    }
-}
-
-CameraPerspective::CameraPerspective()
-{
-    m_sceneRotation = glm::vec2(1.8f, .5f);
-    m_cameraPosition = { -2.f, 0.f, 0.7f };
-    m_aimPosition = { 0.f, 0.f, 0.7f };
-    m_up = { 0.f, 0.f, 1.f };
-    rotateAroundAim(glm::vec2(0));
 }
