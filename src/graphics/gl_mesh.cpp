@@ -106,7 +106,7 @@ GLMeshTriIndices::GLMeshTriIndices(const Model3D& model)
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-        model.triangles.size() * sizeof(Triangle), model.triangles.data(), GL_STATIC_DRAW);
+        model.triangles.size() * sizeof(glm::ivec3), model.triangles.data(), GL_STATIC_DRAW);
 
     //  (GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void *pointer);
     static constexpr int positionSize = sizeof(decltype(Vertex::position));
