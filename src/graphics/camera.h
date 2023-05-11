@@ -56,6 +56,17 @@ public:
 ////////////////////// CAMERA PERSPECTIVE //////////////////////////////
 
 class CameraPerspective : public CameraBase {
+protected:
+    glm::mat4 m_cameraView;
+    glm::mat4 m_cameraProjection;
+
+    glm::vec2 m_sceneRotation; // set in constructor
+    glm::vec3 m_cameraPosition, m_aimPosition, m_up;
+
+    float m_near = .1f, m_far = 2000.f;
+    float m_fov = 1.f /*radians*/, m_ar = 1.f;
+    bool m_viewDirty = true, m_projectionDirty = true;
+
 public:
     CameraPerspective();
     void setFOV(float fov) { m_fov = fov, m_projectionDirty = true; }
@@ -85,30 +96,26 @@ public:
     glm::vec3 getUp() const { return m_up; }
     float getDistance() const { return glm::distance(m_cameraPosition, m_aimPosition); }
 
-    void setJitterAA(glm::vec2 jitter) { m_jitterSizeAA = jitter; }
-    void setJitterDOV(float radius) { m_jitterSizeDOF = radius; }
-    void setJitterEnabled(bool enabled) { m_jitterEnabled = enabled; }
-
     const glm::mat4& getView();
-    const glm::mat4& getProjection();
+    virtual const glm::mat4& getProjection();
     const glm::mat4& getProjectionJittered();
 
     virtual void updateUniforms(GLShader* shader) override;
+};
 
-private:
-    glm::mat4 m_cameraView;
-    glm::mat4 m_cameraProjection;
+////////////////////// CAMERA PERSPECTIVE JITTERED //////////////////////////////
 
-    glm::vec2 m_sceneRotation; // set in constructor
-    glm::vec3 m_cameraPosition, m_aimPosition, m_up;
-
+class CameraPerspectiveJittered : public CameraPerspective {
+protected:
     glm::vec2 m_jitterSizeAA = glm::vec2(0);
     float m_jitterSizeDOF = 0.1f;
+    bool m_jitterEnabled = true;
 
-    float m_near = .1f, m_far = 2000.f;
-    float m_fov = 1.f /*radians*/, m_ar = 1.f;
-    bool m_viewDirty = true, m_projectionDirty = true;
-    bool m_jitterEnabled = false;
+public:
+    void setJitterAA(glm::vec2 jitter) { m_jitterSizeAA = jitter; }
+    void setJitterDOV(float radius) { m_jitterSizeDOF = radius; }
+    void setJitterEnabled(bool enabled) { m_jitterEnabled = enabled; }
+    virtual const glm::mat4& getProjection();
 };
 
 #endif // ORTHOCAMERA_H
