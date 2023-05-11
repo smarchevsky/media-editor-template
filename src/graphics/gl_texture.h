@@ -33,6 +33,7 @@ public:
     {
         createFromRawData(size, format, data);
     }
+    GLTexture2D(GLTexture2D&&rhs);
     ~GLTexture2D();
 
     bool createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data);
@@ -41,7 +42,7 @@ public:
     // Wrapping getWrapping() {return m_w}
 
     uint32_t getHandle() const { return m_textureHandle; }
-    glm::vec2 getSize() const { return m_size; }
+    glm::ivec2 getSize() const { return m_size; }
 
 protected:
     void generateMipMap();

@@ -7,20 +7,20 @@
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 
-class GLFrameBufferBase;
+//typedef std::tuple<HashString, UniformVariant> Uniform;
 
 class EntityBase {
-    std::unordered_map<HashString, UniformVariant> m_uniforms;
+    typedef std::unordered_map<HashString, UniformVariant> NameUniformMap;
 
 protected:
-    // warning! initialize uniform with proper type
-    void initializeUniform(HashString str, const UniformVariant& var) { m_uniforms[str] = var; }
+    NameUniformMap m_uniforms;
+    std::shared_ptr<GLMeshBase> m_mesh;
 
 public:
-    const std::unordered_map<HashString, UniformVariant>& getUniforms() { return m_uniforms; }
+    void initializeUniform(HashString str, const UniformVariant& var) { m_uniforms[str] = var; }
     void setUniform(HashString str, const UniformVariant& var);
-    void applyUniforms(GLShader* shader);
-    virtual void applyUniformsAndDraw(GLShader* shader) = 0;
+    const NameUniformMap& getUniforms() { return m_uniforms; }
+    virtual void applyUniformsAndDraw(GLShader* shader);
 
     virtual ~EntityBase() = default;
 };
@@ -29,8 +29,6 @@ public:
 
 // square sprite -1 to 1
 class EntitySprite2D : public EntityBase {
-    const GLMeshTriArray& m_meshQuad;
-
     glm::vec2 m_pos = glm::vec2(0);
     glm::vec2 m_size = glm::vec2(1);
     float m_angle = 0;
@@ -49,13 +47,10 @@ public:
 /////////////////////////////// MESH 3D ////////////////////////////
 
 class EntityMesh3D : public EntityBase {
-protected:
-    std::shared_ptr<GLMeshTriIndices> m_mesh;
 
 public:
     EntityMesh3D();
     void setMesh(const std::shared_ptr<GLMeshTriIndices>& mesh) { m_mesh = mesh; }
-
     void setTransform(const glm::mat4& transform);
     void applyUniformsAndDraw(GLShader* shader) override;
 };

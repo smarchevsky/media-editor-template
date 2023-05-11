@@ -114,6 +114,7 @@ std::vector<GLShader::Variable> getUniformList(GLShader* shader)
         if (type == GL_SAMPLER_2D)
             texture2DIndex++;
     }
+    printf("\n");
     return result;
 }
 
@@ -203,10 +204,10 @@ GLShader GLShader::FromFile(
         textFromFile(shaderDir / fragRelativePath));
 }
 
-int GLShader::getUniformLocation(const HashString& name) const
-{
-    return glGetUniformLocation(m_shaderProgram, name.getString().c_str());
-}
+//int GLShader::getUniformLocation(const HashString& name) const
+//{
+//    return glGetUniformLocation(m_shaderProgram, name.getString().c_str());
+//}
 
 GLShader::~GLShader()
 {

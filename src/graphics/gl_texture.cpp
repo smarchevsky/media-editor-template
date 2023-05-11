@@ -12,7 +12,7 @@ struct TexelFormatInfo {
     int internalFormat; // GL_RGB8
     int externalFormat; // GL_RGB
     int externalType; //   GL_UNSIGNED_BYTE
-    std::string name;
+    const char* name;
 };
 
 TexelFormatInfo getGLTexelFormatInfo(GLTexture2D::Format format)
@@ -84,7 +84,9 @@ bool GLTexture2D::setWrapping(Wrapping wrapping)
     }
 
     m_wrapping = wrapping;
+
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappingGLformat);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingGLformat);
     return true;
@@ -127,7 +129,9 @@ bool GLTexture2D::setFiltering(Filtering filtering)
     m_filtering = filtering;
 
     generateMipMap();
+
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
     return true;
@@ -145,6 +149,7 @@ bool GLTexture2D::createFromRawData(glm::ivec2 size, GLTexture2D::Format format,
 
     glGenTextures(1, &m_textureHandle);
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+
     glTexImage2D(GL_TEXTURE_2D, 0,
         texelInfo.internalFormat,
         size.x, size.y, 0,
@@ -153,6 +158,7 @@ bool GLTexture2D::createFromRawData(glm::ivec2 size, GLTexture2D::Format format,
         data);
 
     setFiltering(Filtering::Nearset);
+
     if (data) {
         LOG("Texture successfully created: " << texelInfo.name);
     } else {
@@ -220,6 +226,17 @@ void GLTexture2D::clear()
         m_format = Format::Undefined;
         LOG("Texture destroyed");
     }
+}
+
+GLTexture2D::GLTexture2D(GLTexture2D&& rhs)
+{
+    m_textureHandle = rhs.m_textureHandle;
+    m_size = rhs.m_size;
+    m_format = rhs.m_format;
+    m_filtering = rhs.m_filtering;
+    m_wrapping = rhs.m_wrapping;
+
+    rhs.m_textureHandle = 0;
 }
 
 GLTexture2D::~GLTexture2D() { clear(); }

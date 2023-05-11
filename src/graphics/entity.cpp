@@ -12,17 +12,21 @@ void EntityBase::setUniform(HashString str, const UniformVariant& var)
     }
 }
 
-void EntityBase::applyUniforms(GLShader* shader)
+void EntityBase::applyUniformsAndDraw(GLShader* shader)
 {
-    for (const auto& u : getUniforms())
-        shader->setUniform(u.first, u.second);
+    if (m_mesh) {
+        for (const auto& u : getUniforms())
+            shader->setUniform(u.first, u.second);
+
+        m_mesh->draw();
+    }
 }
 
 /////////////////////////////// SPRITE 2D ////////////////////////////
 
 EntitySprite2D::EntitySprite2D()
-    : m_meshQuad(GLMeshStatics::get().getQuad2d())
 {
+    m_mesh = GLMeshStatics::get().getQuad2d();
     initializeUniform("modelWorld", glm::mat4(1));
     initializeUniform("texture0", Texture2Ddata());
     initializeUniform("opacity", 1.f);
@@ -41,8 +45,7 @@ void EntitySprite2D::applyUniformsAndDraw(GLShader* shader)
         m_dirty = false;
     }
 
-    applyUniforms(shader);
-    m_meshQuad.draw();
+    EntityBase::applyUniformsAndDraw(shader);
 }
 
 /////////////////////////////// MESH 3D ////////////////////////////
@@ -60,6 +63,5 @@ void EntityMesh3D::setTransform(const glm::mat4& transform)
 
 void EntityMesh3D::applyUniformsAndDraw(GLShader* shader)
 {
-    applyUniforms(shader);
-    m_mesh->draw();
+    EntityBase::applyUniformsAndDraw(shader);
 }
