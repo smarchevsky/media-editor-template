@@ -39,13 +39,9 @@ struct hash<Vertex> {
 };
 }
 
-struct Triangle {
-    int v[3];
-};
-
 struct Model3D {
     std::vector<Vertex> vertices;
-    std::vector<Triangle> triangles;
+    std::vector<glm::ivec3> triangles;
 };
 
 class MeshReader {

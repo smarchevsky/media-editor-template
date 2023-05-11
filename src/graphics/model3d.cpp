@@ -45,7 +45,7 @@ std::vector<Model3D> MeshReader::read(const std::filesystem::path& path)
             assert(fv == 3 && "Why TinyObj did not triangulate?");
 
             // Loop over vertices in the face.
-            Triangle triangle;
+            glm::ivec3 triangle;
             for (size_t vi = 0; vi < fv; vi++) { // VERTICES IN TRIANGLES
                 Vertex currentVertex;
 
@@ -75,10 +75,10 @@ std::vector<Model3D> MeshReader::read(const std::filesystem::path& path)
                 const auto& foundCell = pointHashMap.find(currentVertex);
 
                 if (foundCell != pointHashMap.end()) { // if found
-                    triangle.v[vi] = foundCell->second;
+                    triangle[vi] = foundCell->second;
                 } else {
                     pointHashMap.insert({ currentVertex, indexOffset });
-                    triangle.v[vi] = indexOffset;
+                    triangle[vi] = indexOffset;
                     indexOffset++;
                 }
             }
