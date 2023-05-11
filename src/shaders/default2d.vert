@@ -6,11 +6,11 @@ layout (location = 1) in vec2 uv;
 
 out vec2 UV;
 
-uniform mat4 cameraView = IDENTITY;
+uniform mat4 cameraViewInv = IDENTITY;
 uniform mat4 modelWorld = IDENTITY;
 
 void main()
 {
-   gl_Position = cameraView * modelWorld * vec4(position, 1.0);
+   gl_Position = cameraViewInv * modelWorld * vec4(position, 1.0);
    UV = uv;
 }
