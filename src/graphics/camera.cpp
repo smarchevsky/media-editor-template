@@ -8,6 +8,10 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+using glm::vec2;
+using glm::vec3;
+using glm::vec4;
+
 ////////////////////////// CAMERA ORTHO //////////////////////////////
 
 const glm::mat4& CameraOrtho::getViewInv()
@@ -35,8 +39,23 @@ void CameraOrtho::updateUniforms(GLShader* shader)
 void CameraPerspective::updateView()
 {
     if (m_viewDirty) {
-        m_cameraViewInv = glm::lookAt(m_cameraPosition, m_aimPosition, m_up);
-        m_cameraView = glm::inverse(m_cameraViewInv);
+
+        vec3 z = -glm::normalize(m_aimPosition - m_cameraPosition);
+        vec3 x = -glm::normalize(glm::cross(z, m_up));
+        vec3 y = -glm::cross(x, z);
+        vec3 p = m_cameraPosition;
+
+        m_cameraView = glm::mat4(
+            x.x, x.y, x.z, 0.f,
+            y.x, y.y, y.z, 0.f,
+            z.x, z.y, z.z, 0.f,
+            p.x, p.y, p.z, 1.f);
+
+        m_cameraViewInv = glm::inverse(m_cameraView);
+
+        // m_cameraViewInv = glm::lookAt(m_cameraPosition, m_aimPosition, m_up);
+        // m_cameraView = glm::inverse(m_cameraViewInv);
+
         m_viewDirty = false;
     }
 }
@@ -69,11 +88,11 @@ const glm::mat4& CameraPerspective::getProjection()
 
 void CameraPerspective::pan(glm::vec2 delta)
 {
-    glm::mat4 invView = glm::inverse(getView());
+    glm::mat4 matView = getView();
 
     float distance = glm::distance(m_cameraPosition, m_aimPosition);
-    glm::vec3 right = invView[0];
-    glm::vec3 up = invView[1];
+    glm::vec3 right = matView[0];
+    glm::vec3 up = matView[1];
     auto offset = (-right * delta.x + up * delta.y) * distance;
 
     m_cameraPosition += offset;
