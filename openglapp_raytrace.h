@@ -26,6 +26,7 @@ class OpenGLApp3D : public Application {
     GLShader m_shaderDefault3D;
     CameraPerspective m_camera;
     double m_time = 0;
+    glm::vec3 m_boxScale = glm::vec3(3);
 
 public:
     void init() override
@@ -73,6 +74,9 @@ public:
         BVH::BVHBuilder bvh;
         auto RTTexture = std::make_shared<GLTexture2D>(
             RTTextureAssembler::assemble(dragonModel[0], bvh));
+        auto bMin = bvh.getNodes()[0].aabb.getMin();
+        auto bMax = bvh.getNodes()[0].aabb.getMax();
+        m_boxScale = bMax - bMin;
 
         m_cubeMesh.setMesh(glMesh3d);
         m_cubeMesh.initializeUniform("texGeometry", RTTexture);
@@ -84,8 +88,10 @@ public:
     {
         m_time += dt;
         glm::mat4 m = glm::mat4(1);
+
         m = glm::rotate(m, (float)m_time * 0.1f, glm::normalize(glm::vec3(1, 1, 1)));
         m = glm::translate(m, glm::vec3(0, 0, 0.1f * sinf(m_time * 2)));
+        m = glm::scale(m, m_boxScale);
 
         m_cubeMesh.setTransform(m);
         GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled };
