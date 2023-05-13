@@ -28,6 +28,7 @@ EntitySprite2D::EntitySprite2D()
 {
     m_mesh = GLMeshStatics::get().getQuad2d();
     initializeUniform("modelWorld", glm::mat4(1));
+    initializeUniform("modelWorldInv", glm::mat4(1));
     initializeUniform("texture0", Texture2Ddata());
     initializeUniform("opacity", 1.f);
 }
@@ -52,13 +53,15 @@ void EntitySprite2D::applyUniformsAndDraw(GLShader* shader)
 
 EntityMesh3D::EntityMesh3D()
 {
-    initializeUniform("modelWorld", glm::mat4(1));
     initializeUniform("texture0", Texture2Ddata());
+    initializeUniform("modelWorld", glm::mat4(1));
+    initializeUniform("modelWorldInv", glm::mat4(1));
 }
 
 void EntityMesh3D::setTransform(const glm::mat4& transform)
 {
     setUniform("modelWorld", transform);
+    setUniform("modelWorldInv", glm::inverse(transform));
 }
 
 void EntityMesh3D::applyUniformsAndDraw(GLShader* shader)

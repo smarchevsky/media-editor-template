@@ -18,7 +18,7 @@ void main()
     vec3 n = normalize(vs.n);
     vec3 fragOffset = vs.wPos.xyz - cameraPosition;
     float fragOffsetLength = length(fragOffset);
-    vec3 lightDir = fragOffset / fragOffsetLength;
+    vec3 viewDir = fragOffset / fragOffsetLength;
     float fragOffsetLength2 = fragOffsetLength * fragOffsetLength;
 
     vec2 uv = vs.uv;
@@ -26,7 +26,7 @@ void main()
     vec4 c2 = texture2D(texture0, FLIP_Y(uv));
     vec4 c3 = vec4(.2, .2, .2, 1);
     FragColor = mix(c1, c3, c2 * c2);
-    FragColor += pow(clamp(-dot(lightDir, n), 0., 1.), 80. * fragOffsetLength) * 0.2 / fragOffsetLength;
+    FragColor += pow(clamp(-dot(viewDir, n), 0., 1.), 80. * fragOffsetLength) * 0.2 / fragOffsetLength;
 
     // FragColor = vec4(uv, 0, 1);
 }

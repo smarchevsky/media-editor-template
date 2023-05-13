@@ -1,4 +1,5 @@
-#include "openglapp3d.h"
+// #include "openglapp3d.h"
+#include "openglapp_raytrace.h"
 
 int main()
 {
