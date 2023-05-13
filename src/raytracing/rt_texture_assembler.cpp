@@ -226,10 +226,10 @@ static RTTextureData16 createGeometryTextureNormalized(const BVH::BVHBuilder& bv
 
         // GBA
         buffer[i * nUints16InNode + 2] = aabbMin.x;
-        buffer[i * nUints16InNode + 3] = aabbMin.y;
-        buffer[i * nUints16InNode + 4] = aabbMin.z;
-        buffer[i * nUints16InNode + 5] = aabbMax.x;
-        buffer[i * nUints16InNode + 6] = aabbMax.y;
+        buffer[i * nUints16InNode + 3] = aabbMax.x;
+        buffer[i * nUints16InNode + 4] = aabbMin.y;
+        buffer[i * nUints16InNode + 5] = aabbMax.y;
+        buffer[i * nUints16InNode + 6] = aabbMin.z;
         buffer[i * nUints16InNode + 7] = aabbMax.z;
     }
 
@@ -261,10 +261,10 @@ static RTTextureData16 createGeometryTextureNormalized(const BVH::BVHBuilder& bv
         auto normalizedPos = normalize(v.position);
 
         buffer[dataOffset + i * nUints16InVertex + 0] = glm::packUnorm1x16(normalizedPos.x);
-        buffer[dataOffset + i * nUints16InVertex + 1] = glm::packUnorm1x16(normalizedPos.y);
-        buffer[dataOffset + i * nUints16InVertex + 2] = glm::packUnorm1x16(normalizedPos.z);
-        buffer[dataOffset + i * nUints16InVertex + 3] = glm::packUnorm1x16(v.normal.x);
-        buffer[dataOffset + i * nUints16InVertex + 4] = glm::packUnorm1x16(v.normal.y);
+        buffer[dataOffset + i * nUints16InVertex + 1] = glm::packUnorm1x16(v.normal.x);
+        buffer[dataOffset + i * nUints16InVertex + 2] = glm::packUnorm1x16(normalizedPos.y);
+        buffer[dataOffset + i * nUints16InVertex + 3] = glm::packUnorm1x16(v.normal.y);
+        buffer[dataOffset + i * nUints16InVertex + 4] = glm::packUnorm1x16(normalizedPos.z);
         buffer[dataOffset + i * nUints16InVertex + 5] = glm::packUnorm1x16(v.normal.z);
         buffer[dataOffset + i * nUints16InVertex + 6] = glm::packUnorm1x16(v.uv.x);
         buffer[dataOffset + i * nUints16InVertex + 7] = glm::packUnorm1x16(v.uv.y);

@@ -82,6 +82,13 @@ uvec4 getData(int index)
     return floatBitsToUint(texture(texGeometry, uvPos));
 }
 
+/*
+    const ivec4 i4_2e15 = ivec4(32768);
+    const ivec4 i4_2e16 = ivec4(65536);
+    dataL = (ivec4(data & uvec4(0x0000ffffu)) + i4_2e15) % i4_2e16 - i4_2e15;
+    dataR = (ivec4(data >> uvec4(16))         + i4_2e15) % i4_2e16 - i4_2e15;
+*/
+
 #define NORM(x) x = x / 32767. - 1.;
 Node getNode(int index)
 {
@@ -94,16 +101,11 @@ Node getNode(int index)
     Node node;
     node.leftChild  = int(dataL.r);
     node.rightChild = int(dataR.r);
-
-    node.leftChild = (node.leftChild + 32768) % 65536 - 32768;
+    node.leftChild =  (node.leftChild  + 32768) % 65536 - 32768;
     node.rightChild = (node.rightChild + 32768) % 65536 - 32768;
 
-    node.aabbMin.x  = float(dataL.g);
-    node.aabbMin.y  = float(dataR.g);
-    node.aabbMin.z  = float(dataL.b);
-    node.aabbMax.x  = float(dataR.b);
-    node.aabbMax.y  = float(dataL.a);
-    node.aabbMax.z  = float(dataR.a);
+    node.aabbMin = vec3(dataL.gba);
+    node.aabbMax = vec3(dataR.gba);
     NORM(node.aabbMin)
     NORM(node.aabbMax)
 
@@ -124,14 +126,9 @@ IndexedTriangle getIndexedTriangle(int triIndex)
     dataL = data & uvec4(0x0000ffffu);
     dataR = data >> uvec4(16);
 
-    triangle.v0.p.x = float(dataL.r);
-    triangle.v0.p.y = float(dataR.r);
-    triangle.v0.p.z = float(dataL.g);
-    triangle.v0.n.x = float(dataR.g);
-    triangle.v0.n.y = float(dataL.b);
-    triangle.v0.n.z = float(dataR.b);
-    triangle.v0.t.x = float(dataL.a);
-    triangle.v0.t.y = float(dataR.a);
+    triangle.v0.p = vec3(dataL.rgb);
+    triangle.v0.n = vec3(dataR.rgb);
+    triangle.v0.t = vec2(dataL.a, dataR.a);
     NORM(triangle.v0.p);
     NORM(triangle.v0.n);
     NORM(triangle.v0.t);
@@ -141,14 +138,9 @@ IndexedTriangle getIndexedTriangle(int triIndex)
     dataL = data & uvec4(0x0000ffffu);
     dataR = data >> uvec4(16);
 
-    triangle.v1.p.x = float(dataL.r);
-    triangle.v1.p.y = float(dataR.r);
-    triangle.v1.p.z = float(dataL.g);
-    triangle.v1.n.x = float(dataR.g);
-    triangle.v1.n.y = float(dataL.b);
-    triangle.v1.n.z = float(dataR.b);
-    triangle.v1.t.x = float(dataL.a);
-    triangle.v1.t.y = float(dataR.a);
+    triangle.v1.p = vec3(dataL.rgb);
+    triangle.v1.n = vec3(dataR.rgb);
+    triangle.v1.t = vec2(dataL.a, dataR.a);
     NORM(triangle.v1.p);
     NORM(triangle.v1.n);
     NORM(triangle.v1.t);
@@ -158,14 +150,9 @@ IndexedTriangle getIndexedTriangle(int triIndex)
     dataL = data & uvec4(0x0000ffffu);
     dataR = data >> uvec4(16);
 
-    triangle.v2.p.x = float(dataL.r);
-    triangle.v2.p.y = float(dataR.r);
-    triangle.v2.p.z = float(dataL.g);
-    triangle.v2.n.x = float(dataR.g);
-    triangle.v2.n.y = float(dataL.b);
-    triangle.v2.n.z = float(dataR.b);
-    triangle.v2.t.x = float(dataL.a);
-    triangle.v2.t.y = float(dataR.a);
+    triangle.v2.p = vec3(dataL.rgb);
+    triangle.v2.n = vec3(dataR.rgb);
+    triangle.v2.t = vec2(dataL.a, dataR.a);
     NORM(triangle.v2.p);
     NORM(triangle.v2.n);
     NORM(triangle.v2.t);
