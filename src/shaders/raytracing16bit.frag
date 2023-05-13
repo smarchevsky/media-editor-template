@@ -18,7 +18,7 @@ uniform mat4 modelWorldInv;
 uniform sampler2D texGeometry;
 uniform ivec2 texGeometrySize;
 
-#define debugShowBVH
+//#define debugShowBVH
 
 //------------------- STACK -----------------------
 
@@ -86,35 +86,24 @@ uvec4 getData(int index)
 Node getNode(int index)
 {
     //isLeftPixel ? leftRight >> 16 : (leftRight & 0x0000ffffu);
-    uvec4 data = getData(index);
-
-///////////////////////////////////////////////////////////
-    // Node node;
-    // node.leftChild  = data.r >> 16; // data.r children
-    // node.rightChild = data.r & 0x0000ffff;
-    // node.aabbMin.x  = float(data.g >> 16);
-    // node.aabbMin.y  = float(data.g & 0x0000ffff);
-    // node.aabbMin.z  = float(data.b >> 16);
-    // node.aabbMax.x  = float(data.b & 0x0000ffff);
-    // node.aabbMax.y  = float(data.a >> 16);
-    // node.aabbMax.z  = float(data.a & 0x0000ffff);
-
-/////////////////////////////////////////////////////////
-
+    uvec4 data, dataL, dataR;
+    data = getData(index);
+    dataL = data & uvec4(0x0000ffffu);
+    dataR = data >> uvec4(16);
 
     Node node;
-    node.leftChild  = int(data.r & 0x0000ffffu);
-    node.rightChild = int(data.r >> 16);
+    node.leftChild  = int(dataL.r);
+    node.rightChild = int(dataR.r);
 
     node.leftChild = (node.leftChild + 32768) % 65536 - 32768;
     node.rightChild = (node.rightChild + 32768) % 65536 - 32768;
 
-    node.aabbMin.x  = float(data.g & 0x0000ffffu);
-    node.aabbMin.y  = float(data.g >> 16);
-    node.aabbMin.z  = float(data.b & 0x0000ffffu);
-    node.aabbMax.x  = float(data.b >> 16);
-    node.aabbMax.y  = float(data.a & 0x0000ffffu);
-    node.aabbMax.z  = float(data.a >> 16);
+    node.aabbMin.x  = float(dataL.g);
+    node.aabbMin.y  = float(dataR.g);
+    node.aabbMin.z  = float(dataL.b);
+    node.aabbMax.x  = float(dataR.b);
+    node.aabbMax.y  = float(dataL.a);
+    node.aabbMax.z  = float(dataR.a);
     NORM(node.aabbMin)
     NORM(node.aabbMax)
 
@@ -128,51 +117,55 @@ IndexedTriangle getIndexedTriangle(int triIndex)
     uint i1 = triIndices.r >> 16;
     uint i2 = triIndices.g & 0x0000ffffu;
 
-    uvec4 data;
+    uvec4 data, dataL, dataR;
     IndexedTriangle triangle;
 
     data = getData(int(i0));
-    // uvec4 dataL = data & uvec4(0x0000ffffu);
-    // uvec4 dataR = data >> 16;
+    dataL = data & uvec4(0x0000ffffu);
+    dataR = data >> uvec4(16);
 
-    triangle.v0.p.x = float(data.r & 0x0000ffffu);
-    triangle.v0.p.y = float(data.r >> 16);
-    triangle.v0.p.z = float(data.g & 0x0000ffffu);
-    triangle.v0.n.x = float(data.g >> 16);
-    triangle.v0.n.y = float(data.b & 0x0000ffffu);
-    triangle.v0.n.z = float(data.b >> 16);
-    triangle.v0.t.x = float(data.a & 0x0000ffffu);
-    triangle.v0.t.y = float(data.a >> 16);
+    triangle.v0.p.x = float(dataL.r);
+    triangle.v0.p.y = float(dataR.r);
+    triangle.v0.p.z = float(dataL.g);
+    triangle.v0.n.x = float(dataR.g);
+    triangle.v0.n.y = float(dataL.b);
+    triangle.v0.n.z = float(dataR.b);
+    triangle.v0.t.x = float(dataL.a);
+    triangle.v0.t.y = float(dataR.a);
     NORM(triangle.v0.p);
     NORM(triangle.v0.n);
     NORM(triangle.v0.t);
 
 
     data = getData(int(i1));
+    dataL = data & uvec4(0x0000ffffu);
+    dataR = data >> uvec4(16);
 
-    triangle.v1.p.x = float(data.r & 0x0000ffffu);
-    triangle.v1.p.y = float(data.r >> 16);
-    triangle.v1.p.z = float(data.g & 0x0000ffffu);
-    triangle.v1.n.x = float(data.g >> 16);
-    triangle.v1.n.y = float(data.b & 0x0000ffffu);
-    triangle.v1.n.z = float(data.b >> 16);
-    triangle.v1.t.x = float(data.a & 0x0000ffffu);
-    triangle.v1.t.y = float(data.a >> 16);
+    triangle.v1.p.x = float(dataL.r);
+    triangle.v1.p.y = float(dataR.r);
+    triangle.v1.p.z = float(dataL.g);
+    triangle.v1.n.x = float(dataR.g);
+    triangle.v1.n.y = float(dataL.b);
+    triangle.v1.n.z = float(dataR.b);
+    triangle.v1.t.x = float(dataL.a);
+    triangle.v1.t.y = float(dataR.a);
     NORM(triangle.v1.p);
     NORM(triangle.v1.n);
     NORM(triangle.v1.t);
 
 
     data = getData(int(i2));
+    dataL = data & uvec4(0x0000ffffu);
+    dataR = data >> uvec4(16);
 
-    triangle.v2.p.x = float(data.r & 0x0000ffffu);
-    triangle.v2.p.y = float(data.r >> 16);
-    triangle.v2.p.z = float(data.g & 0x0000ffffu);
-    triangle.v2.n.x = float(data.g >> 16);
-    triangle.v2.n.y = float(data.b & 0x0000ffffu);
-    triangle.v2.n.z = float(data.b >> 16);
-    triangle.v2.t.x = float(data.a & 0x0000ffffu);
-    triangle.v2.t.y = float(data.a >> 16);
+    triangle.v2.p.x = float(dataL.r);
+    triangle.v2.p.y = float(dataR.r);
+    triangle.v2.p.z = float(dataL.g);
+    triangle.v2.n.x = float(dataR.g);
+    triangle.v2.n.y = float(dataL.b);
+    triangle.v2.n.z = float(dataR.b);
+    triangle.v2.t.x = float(dataL.a);
+    triangle.v2.t.y = float(dataR.a);
     NORM(triangle.v2.p);
     NORM(triangle.v2.n);
     NORM(triangle.v2.t);
