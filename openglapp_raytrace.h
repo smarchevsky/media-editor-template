@@ -61,7 +61,7 @@ public:
                 m_camera.setAR((float)newSize.x / newSize.y);
             });
 
-        m_shaderDefault3D = GLShader::FromFile("default3d.vert", "raytracing.frag");
+        m_shaderDefault3D = GLShader::FromFile("default3d.vert", "raytracing16bit.frag");
 
         auto cubeModel = MeshReader::read(resourceDir / "models3d/cube.obj");
         assert(cubeModel.size());
@@ -77,6 +77,7 @@ public:
         m_cubeMesh.setMesh(glMesh3d);
         m_cubeMesh.initializeUniform("texGeometry", RTTexture);
         m_cubeMesh.initializeUniform("texGeometrySize", RTTexture->getSize());
+        m_window.setClearColor({ 0.1f, 0.1f, 0.2f, 1.f });
     }
 
     void updateWindow(float dt) override

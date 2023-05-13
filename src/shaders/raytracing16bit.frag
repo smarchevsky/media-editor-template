@@ -18,7 +18,7 @@ uniform mat4 modelWorldInv;
 uniform sampler2D texGeometry;
 uniform ivec2 texGeometrySize;
 
-//#define debugShowBVH
+#define debugShowBVH
 
 //------------------- STACK -----------------------
 
@@ -74,98 +74,108 @@ struct IndexedTriangle
 
 //------------------- GETTERS -----------------------
 
-ivec4 getData(int index)
+uvec4 getData(int index)
 {
     int x = index % texGeometrySize.x;
     int y = index / texGeometrySize.x;
     vec2 uvPos = vec2(x / float(texGeometrySize.x), y / float(texGeometrySize.y));
-    return floatBitsToInt(texture(texGeometry, uvPos));
+    return floatBitsToUint(texture(texGeometry, uvPos));
 }
 
+#define NORM(x) x = x / 32767. - 1.;
 Node getNode(int index)
 {
     //isLeftPixel ? leftRight >> 16 : (leftRight & 0x0000ffffu);
-    ivec4 data = getData(index);
+    uvec4 data = getData(index);
+
+///////////////////////////////////////////////////////////
+    // Node node;
+    // node.leftChild  = data.r >> 16; // data.r children
+    // node.rightChild = data.r & 0x0000ffff;
+    // node.aabbMin.x  = float(data.g >> 16);
+    // node.aabbMin.y  = float(data.g & 0x0000ffff);
+    // node.aabbMin.z  = float(data.b >> 16);
+    // node.aabbMax.x  = float(data.b & 0x0000ffff);
+    // node.aabbMax.y  = float(data.a >> 16);
+    // node.aabbMax.z  = float(data.a & 0x0000ffff);
+
+/////////////////////////////////////////////////////////
 
 
     Node node;
-    node.leftChild  = data.r >> 16; // data.r children
-    node.rightChild = data.r & 0x0000ffff;
-    node.aabbMin.x  = float(data.g >> 16);
-    node.aabbMin.y  = float(data.g & 0x0000ffff);
-    node.aabbMin.z  = float(data.b >> 16);
-    node.aabbMax.x  = float(data.b & 0x0000ffff);
-    node.aabbMax.y  = float(data.a >> 16);
-    node.aabbMax.z  = float(data.a & 0x0000ffff);
+    node.leftChild  = int(data.r & 0x0000ffffu);
+    node.rightChild = int(data.r >> 16);
 
-    node.aabbMin /= 32767.;
-    node.aabbMax /= 32767.;
+    node.leftChild = (node.leftChild + 32768) % 65536 - 32768;
+    node.rightChild = (node.rightChild + 32768) % 65536 - 32768;
+
+    node.aabbMin.x  = float(data.g & 0x0000ffffu);
+    node.aabbMin.y  = float(data.g >> 16);
+    node.aabbMin.z  = float(data.b & 0x0000ffffu);
+    node.aabbMax.x  = float(data.b >> 16);
+    node.aabbMax.y  = float(data.a & 0x0000ffffu);
+    node.aabbMax.z  = float(data.a >> 16);
+    NORM(node.aabbMin)
+    NORM(node.aabbMax)
+
     return node;
 }
 
 IndexedTriangle getIndexedTriangle(int triIndex)
 {
-    ivec2 triIndices = getData(triIndex).rg;
-    int i0 = triIndices.r >> 16;
-    int i1 = triIndices.r & 0x0000ffff;
-    int i2 = triIndices.g >> 16;
+    uvec2 triIndices = getData(triIndex).rg;
+    uint i0 = triIndices.r & 0x0000ffffu;
+    uint i1 = triIndices.r >> 16;
+    uint i2 = triIndices.g & 0x0000ffffu;
 
-    vec4 data;
+    uvec4 data;
     IndexedTriangle triangle;
 
+    data = getData(int(i0));
+    // uvec4 dataL = data & uvec4(0x0000ffffu);
+    // uvec4 dataR = data >> 16;
 
-    data = getData(i0);
-
-    triangle.v0.p.x = float(data.r >> 16);
-    triangle.v0.p.y = float(data.r & 0x0000ffff);
-    triangle.v0.p.z = float(data.g >> 16);
-
-    triangle.v0.n.x = float(data.g & 0x0000ffff);
-    triangle.v0.n.y = float(data.b >> 16);
-    triangle.v0.n.z = float(data.b & 0x0000ffff);
-
-    triangle.v0.t.x = float(data.a >> 16);
-    triangle.v0.t.y = float(data.a & 0x0000ffff);
-
-    triangle.v0.p /= 32767.;
-    triangle.v0.n /= 32767.;
-    triangle.v0.t /= 32767.;
+    triangle.v0.p.x = float(data.r & 0x0000ffffu);
+    triangle.v0.p.y = float(data.r >> 16);
+    triangle.v0.p.z = float(data.g & 0x0000ffffu);
+    triangle.v0.n.x = float(data.g >> 16);
+    triangle.v0.n.y = float(data.b & 0x0000ffffu);
+    triangle.v0.n.z = float(data.b >> 16);
+    triangle.v0.t.x = float(data.a & 0x0000ffffu);
+    triangle.v0.t.y = float(data.a >> 16);
+    NORM(triangle.v0.p);
+    NORM(triangle.v0.n);
+    NORM(triangle.v0.t);
 
 
-    data = getData(i1);
+    data = getData(int(i1));
 
-    triangle.v1.p.x = float(data.r >> 16);
-    triangle.v1.p.y = float(data.r & 0x0000ffff);
-    triangle.v1.p.z = float(data.g >> 16);
-
-    triangle.v1.n.x = float(data.g & 0x0000ffff);
-    triangle.v1.n.y = float(data.b >> 16);
-    triangle.v1.n.z = float(data.b & 0x0000ffff);
-
-    triangle.v1.t.x = float(data.a >> 16);
-    triangle.v1.t.y = float(data.a & 0x0000ffff);
-
-    triangle.v1.p /= 32767.;
-    triangle.v1.n /= 32767.;
-    triangle.v1.t /= 32767.;
+    triangle.v1.p.x = float(data.r & 0x0000ffffu);
+    triangle.v1.p.y = float(data.r >> 16);
+    triangle.v1.p.z = float(data.g & 0x0000ffffu);
+    triangle.v1.n.x = float(data.g >> 16);
+    triangle.v1.n.y = float(data.b & 0x0000ffffu);
+    triangle.v1.n.z = float(data.b >> 16);
+    triangle.v1.t.x = float(data.a & 0x0000ffffu);
+    triangle.v1.t.y = float(data.a >> 16);
+    NORM(triangle.v1.p);
+    NORM(triangle.v1.n);
+    NORM(triangle.v1.t);
 
 
-    data = getData(i2);
+    data = getData(int(i2));
 
-    triangle.v2.p.x = float(data.r >> 16);
-    triangle.v2.p.y = float(data.r & 0x0000ffff);
-    triangle.v2.p.z = float(data.g >> 16);
-
-    triangle.v2.n.x = float(data.g & 0x0000ffff);
-    triangle.v2.n.y = float(data.b >> 16);
-    triangle.v2.n.z = float(data.b & 0x0000ffff);
-
-    triangle.v2.t.x = float(data.a >> 16);
-    triangle.v2.t.y = float(data.a & 0x0000ffff);
-
-    triangle.v2.p /= 32767.;
-    triangle.v2.n /= 32767.;
-    triangle.v2.t /= 32767.;
+    triangle.v2.p.x = float(data.r & 0x0000ffffu);
+    triangle.v2.p.y = float(data.r >> 16);
+    triangle.v2.p.z = float(data.g & 0x0000ffffu);
+    triangle.v2.n.x = float(data.g >> 16);
+    triangle.v2.n.y = float(data.b & 0x0000ffffu);
+    triangle.v2.n.z = float(data.b >> 16);
+    triangle.v2.t.x = float(data.a & 0x0000ffffu);
+    triangle.v2.t.y = float(data.a >> 16);
+    NORM(triangle.v2.p);
+    NORM(triangle.v2.n);
+    NORM(triangle.v2.t);
 
 
     return triangle;
@@ -246,6 +256,9 @@ void traceCloseHitV2(inout Ray ray, inout Hit hit)
         ray.nodesVisited++;
         #endif
         select = getNode(stackPop());
+
+
+
         if(!slabs(ray, select.aabbMin, select.aabbMax, tempt))
             continue;
 

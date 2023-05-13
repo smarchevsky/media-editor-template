@@ -159,7 +159,7 @@ static RTTextureData16 createGeometryTextureNormalized(const BVH::BVHBuilder& bv
     //(x - min(x)) / ( max(x) - min(x) )
 
     auto normalize = [&](glm::vec3 pos) {
-        return (pos - bbMin) / (bbMax - bbMin) * 2.f - 1.f;
+        return (pos - bbMin) / (bbMax - bbMin);
     };
 
     constexpr int nUints16PerPixel = 8;
@@ -196,32 +196,41 @@ static RTTextureData16 createGeometryTextureNormalized(const BVH::BVHBuilder& bv
     for (int i = 0; i < bvh.getNodes().size(); ++i) {
         const auto& n = bvh.getNodes()[i];
 
-        int leftChildIndex = (n.leftChild <= 0)
+        int childIndexL = (n.leftChild <= 0)
             ? n.leftChild - nodeIndexPixelOffset // if triangle
             : n.leftChild * nPixelPerNode; //  if node
 
-        int rightChildIndex = (n.rightChild <= 0)
+        int childIndexR = (n.rightChild <= 0)
             ? n.rightChild - nodeIndexPixelOffset
             : n.rightChild * nPixelPerNode;
 
-        assert(leftChildIndex >= -32768 && leftChildIndex <= 32767);
-        assert(rightChildIndex >= -32768 && rightChildIndex <= 32767);
+        assert(childIndexL >= -32768 && childIndexL <= 32767);
+        assert(childIndexR >= -32768 && childIndexR <= 32767);
 
         auto normalizedMin = normalize(n.aabb.getMin());
         auto normalizedMax = normalize(n.aabb.getMax());
 
         // R
-        buffer[i * nUints16InNode + 0] = (int16_t)leftChildIndex;
-        buffer[i * nUints16InNode + 1] = (int16_t)rightChildIndex;
-        // G
-        buffer[i * nUints16InNode + 2] = glm::packSnorm1x16(normalizedMin.x);
-        buffer[i * nUints16InNode + 3] = glm::packSnorm1x16(normalizedMin.y);
-        // B
-        buffer[i * nUints16InNode + 4] = glm::packSnorm1x16(normalizedMin.z);
-        buffer[i * nUints16InNode + 5] = glm::packSnorm1x16(normalizedMax.x);
-        // A
-        buffer[i * nUints16InNode + 6] = glm::packSnorm1x16(normalizedMax.y);
-        buffer[i * nUints16InNode + 7] = glm::packSnorm1x16(normalizedMax.z);
+        buffer[i * nUints16InNode + 0] = (int16_t)childIndexL;
+        buffer[i * nUints16InNode + 1] = (int16_t)childIndexR;
+
+        glm::ivec3 aabbMin(
+            (int16_t)glm::packUnorm1x16(normalizedMin.x),
+            (int16_t)glm::packUnorm1x16(normalizedMin.y),
+            (int16_t)glm::packUnorm1x16(normalizedMin.z));
+
+        glm::ivec3 aabbMax(
+            (int16_t)glm::packUnorm1x16(normalizedMax.x),
+            (int16_t)glm::packUnorm1x16(normalizedMax.y),
+            (int16_t)glm::packUnorm1x16(normalizedMax.z));
+
+        // GBA
+        buffer[i * nUints16InNode + 2] = aabbMin.x;
+        buffer[i * nUints16InNode + 3] = aabbMin.y;
+        buffer[i * nUints16InNode + 4] = aabbMin.z;
+        buffer[i * nUints16InNode + 5] = aabbMax.x;
+        buffer[i * nUints16InNode + 6] = aabbMax.y;
+        buffer[i * nUints16InNode + 7] = aabbMax.z;
     }
 
     int dataOffset = numOfUints16InNodeArray;
@@ -235,13 +244,13 @@ static RTTextureData16 createGeometryTextureNormalized(const BVH::BVHBuilder& bv
         int t1 = t[1] * nPixelPerVertex + triIndexPixelOffset;
         int t2 = t[2] * nPixelPerVertex + triIndexPixelOffset;
 
-        assert(t0 <= 65535 && t1 <= 65535 && t2 <= 65535);
+        assert(t0 <= 32767 && t1 <= 32767 && t2 <= 32767);
+        assert(t0 >= -32768 && t1 >= -32768 && t2 >= -32768);
 
         // R
-        buffer[dataOffset + i * nUints16InIndex + 0] = (uint16_t)t0;
-        buffer[dataOffset + i * nUints16InIndex + 1] = (uint16_t)t1;
-        // G
-        buffer[dataOffset + i * nUints16InIndex + 2] = (uint16_t)t2;
+        buffer[dataOffset + i * nUints16InIndex + 0] = (int16_t)t0;
+        buffer[dataOffset + i * nUints16InIndex + 1] = (int16_t)t1;
+        buffer[dataOffset + i * nUints16InIndex + 2] = (int16_t)t2;
         buffer[dataOffset + i * nUints16InIndex + 3] = 0;
     }
     dataOffset += numOfUints16InIndexArray;
@@ -251,18 +260,14 @@ static RTTextureData16 createGeometryTextureNormalized(const BVH::BVHBuilder& bv
 
         auto normalizedPos = normalize(v.position);
 
-        // R
-        buffer[dataOffset + i * nUints16InVertex + 0] = glm::packSnorm1x16(normalizedPos.x);
-        buffer[dataOffset + i * nUints16InVertex + 1] = glm::packSnorm1x16(normalizedPos.x);
-        // G
-        buffer[dataOffset + i * nUints16InVertex + 2] = glm::packSnorm1x16(normalizedPos.x);
-        buffer[dataOffset + i * nUints16InVertex + 3] = glm::packSnorm1x16(v.normal.x);
-        // B
-        buffer[dataOffset + i * nUints16InVertex + 4] = glm::packSnorm1x16(v.normal.y);
-        buffer[dataOffset + i * nUints16InVertex + 5] = glm::packSnorm1x16(v.normal.z);
-        // A
-        buffer[dataOffset + i * nUints16InVertex + 6] = glm::packSnorm1x16(v.uv.x);
-        buffer[dataOffset + i * nUints16InVertex + 7] = glm::packSnorm1x16(v.uv.y);
+        buffer[dataOffset + i * nUints16InVertex + 0] = glm::packUnorm1x16(normalizedPos.x);
+        buffer[dataOffset + i * nUints16InVertex + 1] = glm::packUnorm1x16(normalizedPos.y);
+        buffer[dataOffset + i * nUints16InVertex + 2] = glm::packUnorm1x16(normalizedPos.z);
+        buffer[dataOffset + i * nUints16InVertex + 3] = glm::packUnorm1x16(v.normal.x);
+        buffer[dataOffset + i * nUints16InVertex + 4] = glm::packUnorm1x16(v.normal.y);
+        buffer[dataOffset + i * nUints16InVertex + 5] = glm::packUnorm1x16(v.normal.z);
+        buffer[dataOffset + i * nUints16InVertex + 6] = glm::packUnorm1x16(v.uv.x);
+        buffer[dataOffset + i * nUints16InVertex + 7] = glm::packUnorm1x16(v.uv.y);
     }
 
     LOG("Node pixel count: " << nodePixelCount
@@ -282,6 +287,6 @@ static RTTextureData16 createGeometryTextureNormalized(const BVH::BVHBuilder& bv
 GLTexture2D RTTextureAssembler::assemble(const Model3D& model, BVH::BVHBuilder& bvh)
 {
     bvh.build(model);
-    RTTextureData32 textureData = createGeometryTexture(bvh, model);
+    RTTextureData16 textureData = createGeometryTextureNormalized(bvh, model);
     return GLTexture2D(textureData.size, textureData.format, textureData.buffer.data());
 }
