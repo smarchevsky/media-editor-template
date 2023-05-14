@@ -37,6 +37,12 @@ static RTTextureData32 createGeometryTexture(const BVH::BVHBuilder& bvh, const M
     constexpr int nPixelPerNode = nFloatsInNode / floatsPerPixel;
     constexpr int nPixelPerVertex = nFloatsInVertex / floatsPerPixel;
 
+    auto bbMin = bvh.getNodes()[0].aabb.getMin();
+    auto bbMax = bvh.getNodes()[0].aabb.getMax();
+    auto normalize = [&](glm::vec3 pos) {
+        return (pos - bbMin) / (bbMax - bbMin) * 2.f - 1.f;
+    };
+
     // calculate index buffer size
     int numOfFloatsInNodeArray = bvh.getNodes().size() * nFloatsInNode;
     int nodePixelCount = numOfFloatsInNodeArray / floatsPerPixel;
@@ -85,15 +91,15 @@ static RTTextureData32 createGeometryTexture(const BVH::BVHBuilder& bvh, const M
         buffer[i * nFloatsInNode + 0] = float(leftChildIndex);
         buffer[i * nFloatsInNode + 1] = float(rightChildIndex);
 #endif
+        auto aabbMin = normalize(n.aabb.getMin());
+        auto aabbMax = normalize(n.aabb.getMax());
 
-        buffer[i * nFloatsInNode + 2] = n.aabb.getMin().x;
-        buffer[i * nFloatsInNode + 3] = n.aabb.getMin().y;
-
-        // second pixel
-        buffer[i * nFloatsInNode + 4] = n.aabb.getMin().z;
-        buffer[i * nFloatsInNode + 5] = n.aabb.getMax().x;
-        buffer[i * nFloatsInNode + 6] = n.aabb.getMax().y;
-        buffer[i * nFloatsInNode + 7] = n.aabb.getMax().z;
+        buffer[i * nFloatsInNode + 2] = aabbMin.x;
+        buffer[i * nFloatsInNode + 3] = aabbMin.y;
+        buffer[i * nFloatsInNode + 4] = aabbMin.z;
+        buffer[i * nFloatsInNode + 5] = aabbMax.x;
+        buffer[i * nFloatsInNode + 6] = aabbMax.y;
+        buffer[i * nFloatsInNode + 7] = aabbMax.z;
     }
     floatOffset += numOfFloatsInNodeArray;
 
@@ -123,10 +129,11 @@ static RTTextureData32 createGeometryTexture(const BVH::BVHBuilder& bvh, const M
     for (int i = 0; i < model.vertices.size(); ++i) {
         const auto& v = model.vertices[i];
 
+        auto p = normalize(v.position);
         // first pixel
-        buffer[floatOffset + i * nFloatsInVertex + 0] = v.position.x;
-        buffer[floatOffset + i * nFloatsInVertex + 1] = v.position.y;
-        buffer[floatOffset + i * nFloatsInVertex + 2] = v.position.z;
+        buffer[floatOffset + i * nFloatsInVertex + 0] = p.x;
+        buffer[floatOffset + i * nFloatsInVertex + 1] = p.y;
+        buffer[floatOffset + i * nFloatsInVertex + 2] = p.z;
         buffer[floatOffset + i * nFloatsInVertex + 3] = v.normal.x;
 
         // second pixel
@@ -152,22 +159,19 @@ static RTTextureData32 createGeometryTexture(const BVH::BVHBuilder& bvh, const M
 
 static RTTextureData16 createGeometryTextureNormalized(const BVH::BVHBuilder& bvh, const Model3D& model)
 {
-    glm::vec3 scale, offset;
-
-    auto bbMin = bvh.getNodes()[0].aabb.getMin();
-    auto bbMax = bvh.getNodes()[0].aabb.getMax();
-    //(x - min(x)) / ( max(x) - min(x) )
-
-    auto normalize = [&](glm::vec3 pos) {
-        return (pos - bbMin) / (bbMax - bbMin);
-    };
-
     constexpr int nUints16PerPixel = 8;
     constexpr int nUints16InNode = 8;
     constexpr int nUints16InIndex = 8;
     constexpr int nUints16InVertex = 8;
     constexpr int nPixelPerNode = nUints16InNode / nUints16PerPixel;
     constexpr int nPixelPerVertex = nUints16InVertex / nUints16PerPixel;
+
+    auto bbMin = bvh.getNodes()[0].aabb.getMin();
+    auto bbMax = bvh.getNodes()[0].aabb.getMax();
+
+    auto normalize = [&](glm::vec3 pos) {
+        return (pos - bbMin) / (bbMax - bbMin);
+    };
 
     // calculate index buffer size
     int numOfUints16InNodeArray = bvh.getNodes().size() * nUints16InNode;
@@ -287,6 +291,6 @@ static RTTextureData16 createGeometryTextureNormalized(const BVH::BVHBuilder& bv
 GLTexture2D RTTextureAssembler::assemble(const Model3D& model, BVH::BVHBuilder& bvh)
 {
     bvh.build(model);
-    RTTextureData16 textureData = createGeometryTextureNormalized(bvh, model);
+    auto textureData = createGeometryTextureNormalized(bvh, model);
     return GLTexture2D(textureData.size, textureData.format, textureData.buffer.data());
 }

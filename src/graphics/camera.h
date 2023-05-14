@@ -65,7 +65,7 @@ protected:
     glm::vec3 m_cameraPosition, m_aimPosition, m_up;
 
     float m_near = .1f, m_far = 2000.f;
-    float m_fov = 1.f /*radians*/, m_ar = 1.f;
+    float m_fov = 0.6f /*radians*/, m_ar = 1.f;
     bool m_viewDirty = true, m_projectionDirty = true;
 
     protected:

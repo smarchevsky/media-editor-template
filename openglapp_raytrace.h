@@ -25,7 +25,7 @@ class OpenGLApp3D : public Application {
 
     GLShader m_shaderDefault3D;
     CameraPerspective m_camera;
-    double m_time = 0;
+    double m_dtSmooth = 0;
     glm::vec3 m_boxScale = glm::vec3(3);
 
 public:
@@ -63,6 +63,7 @@ public:
             });
 
         m_shaderDefault3D = GLShader::FromFile("default3d.vert", "raytracing16bit.frag");
+        //m_shaderDefault3D = GLShader::FromFile("default3d.vert", "raytracing.frag");
 
         auto cubeModel = MeshReader::read(resourceDir / "models3d/cube.obj");
         assert(cubeModel.size());
@@ -74,6 +75,7 @@ public:
         BVH::BVHBuilder bvh;
         auto RTTexture = std::make_shared<GLTexture2D>(
             RTTextureAssembler::assemble(dragonModel[0], bvh));
+
         auto bMin = bvh.getNodes()[0].aabb.getMin();
         auto bMax = bvh.getNodes()[0].aabb.getMax();
         m_boxScale = bMax - bMin;
@@ -86,16 +88,19 @@ public:
 
     void updateWindow(float dt) override
     {
-        m_time += dt;
+        m_dtSmooth = m_dtSmooth * 0.9f + dt * 0.1f;
         glm::mat4 m = glm::mat4(1);
 
-        m = glm::rotate(m, (float)m_time * 0.1f, glm::normalize(glm::vec3(1, 1, 1)));
-        m = glm::translate(m, glm::vec3(0, 0, 0.1f * sinf(m_time * 2)));
+        m = glm::translate(m, glm::vec3(0, 0, 1.0f));
         m = glm::scale(m, m_boxScale);
 
+        static int counter = 0;
         m_cubeMesh.setTransform(m);
         GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled };
         GLRenderManager::draw(&m_shaderDefault3D, &m_window, &m_camera, &m_cubeMesh, true, params3d);
+
+        if (counter++ % 30 == 0)
+            LOG(1 / m_dtSmooth);
     }
 };
 typedef OpenGLApp3D App;
