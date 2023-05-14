@@ -292,34 +292,10 @@ void traceCloseHitV2(inout Ray ray, inout Hit hit)
     }
 }
 
-
-vec2 hash2(vec3 p3) {
-        p3 = fract(p3 * vec3(5.3983, 5.4427, 6.9371));
-    p3 += dot(p3, p3.yzx + 19.19);
-    return fract((p3.xx + p3.yz) * p3.zy);
-}
-
-mat4 rotationMatrix(float angle)
-{
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-
-    return mat4(c,   -s,       0,  0.0,
-                s,    c,       0,  0.0,
-                0,    0,  oc + c,  0.0,
-                0,    0,       0,  1.0);
-}
-
 void main() {
-    vec2 dither = hash2(vec3(gl_FragCoord.xy, 0));
-    mat4 finalMatrix = modelWorldInv;
-    // finalMatrix = rotationMatrix(dither.x * .4) * finalMatrix;
-
     vec3 viewDir = normalize(vs.wPos.xyz - cameraPosition);
-
-    viewDir =         (finalMatrix * vec4(viewDir,        0.)).xyz;
-    vec3 viewOrigin = (finalMatrix * vec4(cameraPosition, 1.)).xyz;
+    viewDir =         (modelWorldInv * vec4(viewDir,        0.)).xyz;
+    vec3 viewOrigin = (modelWorldInv * vec4(cameraPosition, 1.)).xyz;
 
     Ray ray;
     ray.direction = viewDir;
