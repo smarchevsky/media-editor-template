@@ -1,6 +1,9 @@
 #include "gl_rendermanager.h"
 #include "gl_shader.h"
 
+#include "gl_framebuffer.h"
+#include "visualobject.h"
+
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
 
@@ -8,6 +11,7 @@
 #include <unordered_map>
 
 GLRenderParameters GLRenderParameters::s_currentParams;
+
 namespace {
 void generateMipMap(GLFrameBufferBase* fb)
 {
@@ -15,15 +19,35 @@ void generateMipMap(GLFrameBufferBase* fb)
         fbTexture->generateMipMap();
     }
 }
+
+bool hasSameKeys(const EntityBase::NameUniformMap& mapA, const EntityBase::NameUniformMap& mapB)
+{
+    for (const auto& l : mapA) {
+        if (mapB.find(l.first) != mapB.end())
+            return true;
+    }
+    return false;
+}
+
 } // namespace
 
 void GLRenderManager::draw(GLShader* shader,
     GLFrameBufferBase* frameBuffer,
     CameraBase* camera,
-    EntityBase* drawable,
+    VisualObjectBase* visualObject,
     bool clear,
     GLRenderParameters params)
 {
+    assert(shader);
+    assert(frameBuffer);
+
+    assert(visualObject);
+
+    const auto& objectUniforms = visualObject->getUniforms();
+    if (camera && hasSameKeys(camera->getUniforms(), objectUniforms)) {
+        assert(false && "Avoid using same keys in camera and VisualObject");
+    }
+
     frameBuffer->bind();
 
     if (clear) {
@@ -35,11 +59,16 @@ void GLRenderManager::draw(GLShader* shader,
     shader->resetVariables();
 
     if (camera)
-        camera->updateUniforms(shader);
+        camera->applyUniforms(shader);
 
     params.apply();
 
-    drawable->applyUniformsAndDraw(shader);
+    if (visualObject->getMesh()) {
+        visualObject->applyUniforms(shader);
+        visualObject->draw();
+    } else {
+        LOGE("No mesh :(");
+    }
 
     generateMipMap(frameBuffer);
 }

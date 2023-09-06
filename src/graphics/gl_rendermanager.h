@@ -2,8 +2,9 @@
 #define GL_RENDERMANAGER_H
 
 #include "camera.h"
-#include "entity.h"
-#include "gl_framebuffer.h"
+
+class GLFrameBufferBase;
+class VisualObjectBase;
 
 // clang-format off
 enum class GLBlend : uint8_t { Disabled, OneMinusAlpha };
@@ -28,7 +29,7 @@ public:
     static void draw(GLShader* shader,
         GLFrameBufferBase* frameBuffer,
         CameraBase* camera,
-        EntityBase* drawable,
+        VisualObjectBase* drawable,
         bool clear,
         GLRenderParameters params = GLRenderParameters());
 };

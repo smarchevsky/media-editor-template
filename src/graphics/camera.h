@@ -5,15 +5,18 @@
 #include <glm/vec2.hpp>
 #include <string>
 
+#include "entity.h"
+
 class GLShader;
 
-class CameraBase {
+class CameraBase : public EntityBase {
+
 public:
-    virtual ~CameraBase() = default;
-    virtual void updateUniforms(GLShader* shader) = 0;
+    virtual void applyUniforms(GLShader* shader) = 0;
 
     template <class CameraType>
     CameraType* as() { return dynamic_cast<CameraType*>(this); }
+    virtual ~CameraBase() = 0;
 };
 
 ////////////////////////// CAMERA ORTHO //////////////////////////////
@@ -50,7 +53,7 @@ public:
 
     const glm::mat4& getViewInv();
 
-    virtual void updateUniforms(GLShader* shader) override;
+    virtual void applyUniforms(GLShader* shader) override;
 };
 
 ////////////////////// CAMERA PERSPECTIVE //////////////////////////////
@@ -68,7 +71,7 @@ protected:
     float m_fov = 1.f /*radians*/, m_ar = 1.f;
     bool m_viewDirty = true, m_projectionDirty = true;
 
-    protected:
+protected:
     void updateView();
     void updateProjection();
 
@@ -103,7 +106,7 @@ public:
     virtual const glm::mat4& getProjection();
     const glm::mat4& getProjectionJittered();
 
-    virtual void updateUniforms(GLShader* shader) override;
+    virtual void applyUniforms(GLShader* shader) override;
 };
 
 ////////////////////// CAMERA PERSPECTIVE JITTERED //////////////////////////////
@@ -118,7 +121,7 @@ public:
     void setJitterAA(glm::vec2 jitter) { m_jitterSizeAA = jitter; }
     void setJitterDOV(float radius) { m_jitterSizeDOF = radius; }
     void setJitterEnabled(bool enabled) { m_jitterEnabled = enabled; }
-    virtual const glm::mat4& getProjection();
+    virtual const glm::mat4& getProjection() override;
 };
 
 #endif // ORTHOCAMERA_H

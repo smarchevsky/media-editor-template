@@ -1,7 +1,5 @@
 #include "camera.h"
 
-#include "gl_shader.h"
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/random.hpp>
@@ -11,6 +9,8 @@
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
+
+CameraBase::~CameraBase() { }
 
 ////////////////////////// CAMERA ORTHO //////////////////////////////
 
@@ -27,7 +27,7 @@ const glm::mat4& CameraOrtho::getViewInv()
     return m_matView;
 }
 
-void CameraOrtho::updateUniforms(GLShader* shader)
+void CameraOrtho::applyUniforms(GLShader* shader)
 {
     if (shader) {
         shader->setUniform("cameraViewInv", getViewInv());
@@ -111,7 +111,7 @@ void CameraPerspective::rotateAroundAim(glm::vec2 offsetDeltaRadians)
     m_viewDirty = true;
 }
 
-void CameraPerspective::updateUniforms(GLShader* shader)
+void CameraPerspective::applyUniforms(GLShader* shader)
 {
     if (shader) {
         shader->setUniform("cameraViewInv", getViewInv());

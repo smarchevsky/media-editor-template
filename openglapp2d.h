@@ -3,8 +3,8 @@
 
 #include "application.h"
 
-#include "graphics/entity.h"
 #include "graphics/gl_shader.h"
+#include "graphics/visualobject.h"
 
 #include "graphics/gl_rendermanager.h"
 
@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 static fs::path projectDir(PROJECT_DIR);
 
 class OpenGLApp2D : public Application {
-    std::vector<EntitySprite2D> m_sprites;
+    std::vector<VisualObjectSprite2D> m_sprites;
     GLShader m_shaderDefault2d;
     GLFrameBuffer m_fb;
     CameraOrtho m_camera;
@@ -63,16 +63,16 @@ public:
         m_fb.getTexture()->setWrapping(GLTexture2D::Wrapping::ClampEdge);
 
         auto texChecker = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "UV_checker_Map_byValle.jpg"));
-        //auto texLiza = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "mona_liza.jpg"));
-        //  m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
+        // auto texLiza = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "mona_liza.jpg"));
+        //   m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
         {
-            EntitySprite2D s; // 0
+            VisualObjectSprite2D s; // 0
             s.setPos({ 0.5f, 0.f });
             s.setUniform("texture0", texChecker);
             m_sprites.push_back(s);
         }
         {
-            EntitySprite2D s; // 1
+            VisualObjectSprite2D s; // 1
             s.setPos({ -0.5f, -0.3f });
             s.setUniform("texture0", m_fb.getTexture());
             m_sprites.push_back(s);
@@ -84,7 +84,7 @@ public:
         GLRenderManager rm;
         m_sprites[0].addRotation(dt * 0.1f);
 
-        rm.draw(&m_shaderDefault2d, &m_fb, nullptr, &m_sprites[0], false);
+        rm.draw(&m_shaderDefault2d, &m_fb, nullptr, &m_sprites[0], true);
 
         rm.draw(&m_shaderDefault2d, &m_window, &m_camera, &m_sprites[1], true);
     }
