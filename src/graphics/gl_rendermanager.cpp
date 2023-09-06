@@ -2,7 +2,6 @@
 #include "gl_shader.h"
 
 #include "gl_framebuffer.h"
-#include "visualobject.h"
 
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
@@ -20,7 +19,7 @@ void generateMipMap(GLFrameBufferBase* fb)
     }
 }
 
-bool hasSameKeys(const EntityBase::NameUniformMap& mapA, const EntityBase::NameUniformMap& mapB)
+bool hasSameKeys(const NameUniformMap& mapA, const NameUniformMap& mapB)
 {
     for (const auto& l : mapA) {
         if (mapB.find(l.first) != mapB.end())
@@ -28,25 +27,41 @@ bool hasSameKeys(const EntityBase::NameUniformMap& mapA, const EntityBase::NameU
     }
     return false;
 }
-
 } // namespace
 
-void GLRenderManager::draw(GLShader* shader,
+void GLRenderManager::draw(
     GLFrameBufferBase* frameBuffer,
+    GLShader* shader,
     CameraBase* camera,
     VisualObjectBase* visualObject,
     bool clear,
     GLRenderParameters params)
 {
-    assert(shader);
-    assert(frameBuffer);
+    preDraw(frameBuffer, shader, camera, params, clear);
 
     assert(visualObject);
-
-    const auto& objectUniforms = visualObject->getUniforms();
-    if (camera && hasSameKeys(camera->getUniforms(), objectUniforms)) {
+    const auto& objectUniforms = visualObject->updateAndGetUniforms();
+    if (camera && hasSameKeys(camera->updateAndGetUniforms(), objectUniforms)) {
         assert(false && "Avoid using same keys in camera and VisualObject");
     }
+
+    if (visualObject->getMesh()) {
+        shader->setUniforms(visualObject->updateAndGetUniforms());
+
+        visualObject->draw();
+    } else {
+        LOGE("No mesh :(");
+    }
+
+    postDraw(frameBuffer, shader, camera, params);
+}
+
+// PREDRAW / POSTDRAW
+
+void GLRenderManager::preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, CameraBase* camera, GLRenderParameters params, bool clear)
+{
+    assert(shader);
+    assert(frameBuffer);
 
     frameBuffer->bind();
 
@@ -54,22 +69,18 @@ void GLRenderManager::draw(GLShader* shader,
         bool withDepth = (params.depthMode == GLDepth::Enabled);
         frameBuffer->clear(withDepth);
     }
-
     shader->bind();
-    shader->resetVariables();
+    shader->resetUniforms();
 
-    if (camera)
-        camera->applyUniforms(shader);
-
-    params.apply();
-
-    if (visualObject->getMesh()) {
-        visualObject->applyUniforms(shader);
-        visualObject->draw();
-    } else {
-        LOGE("No mesh :(");
+    if (camera) {
+        shader->setUniforms(camera->updateAndGetUniforms());
     }
 
+    params.apply();
+}
+
+void GLRenderManager::postDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, CameraBase* camera, GLRenderParameters params)
+{
     generateMipMap(frameBuffer);
 }
 

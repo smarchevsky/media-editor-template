@@ -2,6 +2,7 @@
 #define GL_RENDERMANAGER_H
 
 #include "camera.h"
+#include "visualobject.h"
 
 class GLFrameBufferBase;
 class VisualObjectBase;
@@ -26,12 +27,19 @@ public:
 
 class GLRenderManager {
 public:
-    static void draw(GLShader* shader,
-        GLFrameBufferBase* frameBuffer,
+    static void draw(GLFrameBufferBase* frameBuffer,
+        GLShader* shader,
         CameraBase* camera,
-        VisualObjectBase* drawable,
+        VisualObjectBase* visualObject,
         bool clear,
         GLRenderParameters params = GLRenderParameters());
+
+private:
+    static void preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader,
+        CameraBase* camera, GLRenderParameters params, bool clear);
+
+    static void postDraw(GLFrameBufferBase* frameBuffer, GLShader* shader,
+        CameraBase* camera, GLRenderParameters params);
 };
 
 #endif // GL_RENDERMANAGER_H

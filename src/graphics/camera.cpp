@@ -27,11 +27,10 @@ const glm::mat4& CameraOrtho::getViewInv()
     return m_matView;
 }
 
-void CameraOrtho::applyUniforms(GLShader* shader)
+const NameUniformMap& CameraOrtho::updateAndGetUniforms()
 {
-    if (shader) {
-        shader->setUniform("cameraViewInv", getViewInv());
-    }
+    m_uniforms["cameraViewInv"] = getViewInv();
+    return m_uniforms;
 }
 
 ////////////////////// CAMERA PERSPECTIVE //////////////////////////////
@@ -86,6 +85,14 @@ const glm::mat4& CameraPerspective::getProjection()
     return m_cameraProjection;
 }
 
+const NameUniformMap& CameraPerspective::updateAndGetUniforms()
+{
+    m_uniforms["cameraViewInv"] = getViewInv();
+    m_uniforms["cameraPosition"] = m_cameraPosition;
+    m_uniforms["cameraProjection"] = getProjection();
+    return m_uniforms;
+}
+
 void CameraPerspective::pan(glm::vec2 delta)
 {
     glm::mat4 matView = getView();
@@ -109,15 +116,6 @@ void CameraPerspective::rotateAroundAim(glm::vec2 offsetDeltaRadians)
     glm::vec3 rotZ = m_aimPosition + glm::rotateZ(rotX, m_sceneRotation.x);
     m_cameraPosition = rotZ;
     m_viewDirty = true;
-}
-
-void CameraPerspective::applyUniforms(GLShader* shader)
-{
-    if (shader) {
-        shader->setUniform("cameraViewInv", getViewInv());
-        shader->setUniform("cameraPosition", m_cameraPosition);
-        shader->setUniform("cameraProjection", getProjection());
-    }
 }
 
 CameraPerspective::CameraPerspective()
