@@ -204,10 +204,7 @@ GLShader GLShader::FromFile(
         textFromFile(shaderDir / fragRelativePath));
 }
 
-//int GLShader::getUniformLocation(const HashString& name) const
-//{
-//    return glGetUniformLocation(m_shaderProgram, name.getString().c_str());
-//}
+// int GLShader::getUniformLocation(const HashString& name) const { return glGetUniformLocation(m_shaderProgram, name.getString().c_str()); }
 
 GLShader::~GLShader()
 {
@@ -217,18 +214,8 @@ GLShader::~GLShader()
     }
 }
 
-void GLShader::setUniform(const HashString& name, const UniformVariant& newVar)
-{
-    auto it = m_locations.find(name);
-    if (it != m_locations.end()) {
-        setUniform(it->second, newVar);
-    } else {
-        // LOGE("Variable: " << name.getString() << " did not find in shader.");
-    }
-}
-
 #define GET_INDEX(type) variant_index<UniformVariant, type>()
-void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
+void GLShader::setUniformInternal(int location, const UniformVariant& uniformVariable)
 {
     const auto& currentDefaultUniform = m_defaultUniforms[location].getData();
     assert(uniformVariable.index() == currentDefaultUniform.index() && "Variable must match shader type");
@@ -313,6 +300,20 @@ void GLShader::setUniform(int location, const UniformVariant& uniformVariable)
     default: {
         LOGE("Unsupported uniform variable type");
     }
+    }
+}
+
+void GLShader::setUniforms(const NameUniformMap& newUniforms)
+{
+    for (const auto& u : newUniforms) {
+        const auto& newUniformName = u.first;
+        const auto& newUniformVariable = u.second;
+        const auto varLocationIter = m_locations.find(newUniformName);
+        const auto& varLocation = varLocationIter->second;
+
+        if (varLocationIter != m_locations.end()) {
+            setUniformInternal(varLocation, newUniformVariable);
+        }
     }
 }
 

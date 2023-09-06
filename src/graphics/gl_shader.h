@@ -12,6 +12,7 @@
 #include <glm/vec4.hpp>
 
 #include <iostream>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -45,6 +46,7 @@ typedef std::variant<
 
     UniformVariant;
 
+typedef std::unordered_map<HashString, UniformVariant> NameUniformMap;
 //////////////////////// SHADER //////////////////////////
 
 typedef std::shared_ptr<class GLShader> GLShaderPtr;
@@ -82,23 +84,26 @@ public:
         const std::filesystem::path& fragRelativePath);
 
     void bind();
-    void setUniform(const HashString& name, const UniformVariant& newVar);
     int getHandle() const { return m_shaderProgram; }
-    void resetVariables()
+
+    void setUniforms(const NameUniformMap& newUniforms);
+
+    void resetUniforms()
     {
         for (const auto& u : m_defaultUniforms) {
-            setUniform(u.getLocation(), u.getData());
+            setUniformInternal(u.getLocation(), u.getData());
         }
     }
 
 private:
-    // int getUniformLocation(const HashString& name) const;
-    void setUniform(int location, const UniformVariant& var);
+    void setUniformInternal(int location, const UniformVariant& var);
 
 private: // DATA
     const uint32_t m_shaderProgram {};
     const std::unordered_map<HashString, int> m_locations;
     const std::vector<Variable> m_defaultUniforms;
+
+    // const std::vector<int> m_prevSetUniformLocations;
 
 private:
     static uint32_t s_currentBindedShaderHandle;

@@ -16,7 +16,7 @@ VisualObjectSprite2D::VisualObjectSprite2D()
     m_mesh = GLMeshStatics::get().getQuad2d();
 }
 
-void VisualObjectSprite2D::applyUniforms(GLShader* shader)
+const NameUniformMap& VisualObjectSprite2D::updateAndGetUniforms()
 {
     if (m_dirty) {
         glm::mat4 mat(1);
@@ -28,15 +28,12 @@ void VisualObjectSprite2D::applyUniforms(GLShader* shader)
         setUniform(modelWorldName, mat);
         m_dirty = false;
     }
-
-    EntityBase::applyUniforms(shader);
+    return m_uniforms;
 }
 
 /////////////////////////////// MESH 3D ////////////////////////////
 
-void VisualObject3D::setTransform(const glm::mat4& transform) { setUniform(modelWorldName, transform); }
-
-void VisualObject3D::applyUniforms(GLShader* shader)
+void VisualObject3D::setTransform(const glm::mat4& transform)
 {
-    EntityBase::applyUniforms(shader);
+    setUniform(modelWorldName, transform);
 }

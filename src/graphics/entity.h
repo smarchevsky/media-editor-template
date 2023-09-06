@@ -8,21 +8,13 @@
 
 class EntityBase {
 public:
-    typedef std::unordered_map<HashString, UniformVariant> NameUniformMap;
-
 protected:
     NameUniformMap m_uniforms;
 
 public:
     void setUniform(HashString str, const UniformVariant& var) { m_uniforms[str] = var; }
 
-    const NameUniformMap& getUniforms() { return m_uniforms; }
-
-    virtual void applyUniforms(GLShader* shader)
-    {
-        for (const auto& u : getUniforms())
-            shader->setUniform(u.first, u.second);
-    }
+    virtual const NameUniformMap& updateAndGetUniforms() { return m_uniforms; }
 
     virtual ~EntityBase() = 0;
 };

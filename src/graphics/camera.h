@@ -12,8 +12,6 @@ class GLShader;
 class CameraBase : public EntityBase {
 
 public:
-    virtual void applyUniforms(GLShader* shader) = 0;
-
     template <class CameraType>
     CameraType* as() { return dynamic_cast<CameraType*>(this); }
     virtual ~CameraBase() = 0;
@@ -53,7 +51,7 @@ public:
 
     const glm::mat4& getViewInv();
 
-    virtual void applyUniforms(GLShader* shader) override;
+    virtual const NameUniformMap& updateAndGetUniforms() override;
 };
 
 ////////////////////// CAMERA PERSPECTIVE //////////////////////////////
@@ -103,10 +101,9 @@ public:
 
     const glm::mat4& getViewInv();
     const glm::mat4& getView();
-    virtual const glm::mat4& getProjection();
-    const glm::mat4& getProjectionJittered();
 
-    virtual void applyUniforms(GLShader* shader) override;
+    virtual const glm::mat4& getProjection();
+    virtual const NameUniformMap& updateAndGetUniforms() override;
 };
 
 ////////////////////// CAMERA PERSPECTIVE JITTERED //////////////////////////////
