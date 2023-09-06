@@ -2,6 +2,7 @@
 #define WINDOW_H
 
 #include <SFML/Graphics.hpp>
+#include <cstdint>
 #include <functional>
 #include <iostream>
 #include <optional>
