@@ -12,9 +12,9 @@
 #include <glm/vec4.hpp>
 
 #include <iostream>
-#include <set>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -71,7 +71,9 @@ public:
 
         const std::string& getName() const { return m_name; }
         const int getLocation() const { return m_location; }
+
         const UniformVariant& getData() const { return m_data; }
+        UniformVariant& getData() { return m_data; }
     };
 
     GLShader() = default;
@@ -86,11 +88,19 @@ public:
     void bind();
     int getHandle() const { return m_shaderProgram; }
 
-    void setUniforms(const NameUniformMap& newUniforms);
+    void setUniforms(const NameUniformMap& newUniforms, bool shaderWise = false);
 
     void resetUniforms()
     {
-        for (const auto& u : m_defaultUniforms) {
+        m_currentUniforms = m_defaultUniforms;
+        m_shaderWiseUniformLocations.clear();
+        m_previouslySetUniformVariables.clear();
+    }
+
+    void applyUniforms() // bind, set all uniforms to binded shader
+    {
+        bind();
+        for (const auto& u : m_currentUniforms) {
             setUniformInternal(u.getLocation(), u.getData());
         }
     }
@@ -101,9 +111,12 @@ private:
 private: // DATA
     const uint32_t m_shaderProgram {};
     const std::unordered_map<HashString, int> m_locations;
-    const std::vector<Variable> m_defaultUniforms;
 
-    // const std::vector<int> m_prevSetUniformLocations;
+    const std::vector<Variable> m_defaultUniforms;
+    /* */ std::vector<Variable> m_currentUniforms;
+
+    std::vector<int> m_previouslySetUniformVariables;
+    std::unordered_set<int> m_shaderWiseUniformLocations;
 
 private:
     static uint32_t s_currentBindedShaderHandle;
