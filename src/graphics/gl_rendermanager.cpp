@@ -48,6 +48,7 @@ void GLRenderManager::draw(
     if (visualObject->getMesh()) {
         shader->setUniforms(visualObject->updateAndGetUniforms());
 
+        shader->applyUniforms();
         visualObject->draw();
     } else {
         LOGE("No mesh :(");
@@ -69,11 +70,11 @@ void GLRenderManager::preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, 
         bool withDepth = (params.depthMode == GLDepth::Enabled);
         frameBuffer->clear(withDepth);
     }
-    shader->bind();
+
     shader->resetUniforms();
 
     if (camera) {
-        shader->setUniforms(camera->updateAndGetUniforms());
+        shader->setUniforms(camera->updateAndGetUniforms(), true);
     }
 
     params.apply();

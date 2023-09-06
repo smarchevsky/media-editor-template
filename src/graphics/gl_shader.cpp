@@ -169,6 +169,8 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
 
         if (success == GL_TRUE) {
             const_cast<std::vector<Variable>&>(m_defaultUniforms) = getUniformList(this);
+            m_currentUniforms = m_defaultUniforms;
+
             auto& locations = const_cast<std::unordered_map<HashString, int>&>(m_locations);
             for (const auto& d : m_defaultUniforms) {
                 locations.insert({ d.getName().c_str(), d.getLocation() });
@@ -191,6 +193,7 @@ GLShader& GLShader::operator=(GLShader&& rhs)
     const_cast<uint32_t&>(rhs.m_shaderProgram) = 0;
     const_cast<std::unordered_map<HashString, int>&>(m_locations) = std::move(rhs.m_locations);
     const_cast<std::vector<Variable>&>(m_defaultUniforms) = std::move(rhs.m_defaultUniforms);
+    m_currentUniforms = std::move(rhs.m_currentUniforms);
     return *this;
 }
 
@@ -303,16 +306,37 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
     }
 }
 
-void GLShader::setUniforms(const NameUniformMap& newUniforms)
+void GLShader::setUniforms(const NameUniformMap& newUniforms, bool shaderWise)
 {
+    for (const auto& location : m_previouslySetUniformVariables)
+        setUniformInternal(location, m_defaultUniforms[location].getData());
+
+    m_previouslySetUniformVariables.clear();
+
     for (const auto& u : newUniforms) {
         const auto& newUniformName = u.first;
         const auto& newUniformVariable = u.second;
         const auto varLocationIter = m_locations.find(newUniformName);
-        const auto& varLocation = varLocationIter->second;
 
         if (varLocationIter != m_locations.end()) {
-            setUniformInternal(varLocation, newUniformVariable);
+            const auto& varLocation = varLocationIter->second;
+
+            bool wasFoundInShaderWiseVariables = m_shaderWiseUniformLocations.find(varLocation) != m_shaderWiseUniformLocations.end();
+            if (wasFoundInShaderWiseVariables) {
+                if (shaderWise) {
+                    assert(false && "Shader-wise variable with this name already set");
+                } else {
+                    assert(false && "Trying to overwrite shader-wise var by not shader-wise variable");
+                }
+            } else {
+                if (shaderWise) {
+                    m_shaderWiseUniformLocations.insert(varLocation);
+                } else {
+                    m_previouslySetUniformVariables.push_back(varLocation);
+                }
+            }
+
+            m_currentUniforms[varLocation].getData() = newUniformVariable;
         }
     }
 }
