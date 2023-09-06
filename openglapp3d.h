@@ -8,6 +8,7 @@
 
 #include "graphics/gl_rendermanager.h"
 #include "graphics/model3d.h"
+#include "graphics/visualobject.h"
 
 #include <SDL2/SDL.h>
 
@@ -16,8 +17,8 @@ static fs::path projectDir(PROJECT_DIR);
 static fs::path resourceDir(RESOURCE_DIR);
 
 class OpenGLApp3D : public Application {
-    EntityMesh3D m_mesh3d;
-    EntitySprite2D m_spriteReceive3D, m_spriteAccumulator;
+    VisualObject3D m_mesh3d;
+    VisualObjectSprite2D m_spriteReceive3D, m_spriteAccumulator;
     GLFrameBuffer m_frameBufferReceive3D, m_frameBufferAccumulator;
 
     GLShader m_shaderDefault2D, m_shaderDefault3D;
