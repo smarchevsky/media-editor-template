@@ -25,7 +25,7 @@ protected:
     Format m_format = Format::Undefined;
     Filtering m_filtering = Filtering::Nearset;
     Wrapping m_wrapping = Wrapping::Repeat;
-    mutable bool m_frameBufferMipmapDirty = false; // used only fir framebuffer
+    mutable bool m_mipmapDirty = false; // used only fir framebuffer
 
 public:
     GLTexture2D() = default;
@@ -46,7 +46,7 @@ public:
     glm::ivec2 getSize() const { return m_size; }
 
 protected:
-    void generateMipMap();
+    void generateMipMapsIfDirty();
     bool fromImage(const Image& img);
     // void toImage(Image& img) const;
     void clear();

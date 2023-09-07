@@ -235,9 +235,7 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
         if (sharedTexture) {
             textureIndex = var.m_index;
             textureHandle = sharedTexture->getHandle();
-
-            if (sharedTexture->m_frameBufferMipmapDirty)
-                sharedTexture->generateMipMap();
+            sharedTexture->generateMipMapsIfDirty();
         }
 
         if (var.m_index < 0) // reset to default texture index in shader

@@ -127,8 +127,7 @@ bool GLTexture2D::setFiltering(Filtering filtering)
     }
 
     m_filtering = filtering;
-
-    generateMipMap();
+    m_mipmapDirty = true;
 
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
 
@@ -208,14 +207,14 @@ static bool isMipMap(GLTexture2D::Filtering filtering)
         || filtering == GLTexture2D::Filtering::LinearMipmap;
 }
 
-void GLTexture2D::generateMipMap()
+void GLTexture2D::generateMipMapsIfDirty()
 {
     // glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST /*GL_FASTEST*/);
-    if (m_textureHandle && isMipMap(m_filtering)) {
+    if (m_mipmapDirty && m_textureHandle && isMipMap(m_filtering)) {
         glBindTexture(GL_TEXTURE_2D, m_textureHandle);
         glGenerateMipmap(GL_TEXTURE_2D);
+        m_mipmapDirty = false;
     }
-    m_frameBufferMipmapDirty = false;
 }
 
 void GLTexture2D::clear()
