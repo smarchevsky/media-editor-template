@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-size_t GLFrameBufferBase::s_currentBuffer = 0;
+size_t GLFrameBufferBase::s_currentBuffer = -1;
 
 void GLFrameBufferBase::staticUnbind() { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
 void GLFrameBufferBase::staticSetViewport(int x, int y, int width, int height) { glViewport(x, y, width, height); }
