@@ -11,15 +11,6 @@
 
 GLRenderParameters GLRenderParameters::s_currentParams;
 
-namespace {
-void generateMipMap(GLFrameBufferBase* fb)
-{
-    if (GLFrameBuffer* fbTexture = dynamic_cast<GLFrameBuffer*>(fb)) {
-        fbTexture->generateMipMap();
-    }
-}
-} // namespace
-
 void GLRenderManager::preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, CameraBase* camera, GLRenderParameters params, bool clear)
 {
     assert(shader);
@@ -52,11 +43,6 @@ void GLRenderManager::drawInternal(GLShader* shader, VisualObjectBase& visualObj
     } else {
         LOGE("No mesh :(");
     }
-}
-
-void GLRenderManager::postDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, CameraBase* camera, GLRenderParameters params)
-{
-    generateMipMap(frameBuffer);
 }
 
 void GLRenderParameters::apply()

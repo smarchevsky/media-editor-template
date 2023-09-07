@@ -15,9 +15,6 @@ void GLFrameBufferBase::clear(bool withDepth)
     bind();
     glClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
     glClear(GL_COLOR_BUFFER_BIT | ((hasDepth() && withDepth) ? GL_DEPTH_BUFFER_BIT : 0));
-    // if(!hasDepth() && withDepth){
-    //     LOGE("Trying to clear depth of framebuffer without depth. Probably it must have depth?");
-    // }
 }
 
 void GLFrameBuffer::create(glm::vec2 size, GLTexture2D::Format format, bool withDepthBuffer)
@@ -60,13 +57,9 @@ void GLFrameBuffer::bind() const
         if (m_colorTexture) {
             auto size = m_colorTexture->getSize();
             glViewport(0, 0, size.x, size.y);
-        }
-    }
-}
 
-void GLFrameBuffer::generateMipMap()
-{
-    if (m_colorTexture) {
-        m_colorTexture->generateMipMap();
+            // when texture will be attached to shader - generate mipmap if not generated
+            m_colorTexture->m_frameBufferMipmapDirty = true;
+        }
     }
 }

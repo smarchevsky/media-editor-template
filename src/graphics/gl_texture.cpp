@@ -215,6 +215,7 @@ void GLTexture2D::generateMipMap()
         glBindTexture(GL_TEXTURE_2D, m_textureHandle);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
+    m_frameBufferMipmapDirty = false;
 }
 
 void GLTexture2D::clear()
