@@ -21,15 +21,14 @@ public:
 // square sprite -1 to 1
 class VisualObjectSprite2D : public VisualObjectBase {
     glm::vec2 m_pos = glm::vec2(0);
-    glm::vec2 m_size = glm::vec2(1);
+    glm::vec2 m_rectBounds[2] { glm::vec2(-1), glm::vec2(1) };
     float m_angle = 0;
     mutable bool m_dirty = true;
 
 public:
     VisualObjectSprite2D();
-
-    void setPos(glm::vec2 pos) { m_pos = pos, m_dirty = true; }
-    void setSize(glm::vec2 size) { m_size = size, m_dirty = true; }
+    void setPos(glm::vec2 p) { m_pos = p, m_dirty = true; }
+    void setRectSize(glm::vec2 p0, glm::vec2 p1) { m_rectBounds[0] = p0, m_rectBounds[1] = p1, m_dirty = true; }
     void setRotation(float angleRad) { m_angle = angleRad, m_dirty = true; }
     void addRotation(float angleOffset) { setRotation(m_angle + angleOffset); }
     virtual const NameUniformMap& updateAndGetUniforms() override;
