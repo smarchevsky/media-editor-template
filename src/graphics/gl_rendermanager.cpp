@@ -18,66 +18,40 @@ void generateMipMap(GLFrameBufferBase* fb)
         fbTexture->generateMipMap();
     }
 }
-
-bool hasSameKeys(const NameUniformMap& mapA, const NameUniformMap& mapB)
-{
-    for (const auto& l : mapA) {
-        if (mapB.find(l.first) != mapB.end())
-            return true;
-    }
-    return false;
-}
 } // namespace
-
-void GLRenderManager::draw(
-    GLFrameBufferBase* frameBuffer,
-    GLShader* shader,
-    CameraBase* camera,
-    VisualObjectBase* visualObject,
-    bool clear,
-    GLRenderParameters params)
-{
-    preDraw(frameBuffer, shader, camera, params, clear);
-
-    assert(visualObject);
-    const auto& objectUniforms = visualObject->updateAndGetUniforms();
-    if (camera && hasSameKeys(camera->updateAndGetUniforms(), objectUniforms)) {
-        assert(false && "Avoid using same keys in camera and VisualObject");
-    }
-
-    if (visualObject->getMesh()) {
-        shader->setUniforms(visualObject->updateAndGetUniforms());
-
-        shader->applyUniforms();
-        visualObject->draw();
-    } else {
-        LOGE("No mesh :(");
-    }
-
-    postDraw(frameBuffer, shader, camera, params);
-}
-
-// PREDRAW / POSTDRAW
 
 void GLRenderManager::preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, CameraBase* camera, GLRenderParameters params, bool clear)
 {
     assert(shader);
     assert(frameBuffer);
 
+    // bind framebuffer, clear (with depth, if exists)
     frameBuffer->bind();
-
     if (clear) {
         bool withDepth = (params.depthMode == GLDepth::Enabled);
         frameBuffer->clear(withDepth);
     }
 
+    // reset all uniforms to default value
     shader->resetUniforms();
 
-    if (camera) {
+    // set camera matrix, if no camera - it will be identity by default
+    if (camera)
         shader->setUniforms(camera->updateAndGetUniforms(), true);
-    }
 
     params.apply();
+}
+
+void GLRenderManager::drawInternal(GLShader* shader, VisualObjectBase& visualObject)
+{
+    if (visualObject.getMesh()) {
+        shader->setUniforms(visualObject.updateAndGetUniforms());
+
+        shader->applyUniforms();
+        visualObject.draw();
+    } else {
+        LOGE("No mesh :(");
+    }
 }
 
 void GLRenderManager::postDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, CameraBase* camera, GLRenderParameters params)
