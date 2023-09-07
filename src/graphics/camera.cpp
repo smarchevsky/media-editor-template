@@ -12,25 +12,39 @@ using glm::vec4;
 
 CameraBase::~CameraBase() { }
 
+// m_viewProjection = glm::ortho(p0.x, p1.x, p0.y, p1.y, -1.f, 1.f);
 ////////////////////////// CAMERA ORTHO //////////////////////////////
 
-const glm::mat4& CameraOrtho::getViewInv()
+const NameUniformMap& CameraRect::updateAndGetUniforms()
 {
-    if (m_viewDirty) {
-        m_viewDirty = false;
-        glm::vec2 scale = m_viewportSize * m_scaleMultiplier;
-        glm::vec2 p0 = m_posWorld - scale * 0.5f;
-        glm::vec2 p1 = m_posWorld + scale * 0.5f;
-        // m_viewProjection = glm::ortho(p0.x, p1.x, p0.y, p1.y, -1.f, 1.f);
-        m_matView = glm::ortho(p0.x, p1.x, p1.y, p0.y, -1.f, 1.f);
-    }
-    return m_matView;
+    updateViewInv();
+    m_uniforms["cameraViewInv"] = m_viewMatrix;
+    return m_uniforms;
 }
 
-const NameUniformMap& CameraOrtho::updateAndGetUniforms()
+void CameraRect::updateViewInv()
 {
-    m_uniforms["cameraViewInv"] = getViewInv();
-    return m_uniforms;
+    if (m_viewDirty) {
+        m_viewMatrix = glm::ortho(m_p[0].x, m_p[1].x, m_p[0].y, m_p[1].y, -1.f, 1.f);
+        m_viewDirty = false;
+    }
+}
+
+void CameraOrtho::updateViewInv()
+{
+    if (m_viewDirty) {
+        glm::vec2 scale = m_viewportSize * m_scaleMultiplier;
+        vec2 p0 = m_posWorld - scale * 0.5f;
+        vec2 p1 = m_posWorld + scale * 0.5f;
+
+        if (m_verticalFlip) {
+            m_p[0] = vec2(p0.x, p1.y), m_p[1] = vec2(p1.x, p0.y);
+        } else {
+            m_p[0] = p0, m_p[1] = p1;
+        }
+
+        CameraRect::updateViewInv();
+    }
 }
 
 ////////////////////// CAMERA PERSPECTIVE //////////////////////////////

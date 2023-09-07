@@ -19,18 +19,32 @@ public:
 
 ////////////////////////// CAMERA ORTHO //////////////////////////////
 
-class CameraOrtho : public CameraBase {
+class CameraRect : public CameraBase {
 protected:
-    glm::mat4 m_matView = glm::mat4(1);
+    glm::mat4 m_viewMatrix = glm::mat4(1);
+    glm::vec2 m_p[2] { glm::vec2(-1), glm::vec2(1) };
+    bool m_viewDirty = true;
+    bool m_verticalFlip = false;
 
+public:
+    void setRect(glm::vec2 p0, glm::vec2 p1) { m_p[0] = p0, m_p[1] = p1, m_viewDirty = true; }
+
+    const NameUniformMap& updateAndGetUniforms() override;
+    virtual void updateViewInv();
+};
+
+class CameraOrtho : public CameraRect {
 private:
     glm::vec2 m_posWorld = glm::vec2(0);
     glm::vec2 m_viewportSize = glm::vec2(1000, 1000);
     float m_scaleMultiplier = 0.003f;
 
-    bool m_viewDirty = true;
+private:
+    void setRect(glm::vec2 p0, glm::vec2 p1); // disable here
 
 public:
+    CameraOrtho() { m_verticalFlip = true; /*OpenGL Y starts from bottom left corner */ }
+
     void setScale(float scale) { m_scaleMultiplier = scale, m_viewDirty = true; }
     void multiplyScale(float scaleOffset) { m_scaleMultiplier *= scaleOffset, m_viewDirty = true; }
     void multiplyScaleOffseted(float scaleFactor, glm::vec2 viewSpaceOffset)
@@ -49,9 +63,7 @@ public:
     glm::vec2 getPos() const { return m_posWorld; }
     float getScale() const { return m_scaleMultiplier; }
 
-    const glm::mat4& getViewInv();
-
-    virtual const NameUniformMap& updateAndGetUniforms() override;
+    void updateViewInv() override;
 };
 
 ////////////////////// CAMERA PERSPECTIVE //////////////////////////////
