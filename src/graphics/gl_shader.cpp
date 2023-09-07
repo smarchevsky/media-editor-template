@@ -229,15 +229,19 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
 
         const auto& sharedTexture = var.m_texture;
 
-        int textureIndex = var.m_index;
-        if (var.m_index < 0) {
-            const auto& defaultVar = std::get<Texture2Ddata>(currentDefaultUniform);
-            textureIndex = defaultVar.m_index;
+        int textureIndex = 0;
+        int textureHandle = 0;
+
+        if (sharedTexture) {
+            textureIndex = var.m_index;
+            textureHandle = sharedTexture->getHandle();
+
+            if (sharedTexture->m_frameBufferMipmapDirty)
+                sharedTexture->generateMipMap();
         }
 
-        textureIndex = sharedTexture ? textureIndex : 0;
-
-        int textureHandle = sharedTexture ? sharedTexture->getHandle() : 0;
+        if (var.m_index < 0) // reset to default texture index in shader
+            textureIndex = std::get<Texture2Ddata>(currentDefaultUniform).m_index;
 
         if (textureIndex < 0 || textureIndex >= 32) {
             LOGE("Invalid texture index: " << textureIndex);

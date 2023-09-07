@@ -24,7 +24,8 @@ protected:
     glm::ivec2 m_size = glm::ivec2(0);
     Format m_format = Format::Undefined;
     Filtering m_filtering = Filtering::Nearset;
-    Wrapping m_wrapping = Wrapping ::Repeat;
+    Wrapping m_wrapping = Wrapping::Repeat;
+    mutable bool m_frameBufferMipmapDirty = false; // used only fir framebuffer
 
 public:
     GLTexture2D() = default;
@@ -33,7 +34,7 @@ public:
     {
         createFromRawData(size, format, data);
     }
-    GLTexture2D(GLTexture2D&&rhs);
+    GLTexture2D(GLTexture2D&& rhs);
     ~GLTexture2D();
 
     bool createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data);
@@ -51,8 +52,8 @@ protected:
     void clear();
 
     static uint32_t s_currentBindedTexture;
-    friend class GLTextureInstance;
     friend class GLFrameBuffer;
+    friend class GLShader;
 };
 
 /////////////////// RENDER (DEPTH) BUFFER /////////////////

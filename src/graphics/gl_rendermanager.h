@@ -34,10 +34,10 @@ public:
         bool clear,
         GLRenderParameters params = GLRenderParameters())
     {
-        assert(visualObject);
         preDraw(frameBuffer, shader, camera, params, clear);
+
+        assert(visualObject);
         drawInternal(shader, *visualObject);
-        postDraw(frameBuffer, shader, camera, params);
     }
 
     static void draw(GLFrameBufferBase* frameBuffer,
@@ -48,21 +48,17 @@ public:
         GLRenderParameters params = GLRenderParameters())
     {
         preDraw(frameBuffer, shader, camera, params, clear);
+
         for (auto& vo : visualObjects)
             drawInternal(shader, vo);
-        postDraw(frameBuffer, shader, camera, params);
     }
 
 private:
-    static void drawInternal(
-        GLShader* shader,
+    static void drawInternal(GLShader* shader,
         VisualObjectBase& visualObject);
 
     static void preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader,
         CameraBase* camera, GLRenderParameters params, bool clear);
-
-    static void postDraw(GLFrameBufferBase* frameBuffer, GLShader* shader,
-        CameraBase* camera, GLRenderParameters params);
 };
 
 #endif // GL_RENDERMANAGER_H

@@ -34,7 +34,6 @@ public:
     void reset();
     void bind() const override;
     bool hasDepth() const override { return !!m_depthTexture; }
-    void generateMipMap();
 
     auto& getTexture() { return m_colorTexture; }
 
