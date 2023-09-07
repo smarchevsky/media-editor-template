@@ -59,7 +59,7 @@ void GLFrameBuffer::bind() const
             glViewport(0, 0, size.x, size.y);
 
             // when texture will be attached to shader - generate mipmap if not generated
-            m_colorTexture->m_frameBufferMipmapDirty = true;
+            m_colorTexture->m_mipmapDirty = true;
         }
     }
 }
