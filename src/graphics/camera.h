@@ -27,6 +27,13 @@ protected:
     bool m_verticalFlip = false;
 
 public:
+    CameraRect() = default;
+    CameraRect(glm::vec2 p0, glm::vec2 p1)
+        : CameraRect()
+    {
+        setRect(p0, p1);
+    }
+
     void setRect(glm::vec2 p0, glm::vec2 p1) { m_p[0] = p0, m_p[1] = p1, m_viewDirty = true; }
 
     const NameUniformMap& updateAndGetUniforms() override;
