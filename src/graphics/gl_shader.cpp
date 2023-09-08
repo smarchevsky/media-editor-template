@@ -181,6 +181,8 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
             glGetProgramInfoLog(m_shaderProgram, 512, NULL, infoLog);
             std::cerr << "Linking failed: " << infoLog << std::endl;
             const_cast<uint32_t&>(m_shaderProgram) = 0;
+
+            assert(false && "Shader compilation failed");
         }
         glDeleteShader(vs);
         glDeleteShader(fs);
