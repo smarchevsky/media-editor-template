@@ -36,6 +36,7 @@ public:
     bool hasDepth() const override { return !!m_depthTexture; }
 
     auto& getTexture() { return m_colorTexture; }
+    void writeFramebufferToFile(const std::filesystem::path& path);
 
 private:
     unsigned int m_fbo = 0;
