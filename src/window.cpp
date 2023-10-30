@@ -149,12 +149,26 @@ void Window::addKeyDownEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event)
 
 void Window::addKeyUpEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event)
 {
-    m_keyMap.insert({ KeyWithModifier(key, mod, false), event });
+    if ((mod & KMOD_CTRL) == KMOD_CTRL) { // 64, 128
+        addKeyDownEvent(key, SDL_Keymod((mod & ~KMOD_CTRL) | KMOD_LCTRL), event);
+        addKeyDownEvent(key, SDL_Keymod((mod & ~KMOD_CTRL) | KMOD_RCTRL), event);
+
+    } else if ((mod & KMOD_ALT) == KMOD_ALT) { // 256, 512
+        addKeyDownEvent(key, SDL_Keymod((mod & ~KMOD_ALT) | KMOD_LALT), event);
+        addKeyDownEvent(key, SDL_Keymod((mod & ~KMOD_ALT) | KMOD_RALT), event);
+
+    } else if ((mod & KMOD_SHIFT) == KMOD_SHIFT) { // 1, 2
+        addKeyDownEvent(key, SDL_Keymod((mod & ~KMOD_SHIFT) | KMOD_LSHIFT), event);
+        addKeyDownEvent(key, SDL_Keymod((mod & ~KMOD_SHIFT) | KMOD_RSHIFT), event);
+
+    } else {
+        m_keyMap.insert({ KeyWithModifier(key, mod, false), event });
+    }
 }
 
-void Window::setAnyKeyDownOnceEvent(const std::string& reason, AnyKeyEvent event) { m_anyKeyDownEvents[reason] = event; }
+void Window::setOneTimePressEvent(const std::string& reason, AnyKeyEvent event) { m_anyKeyDownEvents[reason] = event; }
 
-void Window::setAnyKeyReason(const std::string& reason) { m_anyKeyDownReason = reason; }
+void Window::activateOneTimePressEvent(const std::string& reason) { m_anyKeyDownReason = reason; }
 
 void Window::setScreenResizeEvent(ScreenResizeEvent screenResizeEvent) { m_screenResizeEvent = screenResizeEvent; }
 
@@ -261,7 +275,7 @@ bool Window::processEvent(const SDL_Event* event)
                         const auto& foundEvent = m_anyKeyDownEvents.find(*m_anyKeyDownReason);
                         if (foundEvent != m_anyKeyDownEvents.end())
                             foundEvent->second(keyMod);
-                        m_anyKeyDownReason = {};
+                        m_anyKeyDownReason.reset();
                     }
                 }
             }

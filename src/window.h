@@ -133,8 +133,8 @@ public:
     void addKeyDownEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event);
     void addKeyUpEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event);
 
-    void setAnyKeyDownOnceEvent(const std::string& reason, AnyKeyEvent event);
-    void setAnyKeyReason(const std::string& reason);
+    void setOneTimePressEvent(const std::string& reason, AnyKeyEvent event);
+    void activateOneTimePressEvent(const std::string& reason);
     void setScreenResizeEvent(ScreenResizeEvent screenResizeEvent);
 
     void preDrawImGui();
