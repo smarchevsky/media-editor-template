@@ -1,122 +1,132 @@
 # Media editor template
 
-It is a SFML-based general purpose editor (viewer) template.
+It is a SDL2-based general purpose editor (viewer) template.
 
 <img src="readme_images/screenshot_00.png">
 
-## Features:
+## Key input features:
 
 ### Key bindings:
 ```
-m_window->addKeyDownEvent(sf::Keyboard::O, ModifierKey::Control, ...some_function... );
+m_window->addKeyDownEvent(SDLK_o, KMOD_CTRL, some_function );
 ```
-### Single time any key down event
+
+### One time press event:
+
+<details>
+  <summary>Hidden here</summary>
+
+Export shader type example
+On one time press activation app will be waiting for a key press.
+
+Behavior of code below:
+- press "Ctrl + E"
+- window title changes to "Export shader as: G-glsl, H-hlsl"
+- if press G or H - window title "Successfully exported"
+- if another key "Invalid key, press 'G' or 'H' next time."
+- if G or H were binded to another function - app will not call them this time
+
 ```
-// export file example
-m_window->addKeyDownEvent(sf::Keyboard::E, ModifierKey::Control | ModifierKey::Shift,
+m_window->addKeyDownEvent(SDLK_e, KMOD_CTRL,
     [this]() {
-        m_window->setAnyKeyReason("export file type");            // call here
+        m_window->activateOneTimePressEvent("shader export type");
         m_window->setTitle("Export shader as: G-glsl, H-hlsl");
     });
-    
-// receive here, this function will be called on any key single time after "setAnyKeyReason"
-m_window->setAnyKeyDownOnceEvent("export file type",
+
+m_window->setOneTimePressEvent("shader export type",
     [this](KeyWithModifier key) {
-        std::string shaderText;
-        ShaderType shaderExportType;
         switch (key.key) {
-        case sf::Keyboard::G: shaderExportType = UVBSP::ShaderType::GLSL; break;
-        case sf::Keyboard::H: shaderExportType = UVBSP::ShaderType::HLSL; break;
+        case SDLK_g: {
+            // export as GLSL code here
+            m_window->setTitle("Successfully exported as GLSL");
+        } break;
+        case SDLK_h: {
+            // export as HLSL code here
+            m_window->setTitle("Successfully exported as HLSL");
+        } break;
         default: { 
-            m_window->setTitle("Invalid export letter, press 'G' or 'H' next time.");
-            return; }
+            m_window->setTitle("Invalid key, press 'G' or 'H' next time.");
+            // maybe reset to default title after delay
+            return;
         }
-        // for example: do export stuff
+        }
+
     });
 ```
+</details>
+
 ### Mouse event bindings:
 ```
-m_window->setMouseDragEvent(sf::Mouse::Middle,
-    [this](ivec2 startPos, ivec2 currentPos, ivec2 currentDelta, DragState dragState) {
-        vec2 textureSize = toFloat(m_texture.getSize());
-        vec2 uvCurrentDelta = m_window->mapPixelToCoords(currentDelta) / textureSize;
-        vec2 uvStartPos = m_window->mapPixelToCoords(startPos) / textureSize;
-        vec2 uvCurrentPos = m_window->mapPixelToCoords(currentPos) / textureSize;
-        vec2 uvCurrentDir = normalized(uvCurrentPos - uvStartPos);
-
-        if (dragState == DragState::StartDrag) {
-          // when start dragging
-        } else if (dragState == DragState::ContinueDrag) {
-          // when continue dragging
-        }
-        // do something on MMB drag
-    });
-
-m_window->setMouseDownEvent(sf::Mouse::Left, [this](ivec2 pos, bool mouseDown) {
-        if (mouseDown) { /* on mouse down */  }  else { /* on mouse up */ }
-        // maybe it is better to separate these events
-    });
+// drag view on MMB
+m_window.setMouseDragEvent(MouseButton::Middle,
+    [this](glm::ivec2 startPos, glm::ivec2 currentPos, glm::ivec2 currentDelta, DragState dragState) 
+    {
+        m_camera.addOffset_View(glm::vec2(-currentDelta));
+    }
+);
 ```
-### Read/write file dialog templates
-
-You can create image reader/writer template.
-It saves functions, extensions, current folder and last open filename.
+## File read/write:
+### Add file read/write template:
 ```
-// let's create a "Primary" template
-// read(write)functions: bool(const std::filesystem::path& fullFilePath) (return success)
-addFileInteractionInfo("Primary", "png,jpg", readFunction, writeFunction);
+// add "PrimaryImage" template for reader and writer, with supported extensions (png, jpg)
+addFileInteractionInfo("PrimaryImage", "png,jpg", imageReaderFunction, imageWriterFunction);
 
-// open file
-m_window->addKeyDownEvent(sf::Keyboard::O, ModifierKey::Control,
-    std::bind(&Application::openFileDialog, this, "Primary"));
+// On "Ctrl + O" open file
+// After open file confirmation in dialog window it will 
+// use a reader function from "PrimaryImage" template.
+// On "extension sensitive" enabled - it will filter files by extensions above.
 
-// save file
-m_window->addKeyDownEvent(sf::Keyboard::S, ModifierKey::Control,
-    std::bind(&Application::saveFileOptionalDialog, this, "Primary", false));
+m_window.addKeyDownEvent(SDLK_o, KMOD_CTRL, std::bind(&Application::openFileDialog, this, "PrimaryImage"));
 
-// save file as
-m_window->addKeyDownEvent(sf::Keyboard::S, ModifierKey::Control | ModifierKey::Shift,
-    std::bind(&Application::saveFileOptionalDialog, this, "Primary", true)); 
-// last 'true' is force open dialog window
+// "Ctrl + S" save file
+// The last bool argument "false" - it will automatically overwrite already opened file with imageWriterFunction.
+// If it is a new file - it will open file dialog.
 
-// you can add additional file import
+m_window.addKeyDownEvent(SDLK_s, KMOD_CTRL, std::bind(&Application::saveFileOptionalDialog, this, "PrimaryImage", false));
 
-addFileInteractionInfo("VectorFormatImport", "svg", 
-    anotherReadFunction, anotherWriteFunction);
+// "Ctrl + Shift + S" save file as
+// The last bool argument "true" - it will always open file dialog.
 
-m_window->addKeyDownEvent(sf::Keyboard::I, ModifierKey::Control,
-    std::bind(&Application::openFileDialog, this, "VectorFormatImport"));
+m_window.addKeyDownEvent(SDLK_s, KMOD_CTRL | KMOD_SHIFT, std::bind(&Application::saveFileOptionalDialog, this, "PrimaryImage", true));
+
+// You can add more readers/writers
+// For example, add import/export and bind them to "Ctrl + I", "Ctrl + E"
 ```
 
 ### FileSystemNavigator
-If you want to navigate through a filesystem with ImGui - there is builtin FileSystemNavigator. It opens with Application::openFileDialog.
 
-- Navigate through filesystem via up/down direction keys.
+<details>
+  
+FileSystemNavigator can:
 - Write filename in textbox, highlight text, if filemane exists or not exists in this folder.
 - Show overwrite dialog window ("yes"/"no"), if you are going to overwrite file.
 - Extension sensitive filter.
-- Autocomplene first supported extension if not exists.
+- Autocomplete first supported extension if not exists.
 - launch individual save/read functions for each extension.
-
-You can use it independently of the main project.
+You can use it independently.
 
 <img src="readme_images/screenshot_imgui_filesystem.png"  width=40%>
 
 I did not try it on Windows, so it may not be able to change disks (now).
+</details>
+
+## Graphics features
+<span style="color:red">TODO: write graphics features</span>.
+
 
 ## How to add it to your project
-For complete CMake noobs like me.
+For CMake noobs like me.
 
 This repo is your child project, the parent project is your "main".
 CMake in your root project:
 ```
-set(MET "third_party/media-editor-template") # something like set variable, to get it write ${MET}
-add_subdirectory(${MET}) # just do it!
+set(MediaEditorTemplate "third_party/media-editor-template") # something like set variable, to get it write ${MediaEditorTemplate}
+add_subdirectory(${MediaEditorTemplate}) # important!
 
 set(SOURCE_FILES main.cpp) # the "main" of your project
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-include_directories(${MET}/src) # to find includes do this
+include_directories(${MediaEditorTemplate}/src) # to find includes do this
 target_link_libraries(${PROJECT_NAME} media-editor-template)  # undefined reference without this
 ```
 
@@ -126,22 +136,27 @@ Your main:
 ```
 #include "application.h"
 
+class MyApp : public Application {
+  void init() override; // see examples
+  updateWindow() override;
+};
+
 int main()
 {
-    Application app;
+    MyApp app;
     app.init(); 
-    // override key bindings and creating save templates here
-    
     app.mainLoop();
-    // override drawContext() to draw your stuff
-
     return 0;
 }
 
 ```
-Override Application's functions and be happy!
 
 ## Feel free to use and/or make it better!
 
-# Dependencies:
-- SFML
+### Dependencies:
+- SDL2
+
+### Thirdparty:
+- ImGUI
+- stb_image, stb_image_write
+- tiny_obj_loader
