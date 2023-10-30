@@ -19,7 +19,7 @@ add_definitions(-DHOME_DIR="$ENV{HOME}")
 include_directories(src/)
 include_directories(3party/)
 
-FILE(GLOB_RECURSE ALL_HEADERS ${CMAKE_SOURCE_DIR}/*.h)
+FILE(GLOB_RECURSE ALL_HEADERS ${CMAKE_SOURCE_DIR}/*.h ${CMAKE_SOURCE_DIR}/*.hpp)
 FILE(GLOB_RECURSE ALL_CPP  "src/*.cpp" "3party/*.cpp" "3party/*.c")
 set_source_files_properties("3party/miniz.c" PROPERTIES LANGUAGE CXX )
 

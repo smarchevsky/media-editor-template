@@ -6,7 +6,7 @@ namespace fs = std::filesystem;
 static fs::path projectDir(PROJECT_DIR);
 
 Application::Application()
-    : m_window(glm::ivec2(2000, 1000), "Fucking awesome application")
+    : m_window(glm::ivec2(2000, 1000), "Media editor template application")
 {
 }
 
@@ -27,7 +27,7 @@ void Application::openFileDialog(const std::string& openFileDataName)
         fileData.openFileDialog();
 
     } else
-        printWarningMessage("Invalid open file data name");
+        printWarningMessage("No open info");
 }
 
 void Application::saveFileOptionalDialog(const std::string& openFileDataName, bool forceDialogWindow)
@@ -37,7 +37,7 @@ void Application::saveFileOptionalDialog(const std::string& openFileDataName, bo
         auto& fileData = it->second;
         fileData.saveFileOptionalDialog(forceDialogWindow);
     } else
-        printWarningMessage("Invalid open file data name");
+        printWarningMessage("No save info");
 }
 
 void Application::init()
@@ -57,15 +57,6 @@ void Application::init()
         std::bind(&Application::saveFileOptionalDialog, this, "Primary", true));
 }
 
-void Application::drawImGuiLayer()
-{
-    if (m_fsNavigator) { // file reader/saver here
-        if (!m_fsNavigator->showInImGUI()) {
-            m_fsNavigator.reset();
-        }
-    }
-}
-
 void Application::mainLoop()
 {
     m_currentTimeStamp = SDL_GetPerformanceCounter();
@@ -79,14 +70,19 @@ void Application::mainLoop()
 
         m_window.processEvents();
 
+        m_window.preDrawImGui();
         updateWindow(dt);
+        if (m_fsNavigator && !m_fsNavigator->showInImGUI())
+            m_fsNavigator.reset();
+
+        m_window.postDrawImGui();
 
         m_window.display();
     }
 }
 
-void Application::printWarningMessage(const std::string& msg) { LOG(msg); }
-void Application::printNotificationMessage(const std::string& msg)
+void Application::printWarningMessage(const std::string& msg) const { LOG(msg); }
+void Application::printNotificationMessage(const std::string& msg) const
 {
-    m_window.setTitle(msg);
+    // m_window.setTitle(msg);
 }

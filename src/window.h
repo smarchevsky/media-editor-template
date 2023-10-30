@@ -137,7 +137,8 @@ public:
     void setAnyKeyReason(const std::string& reason);
     void setScreenResizeEvent(ScreenResizeEvent screenResizeEvent);
 
-    void drawImGuiContext(ImGuiContextFunctions imguiFunctions);
+    void preDrawImGui();
+    void postDrawImGui();
     void display();
 
     void bind() const override;
@@ -161,6 +162,7 @@ private: // SDL stuff
     class SDL_Window* m_SDLwindow {};
     SDL_GLContext m_GLcontext {};
     int m_SDLWindowID {};
+    class ImGuiContext* m_ImGUIcontext {};
 
 private: // events
     MouseEventData* getMouseEventData(MouseButton button);

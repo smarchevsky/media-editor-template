@@ -30,9 +30,9 @@ public:
     void saveFileOptionalDialog(const std::string& openFileDataName, bool forceDialogWindow = false);
 
     virtual void updateWindow(float dt) { }
-    virtual void drawImGuiLayer();
-    virtual void printWarningMessage(const std::string& msg);
-    virtual void printNotificationMessage(const std::string& msg);
+
+    virtual void printWarningMessage(const std::string& msg) const;
+    virtual void printNotificationMessage(const std::string& msg) const;
 
 public:
     Application();
