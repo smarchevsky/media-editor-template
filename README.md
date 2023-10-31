@@ -110,8 +110,63 @@ You can use it independently.
 I did not try it on Windows, so it may not be able to change disks (now).
 </details>
 
+
 ## Graphics features
-<span style="color:red">TODO: write graphics features</span>.
+
+DOF multipass dragon from openglapp3d.h example
+<img src="readme_images/screenshot_dragon.png">
+
+
+
+### FrameBuffer
+
+Place, where to draw something.
+
+Abstract class: GLFrameBufferBase, is inherited by Window and GLFrameBuffer.
+
+GLFrameBuffer - virtual buffer, has its own texture, that can be retrieved getTexture() and applied to any visual object as shader variable.
+
+<details>
+    <summary>GLFrameBuffer example</summary>
+
+```
+// declare it in calss members 
+GLFrameBuffer m_fb;
+
+// in init()
+m_fb.create({ 2048, 2048 }, GLTexture2D::Format::RGBA_8);
+m_fb.getTexture()->setFiltering(GLTexture2D::Filtering::LinearMipmap);
+m_fb.getTexture()->setWrapping(GLTexture2D::Wrapping::ClampEdge);
+m_fb.setClearColor({ .23f, .24f, .25f, 1.f });
+
+// you may bind it manually
+m_fb.bind();
+m_fb.clear();
+m_shader.setUniforms(...camera info...);
+m_shader.setUniforms(...someVisualObject info...);
+m_shader.applyUniforms();
+someVisualObject.draw();
+
+// but better use GLRenderManager
+// draw someVisualObject to Framebuffer m_fb, with null camera, with clear enabled "true"
+// (null camera sets shader camera matrix to identity)
+renderManager.draw(&m_fb, &m_shaderDefault2d, nullptr, someVisualObject, true);
+
+// the same way you can draw to window
+
+```
+</details>
+
+### Shader
+
+A class with stored shader uniforms.
+
+Available types: float, glm::vec2, glm::vec3, glm::vec4, glm::mat4, int, glm::ivec2, glm::ivec3, glm::ivec4, Texture2Ddata. Default values are 0, except glm::mat4 - identity matrix.
+
+Shader uniform is set by key (hash string) and std::variant of types above.
+
+<span style="color:red">To be continued...</span>
+
 
 
 ## How to add it to your project
@@ -155,6 +210,7 @@ int main()
 
 ### Dependencies:
 - SDL2
+- GLM
 
 ### Thirdparty:
 - ImGUI
