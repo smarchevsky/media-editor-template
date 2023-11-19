@@ -19,6 +19,14 @@ TexelFormatInfo getGLTexelFormatInfo(GLTexture2D::Format format)
 {
     TexelFormatInfo texelFormat;
     switch (format) {
+
+    case GLTexture2D::Format::R_8: {
+        texelFormat.internalFormat = GL_RED;
+        texelFormat.externalFormat = GL_RED;
+        texelFormat.externalType = GL_UNSIGNED_BYTE;
+        texelFormat.name = "R_8";
+    } break;
+
     case GLTexture2D::Format::RGB_8: {
         texelFormat.internalFormat = GL_RGB8;
         texelFormat.externalFormat = GL_RGB;
@@ -176,6 +184,10 @@ bool GLTexture2D::fromImage(const Image& img)
 
     Format format;
     switch (img.m_nrChannels) {
+    case 1: {
+        format = Format::R_8;
+    } break;
+
     case 3: {
         format = Format::RGB_8;
     } break;

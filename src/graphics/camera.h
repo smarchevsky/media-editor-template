@@ -96,6 +96,7 @@ public:
     CameraPerspective();
     void setFOV(float fov) { m_fov = fov, m_projectionDirty = true; }
     void setAR(float ar) { m_ar = ar, m_projectionDirty = true; }
+    virtual void setFramebufferSize(const glm::vec2& size) { setAR(size.x / size.y); }
 
     void setAim(glm::vec3 aim) { m_aimPosition = aim, m_viewDirty = true; }
     void offsetAim(glm::vec3 delta_aim) { setAim(m_cameraPosition + delta_aim); }
@@ -134,9 +135,14 @@ protected:
     bool m_jitterEnabled = true;
 
 public:
-    void setJitterAA(glm::vec2 jitter) { m_jitterSizeAA = jitter; }
-    void setJitterDOV(float radius) { m_jitterSizeDOF = radius; }
+    void setJitterAASize(glm::vec2 jitter) { m_jitterSizeAA = jitter; }
+    void setJitterDOF(float radius) { m_jitterSizeDOF = radius; }
     void setJitterEnabled(bool enabled) { m_jitterEnabled = enabled; }
+    virtual void setFramebufferSize(const glm::vec2& size) override
+    {
+        CameraPerspective::setFramebufferSize(size);
+        setJitterAASize(1.f / size);
+    }
     virtual const glm::mat4& getProjection() override;
 };
 
