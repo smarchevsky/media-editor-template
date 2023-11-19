@@ -31,6 +31,14 @@ public:
     {
         m_camera.setAR((float)m_window.getSize().x / m_window.getSize().y);
 
+        m_window.setScreenResizeEvent(
+            [this](glm::ivec2 oldSize, glm::ivec2 newSize) {
+                m_frameBufferReceive3D.resize(newSize);
+                m_frameBufferAccumulator.resize(newSize);
+                m_camera.setFramebufferSize(newSize);
+                resetDirty();
+            });
+
         m_window.setMouseScrollEvent( // zoom on scroll
             [this](float diff, glm::ivec2 mousePos) {
                 float scaleFactor = pow(1.1f, -diff);
@@ -58,22 +66,15 @@ public:
                 resetDirty();
             });
 
-        m_window.setScreenResizeEvent( // window resize
-            [this](glm::ivec2 oldSize, glm::ivec2 newSize) {
-                m_camera.setAR((float)newSize.x / newSize.y);
-                resetDirty();
-            });
-
         m_shaderDefault2D = GLShader::FromFile("default2d.vert", "default2d.frag");
         m_shaderDefault3D = GLShader::FromFile("default3d.vert", "default3d.frag");
 
-        glm::vec2 frameBufferSize(1000, 500);
-        m_frameBufferReceive3D.create(frameBufferSize, GLTexture2D::Format::RGB_8, true);
-        m_frameBufferAccumulator.create(frameBufferSize, GLTexture2D::Format::RGB_32F);
-
+        m_frameBufferAccumulator.create(m_window.getSize(), GLTexture2D::Format::RGB_32F);
+        m_frameBufferReceive3D.create(m_window.getSize(), GLTexture2D::Format::RGB_8, true);
         m_frameBufferReceive3D.setClearColor({ .08f, .09f, .1f, 1.f });
+        m_camera.setFramebufferSize(m_window.getSize());
 
-        m_camera.setJitterAA(1.f / frameBufferSize);
+        m_camera.setJitterDOF(0.1f);
 
         m_spriteReceive3D.setUniform("texture0", m_frameBufferReceive3D.getTexture());
         m_spriteAccumulator.setUniform("texture0", m_frameBufferAccumulator.getTexture());
@@ -91,22 +92,24 @@ public:
         // render 3d to framebuffer 3d
         auto startFrameTime = SDL_GetPerformanceCounter();
         float freq = SDL_GetPerformanceFrequency();
-        while (true) {
-            m_camera.setJitterEnabled(m_dirtyLevel != 0);
-            m_spriteReceive3D.setUniform("opacity", 1.f / (m_dirtyLevel + 1));
+        while (m_dirtyLevel <= 4000) {
+            m_camera.setJitterEnabled(m_dirtyLevel != 0); // zero frame without jitter
 
-            GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled, GLPolyMode::Lines };
+            GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled, GLCullMode::NoCull, GLPolyMode::Lines };
             GLRenderManager::draw(&m_frameBufferReceive3D, &m_shaderDefault3D, &m_camera, &m_mesh3d, true, params3d);
 
             // render framebuffer to accumulator with alpha
+            m_spriteReceive3D.setUniform("opacity", 1.f / (m_dirtyLevel + 1));
             GLRenderParameters paramsAccumulate { GLBlend::OneMinusAlpha, GLDepth::Disabled };
             GLRenderManager::draw(&m_frameBufferAccumulator, &m_shaderDefault2D, nullptr, &m_spriteReceive3D, false, paramsAccumulate);
             m_dirtyLevel++;
 
             float frameTime = (float)((SDL_GetPerformanceCounter() - startFrameTime) / freq);
 
-            if (m_dirtyLevel > 4000 || frameTime > 0.01f)
+            if (frameTime > 0.001f)
                 break;
+
+            m_dirtyLevel++;
         }
 
         // render accumulator to screen

@@ -5,7 +5,7 @@
 #include <iostream>
 // #include <cassert>
 
-uint32_t GLTexture2D::s_currentBindedTexture = 0;
+// uint32_t GLTexture2D::s_currentBindedTextureHandle = 0;
 
 namespace {
 struct TexelFormatInfo {
@@ -57,20 +57,19 @@ TexelFormatInfo getGLTexelFormatInfo(GLTexture2D::Format format)
 
     default:
         LOGE("Texture format enum: " << (int)format << " not supported");
-        assert(false && "Stop it!");
+        assert(false);
     }
+
     return texelFormat;
 }
 }
 
 /////////////////// TEXTURE 2D ////////////////////
 
-bool GLTexture2D::setWrapping(Wrapping wrapping)
+void GLTexture2D::setWrapping(Wrapping wrapping)
 {
-    if (!m_textureHandle) {
-        LOGE("No texture handle");
-        return false;
-    }
+    if (!m_textureHandle)
+        assert(false && "No texture handle");
 
     int wrappingGLformat {};
     switch (wrapping) {
@@ -87,8 +86,7 @@ bool GLTexture2D::setWrapping(Wrapping wrapping)
         wrappingGLformat = GL_CLAMP_TO_BORDER;
     } break;
     default:
-        LOGE("Unsuppoerted wrapping type");
-        return false;
+        assert(false && "Unsuppoerted wrapping type");
     }
 
     m_wrapping = wrapping;
@@ -97,14 +95,12 @@ bool GLTexture2D::setWrapping(Wrapping wrapping)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrappingGLformat);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrappingGLformat);
-    return true;
 }
 
-bool GLTexture2D::setFiltering(Filtering filtering)
+void GLTexture2D::setFiltering(Filtering filtering)
 {
     if (!m_textureHandle) {
-        LOGE("No texture handle");
-        return false;
+        assert(false && "No texture handle");
     }
 
     int minFilter, magFilter;
@@ -130,8 +126,7 @@ bool GLTexture2D::setFiltering(Filtering filtering)
 
     } break;
     default:
-        LOGE("Unsupportering texture filtering type");
-        return false;
+        assert(false && "Unsupportering texture filtering type");
     }
 
     m_filtering = filtering;
@@ -141,20 +136,17 @@ bool GLTexture2D::setFiltering(Filtering filtering)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
-    return true;
 }
 
 bool GLTexture2D::createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data)
 {
-    if (size.x <= 0 || size.y <= 0)
-        assert(false && "Negative texture size is not good");
-
-    clear();
     m_size = size;
     m_format = format;
     auto texelInfo = getGLTexelFormatInfo(m_format);
 
-    glGenTextures(1, &m_textureHandle);
+    if (!m_textureHandle)
+        glGenTextures(1, &m_textureHandle);
+
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
 
     glTexImage2D(GL_TEXTURE_2D, 0,
@@ -166,11 +158,7 @@ bool GLTexture2D::createFromRawData(glm::ivec2 size, GLTexture2D::Format format,
 
     setFiltering(Filtering::Nearset);
 
-    if (data) {
-        LOG("Texture successfully created: " << texelInfo.name);
-    } else {
-        LOG("Empty texture successfully created: " << texelInfo.name);
-    }
+    LOG((data ? "Texture created: " : "Empty texture created: ") << texelInfo.name);
 
     return true;
 }
@@ -182,36 +170,22 @@ bool GLTexture2D::fromImage(const Image& img)
         return false;
     }
 
+    // clang-format off
     Format format;
     switch (img.m_nrChannels) {
-    case 1: {
-        format = Format::R_8;
-    } break;
-
-    case 3: {
-        format = Format::RGB_8;
-    } break;
-
-    case 4: {
-        format = Format::RGBA_8;
-    } break;
-
-    default:
-        assert(false && "Stop it");
-        break;
+        case 1: { format = Format::R_8; } break;
+        case 3: { format = Format::RGB_8; } break;
+        case 4: { format = Format::RGBA_8; } break;
+        default: assert(false && "This num of channels (probably 2) does not support");
     }
+    // clang-format on
 
     createFromRawData(img.m_size, format, img.m_data);
     setFiltering(Filtering::LinearMipmap);
     setWrapping(Wrapping::Repeat);
+
     return true;
 }
-
-// void GLTexture2D::toImage(Image& img) const
-// {
-//     // float* data = new float[m_size.x * m_size.y * 3];
-//     // glGetTextureImage(m_textureHandle, 0, GL_RGB, GL_FLOAT, m_size.x * m_size.y * 3 * 4, data);
-// }
 
 static bool isMipMap(GLTexture2D::Filtering filtering)
 {
@@ -222,21 +196,10 @@ static bool isMipMap(GLTexture2D::Filtering filtering)
 void GLTexture2D::generateMipMapsIfDirty()
 {
     // glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST /*GL_FASTEST*/);
-    if (m_mipmapDirty && m_textureHandle && isMipMap(m_filtering)) {
-        glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+    if (m_mipmapDirty && isMipMap(m_filtering) && m_textureHandle) {
+        glBindTexture(GL_TEXTURE_2D, m_textureHandle); // force bind
         glGenerateMipmap(GL_TEXTURE_2D);
         m_mipmapDirty = false;
-    }
-}
-
-void GLTexture2D::clear()
-{
-    if (m_textureHandle) {
-        glDeleteTextures(1, &m_textureHandle);
-        m_textureHandle = 0;
-        m_size = glm::ivec2(0);
-        m_format = Format::Undefined;
-        LOG("Texture destroyed");
     }
 }
 
@@ -251,13 +214,32 @@ GLTexture2D::GLTexture2D(GLTexture2D&& rhs)
     rhs.m_textureHandle = 0;
 }
 
-GLTexture2D::~GLTexture2D() { clear(); }
+GLTexture2D::~GLTexture2D()
+{
+    if (m_textureHandle) {
+        glDeleteTextures(1, &m_textureHandle);
+        m_textureHandle = 0;
+        m_size = glm::ivec2(0);
+        m_format = Format::Undefined;
+        LOG("Texture destroyed");
+    }
+}
+
+// void GLTexture2D::bind()
+// {
+//     if (s_currentBindedTextureHandle != m_textureHandle) {
+//         glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+//         s_currentBindedTextureHandle = m_textureHandle;
+//     }
+// }
 
 /////////////////// RENDER (DEPTH) BUFFER /////////////////
 
-GLDepthBuffer2D::GLDepthBuffer2D(glm::vec2 size)
+void GLDepthBuffer2D::create(glm::ivec2 size)
 {
-    glGenRenderbuffers(1, &m_rbo);
+    if (!m_rbo)
+        glGenRenderbuffers(1, &m_rbo);
+
     glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.x, size.y);
 }

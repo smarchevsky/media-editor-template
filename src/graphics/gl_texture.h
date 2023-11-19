@@ -25,22 +25,18 @@ protected:
     Format m_format = Format::Undefined;
     Filtering m_filtering = Filtering::Nearset;
     Wrapping m_wrapping = Wrapping::Repeat;
-    mutable bool m_mipmapDirty = false; // used only fir framebuffer
+    mutable bool m_mipmapDirty = false; // used for framebuffer
 
 public:
     GLTexture2D() = default;
     GLTexture2D(const Image& img) { fromImage(img); }
-    GLTexture2D(glm::ivec2 size, GLTexture2D::Format format, void* data = nullptr)
-    {
-        createFromRawData(size, format, data);
-    }
+    GLTexture2D(glm::ivec2 size, GLTexture2D::Format format, void* data = nullptr) { createFromRawData(size, format, data); }
     GLTexture2D(GLTexture2D&& rhs);
     ~GLTexture2D();
 
     bool createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data);
-    bool setWrapping(Wrapping);
-    bool setFiltering(Filtering);
-    // Wrapping getWrapping() {return m_w}
+    void setWrapping(Wrapping);
+    void setFiltering(Filtering);
 
     uint32_t getHandle() const { return m_textureHandle; }
     glm::ivec2 getSize() const { return m_size; }
@@ -48,10 +44,8 @@ public:
 protected:
     void generateMipMapsIfDirty();
     bool fromImage(const Image& img);
-    // void toImage(Image& img) const;
-    void clear();
 
-    static uint32_t s_currentBindedTexture;
+    // static uint32_t s_currentBindedTextureHandle;
     friend class GLFrameBuffer;
     friend class GLShader;
 };
@@ -62,8 +56,9 @@ class GLDepthBuffer2D : public GLTextureBase {
     uint32_t m_rbo {};
 
 public:
+    void create(glm::ivec2 size);
     uint32_t getHandle() const { return m_rbo; }
-    GLDepthBuffer2D(glm::vec2 size);
+    GLDepthBuffer2D(glm::ivec2 size) { create(size); }
     ~GLDepthBuffer2D();
 };
 

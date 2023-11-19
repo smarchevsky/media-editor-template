@@ -28,10 +28,9 @@ class GLFrameBuffer : public GLFrameBufferBase {
 public:
     ~GLFrameBuffer();
 
-    void create(glm::vec2 size,
-        GLTexture2D::Format format, bool withDepthBuffer = false);
+    void create(glm::vec2 size, GLTexture2D::Format format, bool withDepthBuffer = false);
+    void resize(glm::vec2 newSize);
 
-    void reset();
     void bind() const override;
     bool hasDepth() const override { return !!m_depthTexture; }
 
