@@ -11,16 +11,12 @@
 
 GLRenderParameters GLRenderParameters::s_currentParams;
 
-void GLRenderManager::preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, CameraBase* camera, GLRenderParameters params, bool clear)
+void GLRenderManager::preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, CameraBase* camera, GLRenderParameters params)
 {
     assert(shader);
     assert(frameBuffer);
 
-    // bind framebuffer, clear (with depth, if exists)
     frameBuffer->bind();
-    if (clear) {
-        frameBuffer->clear();
-    }
 
     // reset all uniforms to default value
     shader->resetUniforms();

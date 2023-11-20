@@ -15,12 +15,12 @@ class OpenGLApp2D : public Application {
     std::vector<VisualObjectSprite2D> m_sprites;
     GLShader m_shaderDefault2d;
     GLFrameBuffer m_fb;
-    CameraOrtho m_camera;
+    CameraOrtho m_cameraView;
 
 public:
     void init() override
     {
-        m_camera.setViewportSize(m_window.getSize());
+        m_cameraView.setViewportSize(m_window.getSize());
 
         ///////////////////////////////////////////////////
 
@@ -42,17 +42,17 @@ public:
         m_window.setMouseScrollEvent( // zoom on scroll
             [this](float diff, glm::ivec2 mousePos) {
                 float scaleFactor = pow(1.1f, -diff);
-                m_camera.multiplyScaleOffseted(scaleFactor, mousePos);
+                m_cameraView.multiplyScaleOffseted(scaleFactor, mousePos);
             });
 
         m_window.setMouseDragEvent(MouseButton::Middle, // drag on MMB
             [this](glm::ivec2 startPos, glm::ivec2 currentPos, glm::ivec2 currentDelta, DragState dragState) {
-                m_camera.addOffset_View(glm::vec2(-currentDelta));
+                m_cameraView.addOffset_View(glm::vec2(-currentDelta));
             });
 
         m_window.setScreenResizeEvent( // window resize
             [this](glm::ivec2 oldSize, glm::ivec2 newSize) {
-                m_camera.setViewportSize(glm::vec2(newSize));
+                m_cameraView.setViewportSize(glm::vec2(newSize));
             });
         m_window.setClearColor({ .13f, .14f, .15f, 1.f });
 
@@ -82,12 +82,14 @@ public:
 
     void updateWindow(float dt) override
     {
-        GLRenderManager rm;
+
         m_sprites[0].addRotation(dt * 0.1f);
 
-        rm.draw(&m_fb, &m_shaderDefault2d, nullptr, &m_sprites[0], true);
+        m_fb.clear();
+        GLRenderManager::draw(&m_fb, &m_shaderDefault2d, nullptr, &m_sprites[0]);
 
-        rm.draw(&m_window, &m_shaderDefault2d, &m_camera, &m_sprites[1], true);
+        m_window.clear();
+        GLRenderManager::draw(&m_window, &m_shaderDefault2d, &m_cameraView, &m_sprites[1]);
     }
 };
 typedef OpenGLApp2D App;

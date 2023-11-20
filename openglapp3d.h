@@ -97,12 +97,13 @@ public:
             m_camera.setJitterEnabled(m_dirtyLevel != 0); // zero frame without jitter
 
             GLRenderParameters params3d { GLBlend::Disabled, GLDepth::Enabled, GLCullMode::NoCull, GLPolyMode::Lines };
-            GLRenderManager::draw(&m_frameBufferReceive3D, &m_shaderDefault3D, &m_camera, &m_mesh3d, true, params3d);
+            m_frameBufferReceive3D.clear();
+            GLRenderManager::draw(&m_frameBufferReceive3D, &m_shaderDefault3D, &m_camera, &m_mesh3d, params3d);
 
             // render framebuffer to accumulator with alpha
             m_spriteReceive3D.setUniform("opacity", 1.f / (m_dirtyLevel + 1));
             GLRenderParameters paramsAccumulate { GLBlend::OneMinusAlpha, GLDepth::Disabled };
-            GLRenderManager::draw(&m_frameBufferAccumulator, &m_shaderDefault2D, nullptr, &m_spriteReceive3D, false, paramsAccumulate);
+            GLRenderManager::draw(&m_frameBufferAccumulator, &m_shaderDefault2D, nullptr, &m_spriteReceive3D, paramsAccumulate);
             m_dirtyLevel++;
 
             float frameTime = (float)((SDL_GetPerformanceCounter() - startFrameTime) / freq);
@@ -115,7 +116,7 @@ public:
 
         // render accumulator to screen
         GLRenderParameters paramsPresent { GLBlend::Disabled, GLDepth::Disabled };
-        GLRenderManager::draw(&m_window, &m_shaderDefault2D, nullptr, &m_spriteAccumulator, false, paramsPresent);
+        GLRenderManager::draw(&m_window, &m_shaderDefault2D, nullptr, &m_spriteAccumulator, paramsPresent);
     }
 };
 typedef OpenGLApp3D App;

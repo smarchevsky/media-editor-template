@@ -33,10 +33,9 @@ public:
         GLShader* shader,
         CameraBase* camera,
         VisualObjectBase* visualObject,
-        bool clear,
         GLRenderParameters params = GLRenderParameters())
     {
-        preDraw(frameBuffer, shader, camera, params, clear);
+        preDraw(frameBuffer, shader, camera, params);
 
         assert(visualObject);
         drawInternal(shader, *visualObject);
@@ -46,10 +45,9 @@ public:
         GLShader* shader,
         CameraBase* camera,
         std::vector<VisualObjectSprite2D>& visualObjects,
-        bool clear,
         GLRenderParameters params = GLRenderParameters())
     {
-        preDraw(frameBuffer, shader, camera, params, clear);
+        preDraw(frameBuffer, shader, camera, params);
 
         for (auto& vo : visualObjects)
             drawInternal(shader, vo);
@@ -60,7 +58,7 @@ private:
         VisualObjectBase& visualObject);
 
     static void preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader,
-        CameraBase* camera, GLRenderParameters params, bool clear);
+        CameraBase* camera, GLRenderParameters params);
 };
 
 #endif // GL_RENDERMANAGER_H
