@@ -8,7 +8,7 @@
 // glm::vec3 toV3(const std::vector<tinyobj::real_t> v) { return glm::vec3(v[0], v[1], v[2]); }
 // glm::vec2 toV2(const std::vector<tinyobj::real_t> v) { return glm::vec2(v[0], v[1]); }
 
-std::vector<Model3D> MeshReader::read(const std::filesystem::path& path)
+std::vector<Model3D> MeshReader::read(const std::filesystem::path& path, ReadMode readMode)
 {
     std::vector<Model3D> resultMeshes;
 
@@ -53,12 +53,17 @@ std::vector<Model3D> MeshReader::read(const std::filesystem::path& path)
                 currentVertex.position.x = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
                 currentVertex.position.y = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
                 currentVertex.position.z = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
+                if (readMode == ReadMode::XZY)
+                    std::swap(currentVertex.position.z, currentVertex.position.y);
 
                 // Check if `normal_index` is zero or positive. negative = no normal data
                 if (idx.normal_index >= 0) {
                     currentVertex.normal.x = attrib.normals[3 * size_t(idx.normal_index) + 0];
                     currentVertex.normal.y = attrib.normals[3 * size_t(idx.normal_index) + 1];
                     currentVertex.normal.z = attrib.normals[3 * size_t(idx.normal_index) + 2];
+
+                    if (readMode == ReadMode::XZY)
+                        std::swap(currentVertex.normal.z, currentVertex.normal.y);
                 }
 
                 // Check if `texcoord_index` is zero or positive. negative = no texcoord data
@@ -82,6 +87,10 @@ std::vector<Model3D> MeshReader::read(const std::filesystem::path& path)
                     indexOffset++;
                 }
             }
+            if (readMode == ReadMode::XZY) {
+                std::swap(triangle[1], triangle[2]);
+            }
+
             resultMesh.triangles.push_back(triangle);
             index_offset += fv;
 

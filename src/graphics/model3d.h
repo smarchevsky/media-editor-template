@@ -46,7 +46,12 @@ struct Model3D {
 
 class MeshReader {
 public:
-    static std::vector<Model3D> read(const std::filesystem::path& path);
+    enum class ReadMode {
+        XYZ,
+        XZY
+    };
+
+    static std::vector<Model3D> read(const std::filesystem::path& path, ReadMode readMode = ReadMode::XYZ);
 
 protected:
 };
