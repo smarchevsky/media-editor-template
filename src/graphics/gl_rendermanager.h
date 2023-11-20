@@ -11,6 +11,7 @@ class VisualObjectBase;
 enum class GLBlend : uint8_t { Disabled, OneMinusAlpha };
 enum class GLDepth : uint8_t { Disabled, Enabled };
 enum class GLPolyMode : uint8_t { Fill, Lines };
+enum class GLCullMode : uint8_t { NoCull, Back, Front };
 // clang-format on
 
 class GLRenderParameters {
@@ -20,6 +21,7 @@ public:
     GLRenderParameters() = default;
     GLBlend blendMode = GLBlend::Disabled;
     GLDepth depthMode = GLDepth::Disabled;
+    GLCullMode cullMode = GLCullMode::NoCull;
     GLPolyMode polyMode = GLPolyMode::Fill;
 
     void apply();

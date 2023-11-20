@@ -60,7 +60,6 @@ void GLRenderParameters::apply()
         default:
             LOGE("Not supported blend mode: " << (int)blendMode);
             assert(false);
-            break;
         }
     }
 
@@ -76,7 +75,30 @@ void GLRenderParameters::apply()
         default:
             LOGE("Not supported depth mode: " << (int)depthMode);
             assert(false);
-            break;
+        }
+    }
+
+    if (s_currentParams.cullMode != cullMode) {
+        s_currentParams.cullMode = cullMode;
+
+        switch (cullMode) {
+        case GLCullMode::NoCull: {
+            glDisable(GL_CULL_FACE);
+        } break;
+
+        case GLCullMode::Back: {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+        } break;
+
+        case GLCullMode::Front: {
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_FRONT);
+        } break;
+
+        default:
+            LOGE("Not supported cull mode: " << (int)cullMode);
+            assert(false);
         }
     }
 
@@ -93,9 +115,6 @@ void GLRenderParameters::apply()
         default:
             LOGE("Not supported poly mode: " << (int)polyMode);
             assert(false);
-            break;
         }
     }
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
 }
