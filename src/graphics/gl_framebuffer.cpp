@@ -20,7 +20,7 @@ void GLFrameBufferBase::clear()
     glClear(GL_COLOR_BUFFER_BIT | ((hasDepth()) ? GL_DEPTH_BUFFER_BIT : 0));
 }
 
-void GLFrameBuffer::createInternal(glm::vec2 size, GLTexture2D::Format format)
+void GLFrameBuffer::create(glm::vec2 size, GLTexture2D::Format format)
 {
     if (!m_fbo)
         glGenFramebuffers(1, &m_fbo);
@@ -28,11 +28,6 @@ void GLFrameBuffer::createInternal(glm::vec2 size, GLTexture2D::Format format)
 
     m_colorTexture = std::make_shared<GLTexture2D>(size, format);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_colorTexture->getHandle(), 0);
-}
-
-void GLFrameBuffer::create(glm::vec2 size, GLTexture2D::Format format)
-{
-    createInternal(size, format);
 
     assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
 }
@@ -40,7 +35,7 @@ void GLFrameBuffer::create(glm::vec2 size, GLTexture2D::Format format)
 void GLFrameBuffer::resize(glm::vec2 newSize)
 {
     if (m_colorTexture)
-        m_colorTexture->createFromRawData(newSize, m_colorTexture->m_format, nullptr);
+        m_colorTexture->createFromRawData(newSize, m_colorTexture->getFormat(), nullptr);
 }
 
 GLFrameBuffer::~GLFrameBuffer()
@@ -62,7 +57,9 @@ void GLFrameBuffer::bind() const
             auto size = m_colorTexture->getSize();
             glViewport(0, 0, size.x, size.y);
 
-            m_colorTexture->m_mipmapDirty = true; // when texture will be attached to shader - generate mipmap if not generated
+            // this framebuffer is going to be modified, so
+            // when texture will be attached to shader - mipmap will be generated
+            m_colorTexture->m_mipmapDirty = true;
         }
     }
 }
@@ -80,15 +77,18 @@ void GLFrameBuffer::writeFramebufferToFile(const std::filesystem::__cxx11::path&
 
 void GLFrameBufferDepth::create(glm::vec2 size, GLTexture2D::Format format)
 {
-    createInternal(size, format);
+    GLFrameBuffer::create(size, format);
+
     m_depthTexture = std::make_shared<GLDepthBuffer2D>(size);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_depthTexture->getHandle());
 
-    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
+    // check framebuffer completion again
+    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "ERROR::RENDERBUFFER:: Renderbuffer is not complete!");
 }
 
 void GLFrameBufferDepth::resize(glm::vec2 newSize)
 {
+    GLFrameBuffer::resize(newSize);
     if (m_depthTexture)
         m_depthTexture->create(newSize);
 }

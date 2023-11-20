@@ -26,22 +26,20 @@ public:
 };
 
 class GLFrameBuffer : public GLFrameBufferBase {
+protected:
     unsigned int m_fbo = 0;
     std::shared_ptr<GLTexture2D> m_colorTexture;
-
-protected:
-    void createInternal(glm::vec2 size, GLTexture2D::Format format);
 
 public:
     ~GLFrameBuffer();
 
     void bind() const override;
-    bool hasDepth() const override { return false; };
+    bool hasDepth() const override { return false; }
 
     virtual void create(glm::vec2 size, GLTexture2D::Format format);
     virtual void resize(glm::vec2 newSize);
-
     const auto& getTexture() const { return m_colorTexture; }
+
     void writeFramebufferToFile(const std::filesystem::path& path);
 };
 
@@ -49,7 +47,7 @@ class GLFrameBufferDepth : public GLFrameBuffer {
     std::shared_ptr<GLDepthBuffer2D> m_depthTexture;
 
 public:
-    bool hasDepth() const override { return true; };
+    bool hasDepth() const override { return true; }
     void create(glm::vec2 size, GLTexture2D::Format format) override;
     void resize(glm::vec2 newSize) override;
 };
