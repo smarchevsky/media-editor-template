@@ -9,7 +9,7 @@
 #include <cassert>
 #include <unordered_map>
 
-GLRenderParameters GLRenderParameters::s_currentParams;
+static GLRenderParameters s_currentParams;
 
 void GLRenderManager::preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, CameraBase* camera, GLRenderParameters params)
 {
@@ -34,7 +34,7 @@ void GLRenderManager::drawInternal(GLShader* shader, VisualObjectBase& visualObj
         shader->setUniforms(visualObject.updateAndGetUniforms());
 
         shader->applyUniforms();
-        visualObject.draw();
+        visualObject.getMesh()->draw();
     } else {
         LOGE("No mesh :(");
     }

@@ -4,8 +4,6 @@
 
 using namespace glm;
 
-void VisualObjectBase::draw() { m_mesh->draw(); }
-
 VisualObjectBase::~VisualObjectBase() { }
 
 /////////////////////////// VisualObject2D /////////////////////

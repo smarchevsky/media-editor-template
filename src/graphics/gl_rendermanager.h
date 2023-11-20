@@ -15,7 +15,6 @@ enum class GLCullMode : uint8_t { NoCull, Back, Front };
 // clang-format on
 
 class GLRenderParameters {
-    static GLRenderParameters s_currentParams;
 
 public:
     GLRenderParameters() = default;

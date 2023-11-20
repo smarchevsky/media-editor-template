@@ -12,7 +12,6 @@ protected:
 
 public:
     const std::shared_ptr<GLMeshBase>& getMesh() const { return m_mesh; }
-    void draw();
     virtual ~VisualObjectBase() = 0;
 };
 
