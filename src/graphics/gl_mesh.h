@@ -11,13 +11,16 @@ class Model3D;
 //////////////////////// GL MESH BASE /////////////////////////
 
 class GLMeshBase : NoCopy<GLMeshBase> {
+protected:
     static uint32_t s_currentBindedMeshHandle;
+    uint32_t m_VAO {};
 
 protected:
-    void bind(uint32_t handle) const;
+    void bind() const;
 
 public:
     virtual ~GLMeshBase() = default;
+
     virtual void draw() const = 0;
 };
 
@@ -25,7 +28,7 @@ public:
 
 class GLMeshTriArray : public GLMeshBase {
     friend class GLMeshStatics;
-    uint32_t m_VBO {}, m_VAO {}, m_vertCount {};
+    uint32_t m_VBO {}, m_vertCount {};
 
 public:
     GLMeshTriArray() = default;
@@ -37,7 +40,7 @@ public:
 //////////////////////// GL MESH TRI INDICES /////////////////////////
 
 class GLMeshTriIndices : public GLMeshBase {
-    uint32_t m_VAO {}, m_VBO {}, m_EBO {};
+    uint32_t m_VBO {}, m_EBO {};
     uint32_t m_indicesCount {};
 
 public:
@@ -56,7 +59,8 @@ public:
         static GLMeshStatics instance;
         return instance;
     }
-    const std::shared_ptr<GLMeshTriArray>& getQuad2d() { return get().s_quad; };
+
+    const std::shared_ptr<GLMeshTriArray>& getQuad2d() { return get().s_quad; }
 
 private:
     GLMeshStatics();
