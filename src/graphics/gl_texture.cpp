@@ -171,7 +171,7 @@ bool GLTexture2D::fromImage(const Image& img)
     }
 
     // clang-format off
-    Format format;
+    Format format = Format::Undefined;
     switch (img.m_nrChannels) {
         case 1: { format = Format::R_8; } break;
         case 3: { format = Format::RGB_8; } break;
@@ -203,24 +203,11 @@ void GLTexture2D::generateMipMapsIfDirty()
     }
 }
 
-GLTexture2D::GLTexture2D(GLTexture2D&& rhs)
-{
-    m_textureHandle = rhs.m_textureHandle;
-    m_size = rhs.m_size;
-    m_format = rhs.m_format;
-    m_filtering = rhs.m_filtering;
-    m_wrapping = rhs.m_wrapping;
-
-    rhs.m_textureHandle = 0;
-}
-
 GLTexture2D::~GLTexture2D()
 {
     if (m_textureHandle) {
         glDeleteTextures(1, &m_textureHandle);
         m_textureHandle = 0;
-        m_size = glm::ivec2(0);
-        m_format = Format::Undefined;
         LOG("Texture destroyed");
     }
 }

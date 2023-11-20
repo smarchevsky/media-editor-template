@@ -22,22 +22,42 @@ public:
 protected:
     uint32_t m_textureHandle {};
     glm::ivec2 m_size = glm::ivec2(0);
+
     Format m_format = Format::Undefined;
     Filtering m_filtering = Filtering::Nearset;
     Wrapping m_wrapping = Wrapping::Repeat;
+
     mutable bool m_mipmapDirty = false; // used for framebuffer
 
 public:
+    GLTexture2D& operator=(GLTexture2D&& rhs) // it seems, you can swap textures with no problems
+    {
+        m_textureHandle = rhs.m_textureHandle;
+        rhs.m_textureHandle = 0;
+        m_size = rhs.m_size;
+
+        m_format = rhs.m_format;
+        m_filtering = rhs.m_filtering;
+        m_wrapping = rhs.m_wrapping;
+
+        m_mipmapDirty = rhs.m_mipmapDirty;
+        return *this;
+    }
+
     GLTexture2D() = default;
     GLTexture2D(const Image& img) { fromImage(img); }
     GLTexture2D(glm::ivec2 size, GLTexture2D::Format format, void* data = nullptr) { createFromRawData(size, format, data); }
-    GLTexture2D(GLTexture2D&& rhs);
+    GLTexture2D(GLTexture2D&& rhs) { *this = std::move(rhs); }
     ~GLTexture2D();
 
     bool createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data);
+
     void setWrapping(Wrapping);
     void setFiltering(Filtering);
 
+    Filtering getFiltering() const { return m_filtering; }
+    Wrapping getWrapping() const { return m_wrapping; }
+    Format getFormat() const { return m_format; }
     uint32_t getHandle() const { return m_textureHandle; }
     glm::ivec2 getSize() const { return m_size; }
 
