@@ -18,29 +18,40 @@ public:
 public:
     virtual void bind() const = 0;
     virtual bool hasDepth() const = 0;
-    void clear(bool withDepth = true);
+    void clear();
+
     void setClearColor(const glm::vec4& color) { m_clearColor = color; }
 
     virtual ~GLFrameBufferBase() { }
 };
 
 class GLFrameBuffer : public GLFrameBufferBase {
+    unsigned int m_fbo = 0;
+    std::shared_ptr<GLTexture2D> m_colorTexture;
+
+protected:
+    void createInternal(glm::vec2 size, GLTexture2D::Format format);
+
 public:
     ~GLFrameBuffer();
 
-    void create(glm::vec2 size, GLTexture2D::Format format, bool withDepthBuffer = false);
-    void resize(glm::vec2 newSize);
-
     void bind() const override;
-    bool hasDepth() const override { return !!m_depthTexture; }
+    bool hasDepth() const override { return false; };
 
-    auto& getTexture() { return m_colorTexture; }
+    virtual void create(glm::vec2 size, GLTexture2D::Format format);
+    virtual void resize(glm::vec2 newSize);
+
+    const auto& getTexture() const { return m_colorTexture; }
     void writeFramebufferToFile(const std::filesystem::path& path);
+};
 
-private:
-    unsigned int m_fbo = 0;
-    std::shared_ptr<GLTexture2D> m_colorTexture;
+class GLFrameBufferDepth : public GLFrameBuffer {
     std::shared_ptr<GLDepthBuffer2D> m_depthTexture;
+
+public:
+    bool hasDepth() const override { return true; };
+    void create(glm::vec2 size, GLTexture2D::Format format) override;
+    void resize(glm::vec2 newSize) override;
 };
 
 #endif // GLFRAMEBUFFER_H

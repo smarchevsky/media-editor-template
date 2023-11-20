@@ -19,8 +19,7 @@ void GLRenderManager::preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, 
     // bind framebuffer, clear (with depth, if exists)
     frameBuffer->bind();
     if (clear) {
-        bool withDepth = (params.depthMode == GLDepth::Enabled);
-        frameBuffer->clear(withDepth);
+        frameBuffer->clear();
     }
 
     // reset all uniforms to default value

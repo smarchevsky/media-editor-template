@@ -19,7 +19,8 @@ static fs::path resourceDir(RESOURCE_DIR);
 class OpenGLApp3D : public Application {
     VisualObject3D m_mesh3d;
     VisualObjectSprite2D m_spriteReceive3D, m_spriteAccumulator;
-    GLFrameBuffer m_frameBufferReceive3D, m_frameBufferAccumulator;
+    GLFrameBufferDepth m_frameBufferReceive3D;
+    GLFrameBuffer m_frameBufferAccumulator;
 
     GLShader m_shaderDefault2D, m_shaderDefault3D;
     CameraPerspectiveJittered m_camera;
@@ -70,7 +71,7 @@ public:
         m_shaderDefault3D = GLShader::FromFile("default3d.vert", "default3d.frag");
 
         m_frameBufferAccumulator.create(m_window.getSize(), GLTexture2D::Format::RGB_32F);
-        m_frameBufferReceive3D.create(m_window.getSize(), GLTexture2D::Format::RGB_8, true);
+        m_frameBufferReceive3D.create(m_window.getSize(), GLTexture2D::Format::RGB_8);
         m_frameBufferReceive3D.setClearColor({ .08f, .09f, .1f, 1.f });
         m_camera.setFramebufferSize(m_window.getSize());
 
