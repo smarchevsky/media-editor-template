@@ -17,34 +17,35 @@ CameraBase::~CameraBase() { }
 
 const NameUniformMap& CameraRect::updateAndGetUniforms()
 {
-    updateViewInv();
-    m_uniforms["cameraViewInv"] = m_viewMatrix;
+    m_uniforms["cameraViewInv"] = getViewMatrix();
     return m_uniforms;
 }
 
-void CameraRect::updateViewInv()
+const glm::mat4& CameraRect::getViewMatrix() const
 {
     if (m_viewDirty) {
-        m_viewMatrix = glm::ortho(m_p[0].x, m_p[1].x, m_p[0].y, m_p[1].y, -1.f, 1.f);
+        m_viewMatrix = glm::ortho(m_rect[0].x, m_rect[1].x, m_rect[0].y, m_rect[1].y, -1.f, 1.f);
         m_viewDirty = false;
     }
+    return m_viewMatrix;
 }
 
-void CameraOrtho::updateViewInv()
+const glm::mat4& CameraOrtho::getViewMatrix() const
 {
     if (m_viewDirty) {
         glm::vec2 scale = m_viewportSize * m_scaleMultiplier;
         vec2 p0 = m_posWorld - scale * 0.5f;
         vec2 p1 = m_posWorld + scale * 0.5f;
 
+        glm::vec2* rectMutable = const_cast<glm::vec2*>(m_rect);
         if (m_verticalFlip) {
-            m_p[0] = vec2(p0.x, p1.y), m_p[1] = vec2(p1.x, p0.y);
+            rectMutable[0] = vec2(p0.x, p1.y), rectMutable[1] = vec2(p1.x, p0.y);
         } else {
-            m_p[0] = p0, m_p[1] = p1;
+            rectMutable[0] = p0, rectMutable[1] = p1;
         }
-
-        CameraRect::updateViewInv();
     }
+
+    return CameraRect::getViewMatrix();
 }
 
 ////////////////////// CAMERA PERSPECTIVE //////////////////////////////

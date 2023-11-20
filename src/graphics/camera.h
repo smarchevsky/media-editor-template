@@ -21,9 +21,9 @@ public:
 
 class CameraRect : public CameraBase {
 protected:
-    glm::mat4 m_viewMatrix = glm::mat4(1);
-    glm::vec2 m_p[2] { glm::vec2(-1), glm::vec2(1) };
-    bool m_viewDirty = true;
+    mutable glm::mat4 m_viewMatrix = glm::mat4(1);
+    glm::vec2 m_rect[2] { glm::vec2(-1), glm::vec2(1) };
+    mutable bool m_viewDirty = true;
     bool m_verticalFlip = false;
 
 public:
@@ -34,10 +34,11 @@ public:
         setRect(p0, p1);
     }
 
-    void setRect(glm::vec2 p0, glm::vec2 p1) { m_p[0] = p0, m_p[1] = p1, m_viewDirty = true; }
+    void setRect(glm::vec2 p0, glm::vec2 p1) { m_rect[0] = p0, m_rect[1] = p1, m_viewDirty = true; }
 
     const NameUniformMap& updateAndGetUniforms() override;
-    virtual void updateViewInv();
+
+    virtual const glm::mat4& getViewMatrix() const;
 };
 
 class CameraOrtho : public CameraRect {
@@ -70,7 +71,7 @@ public:
     glm::vec2 getPos() const { return m_posWorld; }
     float getScale() const { return m_scaleMultiplier; }
 
-    void updateViewInv() override;
+    const glm::mat4& getViewMatrix() const override;
 };
 
 ////////////////////// CAMERA PERSPECTIVE //////////////////////////////
