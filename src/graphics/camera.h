@@ -79,8 +79,8 @@ public:
 
 class CameraPerspective : public CameraBase {
 protected:
-    glm::mat4 m_cameraView;
-    glm::mat4 m_cameraViewInv;
+    glm::mat4 m_cameraMatrix;
+    glm::mat4 m_cameraMatrixInv; // camera view matrix
     glm::mat4 m_cameraProjection;
 
     glm::vec2 m_sceneRotation; // set in constructor
@@ -121,8 +121,9 @@ public:
     glm::vec3 getUp() const { return m_up; }
     float getDistance() const { return glm::distance(m_cameraPosition, m_aimPosition); }
 
-    const glm::mat4& getViewInv();
-    const glm::mat4& getView();
+    const glm::mat4& getViewMatrix() { return getCameraMatrixInv(); }
+    const glm::mat4& getCameraMatrixInv();
+    const glm::mat4& getCameraMatrix();
 
     virtual const glm::mat4& getProjection();
     virtual const NameUniformMap& updateAndGetUniforms() override;

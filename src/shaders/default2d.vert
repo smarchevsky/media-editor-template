@@ -2,15 +2,15 @@
 #define IDENTITY mat4(1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1)
 
 layout (location = 0) in vec3 position;
-layout (location = 1) in vec2 uv;
+layout (location = 1) in vec2 uvIn;
 
-out vec2 UV;
+out vec2 uv;
 
-uniform mat4 cameraViewInv = IDENTITY;
+uniform mat4 cameraView = IDENTITY;
 uniform mat4 modelWorld = IDENTITY;
 
 void main()
 {
-   gl_Position = cameraViewInv * modelWorld * vec4(position, 1.0);
-   UV = uv;
+   gl_Position = cameraView * modelWorld * vec4(position, 1.0);
+   uv = uvIn;
 }

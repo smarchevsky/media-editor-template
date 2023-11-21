@@ -17,7 +17,7 @@ CameraBase::~CameraBase() { }
 
 const NameUniformMap& CameraRect::updateAndGetUniforms()
 {
-    m_uniforms["cameraViewInv"] = getViewMatrix();
+    m_uniforms["cameraView"] = getViewMatrix();
     return m_uniforms;
 }
 
@@ -59,16 +59,16 @@ void CameraPerspective::updateView()
         vec3 y = -glm::cross(x, z);
         vec3 p = m_cameraPosition;
 
-        m_cameraView = glm::mat4(
+        m_cameraMatrix = glm::mat4(
             x.x, x.y, x.z, 0.f,
             y.x, y.y, y.z, 0.f,
             z.x, z.y, z.z, 0.f,
             p.x, p.y, p.z, 1.f);
 
-        m_cameraViewInv = glm::inverse(m_cameraView);
+        m_cameraMatrixInv = glm::inverse(m_cameraMatrix);
 
-        // m_cameraViewInv = glm::lookAt(m_cameraPosition, m_aimPosition, m_up);
-        // m_cameraView = glm::inverse(m_cameraViewInv);
+        // m_cameraViewMatrix = glm::lookAt(m_cameraPosition, m_aimPosition, m_up);
+        // m_cameraMatrix = glm::inverse(m_cameraViewMatrix);
 
         m_viewDirty = false;
     }
@@ -82,16 +82,16 @@ void CameraPerspective::updateProjection()
     }
 }
 
-const glm::mat4& CameraPerspective::getViewInv()
+const glm::mat4& CameraPerspective::getCameraMatrixInv()
 {
     updateView();
-    return m_cameraViewInv;
+    return m_cameraMatrixInv;
 }
 
-const glm::mat4& CameraPerspective::getView()
+const glm::mat4& CameraPerspective::getCameraMatrix()
 {
     updateView();
-    return m_cameraView;
+    return m_cameraMatrix;
 }
 
 const glm::mat4& CameraPerspective::getProjection()
@@ -102,7 +102,7 @@ const glm::mat4& CameraPerspective::getProjection()
 
 const NameUniformMap& CameraPerspective::updateAndGetUniforms()
 {
-    m_uniforms["cameraViewInv"] = getViewInv();
+    m_uniforms["cameraView"] = getViewMatrix();
     m_uniforms["cameraPosition"] = m_cameraPosition;
     m_uniforms["cameraProjection"] = getProjection();
     return m_uniforms;
@@ -110,7 +110,7 @@ const NameUniformMap& CameraPerspective::updateAndGetUniforms()
 
 void CameraPerspective::pan(glm::vec2 delta)
 {
-    glm::mat4 matView = getView();
+    glm::mat4 matView = getCameraMatrix();
 
     float distance = glm::distance(m_cameraPosition, m_aimPosition);
     glm::vec3 right = matView[0];
