@@ -41,13 +41,14 @@ public:
             });
 
         m_window.setMouseScrollEvent( // zoom on scroll
-            [this](float diff, glm::ivec2 mousePos) {
+            [this](float diff, glm::ivec2 mousePixelPos) {
                 float scaleFactor = pow(1.1f, -diff);
                 float distance = m_camera.getDistance();
+                glm::vec2 mousePos = m_window.toNormalizedPos(mousePixelPos, false);
 
                 distance *= scaleFactor;
-                distance = glm::clamp(distance, 0.1f, 1000.f);
-                m_camera.setDistanceFromAim(distance);
+                m_camera.pan(mousePos * (scaleFactor - 1.f));
+                m_camera.setDistanceFromAim(glm::clamp(distance, 0.1f, 1000.f));
                 resetDirty();
             });
 
