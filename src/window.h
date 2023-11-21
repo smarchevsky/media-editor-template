@@ -150,9 +150,15 @@ public:
 
     bool processEvents();
 
-    glm::vec2 toCoordonates01(const glm::vec2 p) { return p / glm::vec2(m_windowSize); }
-    glm::vec2 toCoordonatesM11(const glm::vec2 p) { return toCoordonates01(p) * 2.f - 1.f; }
-    // glm::vec2 toOffsetM11(const glm::vec2 p) { return toCoordonates01(p) * 2.f; }
+    glm::vec2 toNormalizedPos01(const glm::vec2 p, bool flipY)
+    {
+        glm::vec2 result = p / glm::vec2(m_windowSize);
+        if (flipY)
+            result.y = 1 - result.y;
+        return result;
+    }
+    glm::vec2 toNormalizedPos(const glm::vec2 pixelPos, bool flipY) { return toNormalizedPos01(pixelPos, flipY) * 2.f - 1.f; }
+
     glm::ivec2 getSize() { return m_windowSize; }
 
 private:
