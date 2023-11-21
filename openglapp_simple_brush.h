@@ -60,14 +60,16 @@ public:
                 m_cameraView.addOffset_View(glm::vec2(-currentDelta));
             });
 
+        m_window.setMouseDragEvent(MouseButton::Left, // drag on MMB
+            [this](glm::ivec2 startPos, glm::ivec2 currentPos, glm::ivec2 currentDelta, DragState dragState) {
+                GLRenderManager::draw(&m_frameBufferImage, &m_shaderBrush, &m_cameraImage, &m_spriteBrush);
+            });
+
         m_window.setMouseMoveEvent(MouseButton::Left,
             [this](glm::ivec2 currentScreenPos, glm::ivec2 delta) {
                 glm::vec2 normalizedScreenPos = m_window.toNormalizedPos(currentScreenPos, true);
-
                 glm::vec2 spritePosWorld = glm::inverse(m_cameraView.getViewMatrix()) * glm::vec4(normalizedScreenPos, 0.f, 1.f);
-
                 m_spriteBrush.setPos(spritePosWorld);
-                GLRenderManager::draw(&m_frameBufferImage, &m_shaderBrush, &m_cameraImage, &m_spriteBrush);
             });
 
         m_window.setScreenResizeEvent( // window resize
