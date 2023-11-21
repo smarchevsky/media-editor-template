@@ -31,10 +31,11 @@ public:
     CameraRect(glm::vec2 p0, glm::vec2 p1)
         : CameraRect()
     {
-        setRect(p0, p1);
+        setViewRect(p0, p1);
     }
 
-    void setRect(glm::vec2 p0, glm::vec2 p1) { m_rect[0] = p0, m_rect[1] = p1, m_viewDirty = true; }
+    void setViewRect(glm::vec2 p0, glm::vec2 p1) { m_rect[0] = p0, m_rect[1] = p1, m_viewDirty = true; }
+    void setViewRect(glm::vec4 p) { setViewRect({ p.x, p.y }, { p.z, p.w }); }
 
     const NameUniformMap& updateAndGetUniforms() override;
 
