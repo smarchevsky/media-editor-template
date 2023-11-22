@@ -33,14 +33,18 @@ void Image::load(const std::filesystem::path& path)
     }
 }
 
-void Image::fill(glm::ivec2 size, glm::ivec4 color)
+void Image::fill(glm::ivec2 size, int32_t packedColor)
 {
     clear();
     assert(size.x > 0 && size.y > 0 && "Image size must be positive");
     m_size = size;
     m_nrChannels = 4;
 
-    color = glm::clamp(color, glm::ivec4(0), glm::ivec4(255));
+    glm::ivec4 color(
+        (packedColor & 0xFF000000) >> 24,
+        (packedColor & 0x00FF0000) >> 16,
+        (packedColor & 0x0000FF00) >> 8,
+        (packedColor & 0x000000FF));
 
     size_t img_size = m_size.x * m_size.y * m_nrChannels;
 

@@ -9,12 +9,12 @@ class Image : NoCopy<Image> {
 public:
     Image();
     Image(const std::filesystem::path& path) { load(path); }
-    Image(glm::ivec2 size, glm::ivec4 color) { fill(size, color); }
+    Image(glm::ivec2 size, int32_t packedColor) { fill(size, packedColor); }
     Image(Image&& rhs);
     ~Image();
 
     void load(const std::filesystem::path& path);
-    void fill(glm::ivec2 size, glm::ivec4 color);
+    void fill(glm::ivec2 size, int32_t packedColor);
     void clear();
     bool isValid() const;
 
