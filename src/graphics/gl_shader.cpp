@@ -12,7 +12,6 @@
 #include <iostream>
 #include <sstream>
 
-static const std::filesystem::path shaderDir(SHADER_DIR);
 uint32_t GLShader::s_currentBindedShaderHandle = 0;
 
 namespace {

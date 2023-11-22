@@ -18,6 +18,7 @@
 #include <variant>
 #include <vector>
 
+static const std::filesystem::path shaderDir(SHADER_DIR);
 std::string textFromFile(const std::filesystem::path& path);
 
 struct Texture2Ddata {
