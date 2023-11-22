@@ -24,7 +24,8 @@ out float FragColor;
 int cell(in ivec2 p) { return (texelFetch(texture0, p % ivec2(ImageSize), 0).x > 0.5) ? 1 : 0; }
 
 void main() {
-    ivec2 px = ivec2(uv * ImageSize);
+    // ivec2 px = ivec2(uv * ImageSize);
+    ivec2 px = ivec2(gl_FragCoord.xy);
     int k =
           cell(px + ivec2(-1,-1)) + cell(px + ivec2(0,-1)) + cell(px + ivec2(1,-1))
         + cell(px + ivec2(-1, 0)) +                          cell(px + ivec2(1, 0))
@@ -47,7 +48,7 @@ out vec4 FragColor;
 float saturate(float x) { return clamp(x, 0., 1.); }
 
 float edgeMark(vec2 uv, float fw) {
-    vec2 edge = abs(fract(TextureSize * uv + 0.5) * 2. - 1.);
+    vec2 edge = abs(fract(gl_FragCoord.xy + 0.5) * 2. - 1.);
     return smoothstep(fw * 2, 0, min(edge.x, edge.y));
 }
 
