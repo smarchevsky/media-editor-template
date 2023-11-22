@@ -41,6 +41,13 @@ TexelFormatInfo getGLTexelFormatInfo(GLTexture2D::Format format)
         texelFormat.name = "RGBA_8";
     } break;
 
+    case GLTexture2D::Format::R_32F: {
+        texelFormat.internalFormat = GL_R32F;
+        texelFormat.externalFormat = GL_RED;
+        texelFormat.externalType = GL_FLOAT;
+        texelFormat.name = "R_32F";
+    } break;
+
     case GLTexture2D::Format::RGB_32F: {
         texelFormat.internalFormat = GL_RGB32F;
         texelFormat.externalFormat = GL_RGB;
