@@ -9,7 +9,7 @@ class Image : NoCopy<Image> {
 public:
     Image();
     Image(const std::filesystem::path& path) { load(path); }
-    Image(glm::ivec2 size, int32_t packedColor) { fill(size, packedColor); }
+    explicit Image(glm::ivec2 size, int32_t packedRGBA) { fill(size, packedRGBA); }
     Image(Image&& rhs);
     ~Image();
 
@@ -17,6 +17,12 @@ public:
     void fill(glm::ivec2 size, int32_t packedColor);
     void clear();
     bool isValid() const;
+
+    unsigned char* getDataMutable() { return m_data; }
+    const unsigned char* getData() const { return m_data; }
+    size_t getDataSize() const { return getSize().x * getSize().y * getNumChannels(); }
+    int getNumChannels() const { return m_nrChannels; }
+    glm::ivec2 getSize() const { return m_size; }
 
 private:
     std::string m_name;

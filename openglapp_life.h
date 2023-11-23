@@ -1,6 +1,8 @@
 #ifndef OPENGLAPP_LIFE_H
 #define OPENGLAPP_LIFE_H
 
+#include "graphics/image.h"
+
 #include "application.h"
 
 #include "graphics/gl_shader.h"
@@ -24,7 +26,6 @@ out float FragColor;
 int cell(in ivec2 p) { return (texelFetch(texture0, p % ivec2(ImageSize), 0).x > 0.5) ? 1 : 0; }
 
 void main() {
-    // ivec2 px = ivec2(uv * ImageSize);
     ivec2 px = ivec2(gl_FragCoord.xy);
     int k =
           cell(px + ivec2(-1,-1)) + cell(px + ivec2(0,-1)) + cell(px + ivec2(1,-1))
@@ -48,7 +49,7 @@ out vec4 FragColor;
 float saturate(float x) { return clamp(x, 0., 1.); }
 
 float edgeMark(vec2 uv, float fw) {
-    vec2 edge = abs(fract(gl_FragCoord.xy + 0.5) * 2. - 1.);
+    vec2 edge = abs(fract(TextureSize * uv + 0.5) * 2. - 1.);
     return smoothstep(fw * 2, 0, min(edge.x, edge.y));
 }
 
@@ -56,7 +57,6 @@ void main() {
     vec3 f = texture2D(texture0, uv).rrr;
     vec2 fw = fwidth(uv) * TextureSize;
     f = mix(f, vec3(0, .6, 0), saturate(.03 / fw.x - 0.1) * edgeMark(uv, fw.x));
-    // f.y = edgeMark(uv).x;
     FragColor = vec4(f, 1);
 }
 
@@ -68,7 +68,7 @@ class OpenGLApp2D : public Application {
 
     GLFrameBuffer m_fb0, m_fb1; // buffers for convey's life
 
-    std::shared_ptr<GLTexture2D> m_initialTexture = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "mona_liza.jpg"));
+    std::shared_ptr<GLTexture2D> m_initialTexture;
     std::shared_ptr<GLTexture2D> m_pixelBright = std::make_shared<GLTexture2D>(Image(glm::ivec2(1), 0xFF8800FF));
     std::shared_ptr<GLTexture2D> m_pixelDark = std::make_shared<GLTexture2D>(Image(glm::ivec2(1), 0x000000FF));
 
@@ -76,6 +76,7 @@ class OpenGLApp2D : public Application {
     int m_iterationIndex {};
     bool m_frameBufferFlip {};
     bool m_isPlaying {};
+    bool m_isPlayingFast {};
 
 public:
     GLFrameBuffer& getThisFB() { return m_frameBufferFlip ? m_fb0 : m_fb1; }
@@ -83,6 +84,38 @@ public:
 
     void initializeWithImage()
     {
+        if (!m_initialTexture) {
+#define CREATE_FROM_TEXTURE
+#ifdef CREATE_AGAR
+            Image agar(glm::ivec2(1024), 0xFF000000);
+            auto* data = agar.getDataMutable();
+
+            for (int dataOffset = 0; dataOffset < agar.getDataSize(); dataOffset += agar.getNumChannels()) {
+                unsigned char* p = data + dataOffset;
+                int pixelOffset = dataOffset / agar.getNumChannels();
+                if ((pixelOffset % agar.getSize().x) % 3 == 0) // every third pixel black by X
+                    p[0] = 0;
+                if ((pixelOffset / agar.getSize().x) % 3 == 0) // every third pixel black by Y
+                    p[0] = 0;
+            }
+
+            m_initialTexture = std::make_shared<GLTexture2D>(agar);
+#elif defined CREATE_FROM_TEXTURE
+            m_initialTexture = std::make_shared<GLTexture2D>(Image(projectDir / "resources" / "mona_liza.jpg"));
+#elif defined CREATE_NOISE
+            Image noiseImage(glm::ivec2(1024), 0xFF000000);
+            auto* data = noiseImage.getDataMutable();
+            srand(time(0));
+            for (int dataOffset = 0; dataOffset < noiseImage.getDataSize(); dataOffset += noiseImage.getNumChannels()) {
+                unsigned char* p = data + dataOffset;
+                p[0] = rand() % 256;
+            }
+            m_initialTexture = std::make_shared<GLTexture2D>(noiseImage);
+#else
+            m_initialTexture = std::make_shared<GLTexture2D>(Image(glm::ivec2(1024), 0x00000000));
+#endif
+        }
+
         m_spriteFullScreen.setUniform("texture0", m_initialTexture);
         GLRenderManager::draw(&m_fb1, &m_shaderDefault2d, 0, &m_spriteFullScreen);
         m_spriteFullScreen.setUniform("texture0", m_fb1.getTexture());
@@ -167,8 +200,11 @@ public:
             m_isPlaying = false;
         });
 
-        m_window.addKeyDownEvent(SDLK_p, KMOD_NONE, [this]() { m_isPlaying = true; });
-        m_window.addKeyUpEvent(SDLK_p, KMOD_NONE, [this]() { m_isPlaying = false; });
+        m_window.addKeyDownEvent(SDLK_o, KMOD_NONE, [this]() { m_isPlaying = true; });
+        m_window.addKeyUpEvent(SDLK_o, KMOD_NONE, [this]() { m_isPlaying = false; });
+
+        m_window.addKeyDownEvent(SDLK_p, KMOD_NONE, [this]() { m_isPlayingFast = true; });
+        m_window.addKeyUpEvent(SDLK_p, KMOD_NONE, [this]() { m_isPlayingFast = false; });
 
         ///////////////////////////////////////////////////
         m_window.setMouseScrollEvent( // zoom on scroll
@@ -195,6 +231,8 @@ public:
         const int size = 1024;
         m_fb0.create({ size, size }, GLTexture2D::Format::R_8);
         m_fb1.create({ size, size }, GLTexture2D::Format::R_8);
+        m_fb0.getTexture()->setFiltering(GLTexture2D::Filtering::NearestMipmap);
+        m_fb1.getTexture()->setFiltering(GLTexture2D::Filtering::NearestMipmap);
 
         m_spriteBrush.setRectSize(glm::vec2(0), glm::vec2(2.f / size)); // set brush 1 px size
         m_spriteBrush.setUniform("opacity", 0.5f);
@@ -204,9 +242,11 @@ public:
 
     void updateWindow(float dt) override
     {
-        if (m_isPlaying)
-            for (int i = 0; i < 1; ++i)
+        if (m_isPlayingFast) {
+            for (int i = 0; i < 19; ++i)
                 updateLife();
+        } else if (m_isPlaying)
+            updateLife();
 
         // m_sprite.setUniform("texture0", m_frameBufferAccumulator.getTexture());
 
