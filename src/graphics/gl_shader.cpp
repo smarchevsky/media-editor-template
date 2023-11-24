@@ -74,7 +74,43 @@ UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
     return {};
 }
 
-std::vector<GLShader::Variable> getUniformList(GLShader* shader)
+int createShader(const char* shaderSource, int shaderType)
+{
+    const char* shaderTypeName {};
+    switch (shaderType) {
+    case GL_VERTEX_SHADER: {
+        shaderTypeName = "Vertex";
+    } break;
+    case GL_FRAGMENT_SHADER: {
+        shaderTypeName = "Fragment";
+    } break;
+    default: {
+        std::cerr << "Invalid shader type" << std::endl;
+        return -1;
+    }
+    }
+
+    unsigned int currentShader = glCreateShader(shaderType);
+    glShaderSource(currentShader, 1, &shaderSource, NULL);
+    glCompileShader(currentShader);
+
+    int success;
+    char infolog[512];
+    glGetShaderiv(currentShader, GL_COMPILE_STATUS, &success);
+    if (success != GL_TRUE) {
+        // (GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
+        int newSize;
+        glGetShaderInfoLog(currentShader, 512, &newSize, infolog);
+        std::cerr << shaderTypeName << " shader compilation failed" << infolog << std::endl;
+    }
+
+    return currentShader;
+}
+#define GET_INDEX(type) variant_index<UniformVariant, type>()
+
+} // namespace
+
+std::vector<GLShader::Variable> GLShader::getUniformList(GLShader* shader)
 {
     const auto program = shader->getHandle();
 
@@ -117,41 +153,6 @@ std::vector<GLShader::Variable> getUniformList(GLShader* shader)
     return result;
 }
 
-int createShader(const char* shaderSource, int shaderType)
-{
-    const char* shaderTypeName {};
-    switch (shaderType) {
-    case GL_VERTEX_SHADER: {
-        shaderTypeName = "Vertex";
-    } break;
-    case GL_FRAGMENT_SHADER: {
-        shaderTypeName = "Fragment";
-    } break;
-    default: {
-        std::cerr << "Invalid shader type" << std::endl;
-        return -1;
-    }
-    }
-
-    unsigned int currentShader = glCreateShader(shaderType);
-    glShaderSource(currentShader, 1, &shaderSource, NULL);
-    glCompileShader(currentShader);
-
-    int success;
-    char infolog[512];
-    glGetShaderiv(currentShader, GL_COMPILE_STATUS, &success);
-    if (success != GL_TRUE) {
-        // (GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
-        int newSize;
-        glGetShaderInfoLog(currentShader, 512, &newSize, infolog);
-        std::cerr << shaderTypeName << " shader compilation failed" << infolog << std::endl;
-    }
-
-    return currentShader;
-}
-
-} // namespace
-
 GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode)
 {
     GLint success = GL_FALSE;
@@ -172,7 +173,7 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
 
             auto& locations = const_cast<std::unordered_map<HashString, int>&>(m_locations);
             for (const auto& d : m_defaultUniforms) {
-                locations.insert({ d.getName().c_str(), d.getLocation() });
+                locations.insert({ d.m_name.c_str(), d.m_location });
             }
 
         } else {
@@ -186,16 +187,6 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
         glDeleteShader(vs);
         glDeleteShader(fs);
     }
-}
-
-GLShader& GLShader::operator=(GLShader&& rhs)
-{
-    const_cast<uint32_t&>(m_shaderProgram) = rhs.m_shaderProgram;
-    const_cast<uint32_t&>(rhs.m_shaderProgram) = 0;
-    const_cast<std::unordered_map<HashString, int>&>(m_locations) = std::move(rhs.m_locations);
-    const_cast<std::vector<Variable>&>(m_defaultUniforms) = std::move(rhs.m_defaultUniforms);
-    m_currentUniforms = std::move(rhs.m_currentUniforms);
-    return *this;
 }
 
 GLShader GLShader::FromFile(
@@ -218,10 +209,9 @@ GLShader::~GLShader()
     }
 }
 
-#define GET_INDEX(type) variant_index<UniformVariant, type>()
 void GLShader::setUniformInternal(int location, const UniformVariant& uniformVariable)
 {
-    const auto& currentDefaultUniform = m_defaultUniforms[location].getData();
+    const auto& currentDefaultUniform = m_defaultUniforms[location].m_data;
     assert(uniformVariable.index() == currentDefaultUniform.index() && "Variable must match shader type");
     switch (uniformVariable.index()) {
 
@@ -309,11 +299,27 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
     }
 }
 
-void GLShader::setUniforms(const NameUniformMap& newUniforms, bool shaderWise)
+void GLShader::setCameraUniforms(const NameUniformMap& cameraUniforms)
+{
+    for (const auto& u : cameraUniforms) {
+        const auto& cameraUniformName = u.first;
+        const auto& cameraUniformVariable = u.second;
+        const auto varLocationIter = m_locations.find(cameraUniformName);
+
+        if (varLocationIter != m_locations.end()) {
+            int varLocation = varLocationIter->second;
+
+            // mark as camera type
+            const_cast<std::vector<Variable>&>(m_defaultUniforms)[varLocation].m_type = UniformType::Camera;
+            m_currentUniforms[varLocation].m_data = cameraUniformVariable;
+        }
+    }
+}
+
+void GLShader::setUniforms(const NameUniformMap& newUniforms)
 {
     for (const auto& location : m_previouslySetUniformVariables)
-        setUniformInternal(location, m_defaultUniforms[location].getData());
-
+        setUniformInternal(location, m_defaultUniforms[location].m_data);
     m_previouslySetUniformVariables.clear();
 
     for (const auto& u : newUniforms) {
@@ -322,29 +328,21 @@ void GLShader::setUniforms(const NameUniformMap& newUniforms, bool shaderWise)
         const auto varLocationIter = m_locations.find(newUniformName);
 
         if (varLocationIter != m_locations.end()) {
-            const auto& varLocation = varLocationIter->second;
+            int varLocation = varLocationIter->second;
 
-            bool wasFoundInShaderWiseVariables = m_shaderWiseUniformLocations.find(varLocation) != m_shaderWiseUniformLocations.end();
-            if (wasFoundInShaderWiseVariables) {
-                if (shaderWise) {
-                    assert(false && "Shader-wise variable with this name already set");
-                } else {
-                    assert(false && "Trying to overwrite shader-wise var by not shader-wise variable");
-                }
-            } else {
-                if (shaderWise) {
-                    m_shaderWiseUniformLocations.insert(varLocation);
-                } else {
-                    m_previouslySetUniformVariables.push_back(varLocation);
-                }
-            }
+            assert(m_defaultUniforms[varLocation].m_type == UniformType::Default && "Uniform was previously marked as Camera type.");
 
-            m_currentUniforms[varLocation].getData() = newUniformVariable;
+            m_previouslySetUniformVariables.push_back(varLocation);
+            m_currentUniforms[varLocation].m_data = newUniformVariable;
         }
+    }
+
+    for (const auto& u : m_currentUniforms) {
+        setUniformInternal(u.m_location, u.m_data);
     }
 }
 
-void GLShader::bind()
+void GLShader::bindAndResetUniforms()
 {
     // #define ALWAYS_BIND
 #ifdef ALWAYS_BIND
@@ -355,6 +353,9 @@ void GLShader::bind()
         glUseProgram(m_shaderProgram);
     }
 #endif
+
+    m_currentUniforms = m_defaultUniforms;
+    m_previouslySetUniformVariables.clear();
 }
 
 std::string textFromFile(const std::filesystem::path& path)

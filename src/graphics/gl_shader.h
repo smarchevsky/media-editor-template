@@ -50,64 +50,64 @@ typedef std::variant<
 typedef std::unordered_map<HashString, UniformVariant> NameUniformMap;
 //////////////////////// SHADER //////////////////////////
 
-typedef std::shared_ptr<class GLShader> GLShaderPtr;
 class GLShader : NoCopy<GLShader> {
+
 public:
-    class Variable {
-        int m_location = -1;
-        std::string m_name;
-        UniformVariant m_data;
-
-    public:
-        Variable() = default;
-        Variable(
-            int location,
-            const std::string& m_name,
-            UniformVariant m_data)
-            : m_location(location)
-            , m_name(m_name)
-            , m_data(m_data)
-        {
-        }
-
-        const std::string& getName() const { return m_name; }
-        const int getLocation() const { return m_location; }
-
-        const UniformVariant& getData() const { return m_data; }
-        UniformVariant& getData() { return m_data; }
-    };
-
-    GLShader() = default;
-    GLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode);
-    GLShader& operator=(GLShader&& rhs);
-    ~GLShader();
-
     static GLShader FromFile(
         const std::filesystem::path& vertRelativePath,
         const std::filesystem::path& fragRelativePath);
 
-    void bind();
     int getHandle() const { return m_shaderProgram; }
 
-    void setUniforms(const NameUniformMap& newUniforms, bool shaderWise = false);
+    // binds shader and clears uniforms
+    void bindAndResetUniforms();
 
-    void resetUniforms()
-    {
-        m_currentUniforms = m_defaultUniforms;
-        m_shaderWiseUniformLocations.clear();
-        m_previouslySetUniformVariables.clear();
-    }
+    // set uniforms by objects, if variable was previously marked as Camera type - assert
+    void setUniforms(const NameUniformMap& newUniforms);
 
-    void applyUniforms() // bind, set all uniforms to binded shader
-    {
-        bind();
-        for (const auto& u : m_currentUniforms) {
-            setUniformInternal(u.getLocation(), u.getData());
-        }
-    }
+    // set camera uniforms right after bind reset uniforms
+    void setCameraUniforms(const NameUniformMap& cameraUniforms);
+
+    GLShader() = default;
+    GLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode);
+    ~GLShader();
 
 private:
+    enum class UniformType {
+        Default,
+        Camera
+    };
+
+    // clang-format off
+    class Variable {
+        int m_location = -1;
+        std::string m_name;
+        UniformVariant m_data;
+        UniformType m_type = UniformType::Default;
+
+    public:
+        Variable() = default;
+        Variable( int location, const std::string& m_name, UniformVariant m_data)
+            : m_location(location), m_name(m_name), m_data(m_data) {}
+
+        friend class GLShader;
+    };
+    // clang-format on
+
     void setUniformInternal(int location, const UniformVariant& var);
+    std::vector<GLShader::Variable> getUniformList(GLShader* shader);
+
+public:
+    GLShader& operator=(GLShader&& rhs)
+    {
+        const_cast<uint32_t&>(m_shaderProgram) = rhs.m_shaderProgram;
+        const_cast<uint32_t&>(rhs.m_shaderProgram) = 0;
+
+        const_cast<std::unordered_map<HashString, int>&>(m_locations) = std::move(rhs.m_locations);
+        const_cast<std::vector<Variable>&>(m_defaultUniforms) = std::move(rhs.m_defaultUniforms);
+        m_currentUniforms = std::move(rhs.m_currentUniforms);
+        return *this;
+    }
 
 private: // DATA
     const uint32_t m_shaderProgram {};
@@ -117,7 +117,6 @@ private: // DATA
     /* */ std::vector<Variable> m_currentUniforms;
 
     std::vector<int> m_previouslySetUniformVariables;
-    std::unordered_set<int> m_shaderWiseUniformLocations;
 
 private:
     static uint32_t s_currentBindedShaderHandle;

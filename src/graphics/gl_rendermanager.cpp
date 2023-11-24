@@ -18,12 +18,12 @@ void GLRenderManager::preDraw(GLFrameBufferBase* frameBuffer, GLShader* shader, 
 
     frameBuffer->bind();
 
-    // reset all uniforms to default value
-    shader->resetUniforms();
+    // reset all uniforms to default values
+    shader->bindAndResetUniforms();
 
-    // set camera matrix, if no camera - it will be identity by default
+    // set camera data, if no camera - there will be default uniforms
     if (camera)
-        shader->setUniforms(camera->updateAndGetUniforms(), true);
+        shader->setCameraUniforms(camera->updateAndGetUniforms());
 
     params.apply();
 }
@@ -32,8 +32,6 @@ void GLRenderManager::drawInternal(GLShader* shader, VisualObjectBase& visualObj
 {
     if (visualObject.getMesh()) {
         shader->setUniforms(visualObject.updateAndGetUniforms());
-
-        shader->applyUniforms();
         visualObject.getMesh()->draw();
     } else {
         LOGE("No mesh :(");
