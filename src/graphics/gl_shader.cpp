@@ -168,11 +168,10 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
         glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
 
         if (success == GL_TRUE) {
-            const_cast<std::vector<Variable>&>(m_defaultUniforms) = getUniformList(this);
-            m_currentUniforms = m_defaultUniforms;
+            const_cast<std::vector<Variable>&>(m_uniforms) = getUniformList(this);
 
             auto& locations = const_cast<std::unordered_map<HashString, int>&>(m_locations);
-            for (const auto& d : m_defaultUniforms) {
+            for (const auto& d : m_uniforms) {
                 locations.insert({ d.m_name.c_str(), d.m_location });
             }
 
@@ -211,7 +210,7 @@ GLShader::~GLShader()
 
 void GLShader::setUniformInternal(int location, const UniformVariant& uniformVariable)
 {
-    const auto& currentDefaultUniform = m_defaultUniforms[location].m_data;
+    const auto& currentDefaultUniform = m_uniforms[location].m_defaultData;
     assert(uniformVariable.index() == currentDefaultUniform.index() && "Variable must match shader type");
     switch (uniformVariable.index()) {
 
@@ -310,18 +309,15 @@ void GLShader::setCameraUniforms(const NameUniformMap& cameraUniforms)
             int varLocation = varLocationIter->second;
 
             // mark as camera type
-            const_cast<std::vector<Variable>&>(m_defaultUniforms)[varLocation].m_type = UniformType::Camera;
-            m_currentUniforms[varLocation].m_data = cameraUniformVariable;
+            m_uniforms[varLocation].m_currentData = cameraUniformVariable;
+            m_uniforms[varLocation].m_type = UniformType::Camera;
+            m_uniforms[varLocation].m_status = UniformStatus::MustUpdate;
         }
     }
 }
 
 void GLShader::setUniforms(const NameUniformMap& newUniforms)
 {
-    for (const auto& location : m_previouslySetUniformVariables)
-        setUniformInternal(location, m_defaultUniforms[location].m_data);
-    m_previouslySetUniformVariables.clear();
-
     for (const auto& u : newUniforms) {
         const auto& newUniformName = u.first;
         const auto& newUniformVariable = u.second;
@@ -330,15 +326,35 @@ void GLShader::setUniforms(const NameUniformMap& newUniforms)
         if (varLocationIter != m_locations.end()) {
             int varLocation = varLocationIter->second;
 
-            assert(m_defaultUniforms[varLocation].m_type == UniformType::Default && "Uniform was previously marked as Camera type.");
+            assert(getCurrentUniformType(varLocation) == UniformType::Default && "Uniform was previously marked as Camera type.");
 
-            m_previouslySetUniformVariables.push_back(varLocation);
-            m_currentUniforms[varLocation].m_data = newUniformVariable;
+            m_uniforms[varLocation].m_currentData = newUniformVariable;
+            m_uniforms[varLocation].m_status = UniformStatus::MustUpdate;
         }
     }
 
-    for (const auto& u : m_currentUniforms) {
-        setUniformInternal(u.m_location, u.m_data);
+    // state machine magic
+    for (auto& u : m_uniforms) {
+        // camera updates only once after bind, and remain unchanged untill next bind
+        if (u.m_type == UniformType::Camera) {
+            if (u.m_status == UniformStatus::MustUpdate) {
+                setUniformInternal(u.m_location, u.m_currentData);
+                u.m_status = UniformStatus::DontTouch;
+            }
+            continue;
+        }
+
+        // if variable is updated - update it in shader
+        if ((u.m_status == UniformStatus::MustUpdate)) {
+            setUniformInternal(u.m_location, u.m_currentData);
+            u.m_currentData = u.m_defaultData;
+            u.m_status = UniformStatus::MustResetToDefault;
+
+            // if variable was previously updated - reset it to default
+        } else if (u.m_status == UniformStatus::MustResetToDefault) {
+            setUniformInternal(u.m_location, u.m_defaultData);
+            u.m_status = UniformStatus::DontTouch;
+        }
     }
 }
 
@@ -354,8 +370,11 @@ void GLShader::bindAndResetUniforms()
     }
 #endif
 
-    m_currentUniforms = m_defaultUniforms;
-    m_previouslySetUniformVariables.clear();
+    // all default uniforms are dirty, don't change it
+    // so, they will be overwritten in
+    for (auto& u : m_uniforms) {
+        u.m_status = UniformStatus::MustResetToDefault;
+    }
 }
 
 std::string textFromFile(const std::filesystem::path& path)

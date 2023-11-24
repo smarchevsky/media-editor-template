@@ -73,26 +73,29 @@ public:
     ~GLShader();
 
 private:
-    enum class UniformType {
-        Default,
-        Camera
-    };
-
     // clang-format off
+    enum class UniformType : uint8_t { Default, Camera };
+    enum class UniformStatus : uint8_t { DontTouch, MustUpdate, MustResetToDefault };
+
+
     class Variable {
+        UniformVariant m_defaultData;
+        mutable UniformVariant m_currentData;
         int m_location = -1;
         std::string m_name;
-        UniformVariant m_data;
-        UniformType m_type = UniformType::Default;
+        mutable UniformType m_type = UniformType::Default;
+        mutable UniformStatus m_status = UniformStatus::MustUpdate; // variables are dirty by default, to update in shader state machine
 
     public:
         Variable() = default;
-        Variable( int location, const std::string& m_name, UniformVariant m_data)
-            : m_location(location), m_name(m_name), m_data(m_data) {}
+        Variable(int location, const std::string& m_name, UniformVariant data)
+            : m_defaultData(data), m_currentData(data),  m_location(location), m_name(m_name)  {}
 
         friend class GLShader;
     };
     // clang-format on
+
+    UniformType getCurrentUniformType(int location) const { return m_uniforms[location].m_type; }
 
     void setUniformInternal(int location, const UniformVariant& var);
     std::vector<GLShader::Variable> getUniformList(GLShader* shader);
@@ -104,8 +107,7 @@ public:
         const_cast<uint32_t&>(rhs.m_shaderProgram) = 0;
 
         const_cast<std::unordered_map<HashString, int>&>(m_locations) = std::move(rhs.m_locations);
-        const_cast<std::vector<Variable>&>(m_defaultUniforms) = std::move(rhs.m_defaultUniforms);
-        m_currentUniforms = std::move(rhs.m_currentUniforms);
+        const_cast<std::vector<Variable>&>(m_uniforms) = std::move(rhs.m_uniforms);
         return *this;
     }
 
@@ -113,10 +115,7 @@ private: // DATA
     const uint32_t m_shaderProgram {};
     const std::unordered_map<HashString, int> m_locations;
 
-    const std::vector<Variable> m_defaultUniforms;
-    /* */ std::vector<Variable> m_currentUniforms;
-
-    std::vector<int> m_previouslySetUniformVariables;
+    const std::vector<Variable> m_uniforms;
 
 private:
     static uint32_t s_currentBindedShaderHandle;
