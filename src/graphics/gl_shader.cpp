@@ -30,6 +30,7 @@ constexpr size_t variant_index()
         }
     }
 }
+#define GET_INDEX(type) variant_index<UniformVariant, type>()
 
 UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
 {
@@ -106,47 +107,42 @@ int createShader(const char* shaderSource, int shaderType)
 
     return currentShader;
 }
-#define GET_INDEX(type) variant_index<UniformVariant, type>()
-
 } // namespace
 
 std::vector<GLShader::Variable> GLShader::getUniformList(GLShader* shader)
 {
     const auto program = shader->getHandle();
 
-    GLint count;
-    GLint size; // size of the variable
-    GLenum type; // type of the variable (float, vec3 or mat4, etc)
+    GLint varCount;
+    GLint varSize; // size of the variable
+    GLenum varType; // type of the variable (float, vec3 or mat4, etc)
 
-    const GLsizei bufSize = 512; // maximum name length
-    GLchar name[bufSize] {}; // variable name in GLSL
-    GLsizei length; // name length
+    const GLsizei varBufSize = 512; // maximum name length
+    GLchar varName[varBufSize] {}; // variable name in GLSL
+    GLsizei varNameLength; // name length
 
-    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &count);
-    printf("Active Attributes: %d\n", count);
-    for (int i = 0; i < count; i++) {
-        glGetActiveAttrib(program, (GLuint)i, bufSize, &length, &size, &type, name);
-        printf("  - Attribute #%d Type: %u Name: %s\n", i, type, name);
+    glGetProgramiv(program, GL_ACTIVE_ATTRIBUTES, &varCount);
+    printf("Active Attributes: %d\n", varCount);
+    for (int i = 0; i < varCount; i++) {
+        glGetActiveAttrib(program, (GLuint)i, varBufSize, &varNameLength, &varSize, &varType, varName);
+        printf("  - Attribute #%d Type: %u Name: %s\n", i, varType, varName);
     }
 
-    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &count);
-    printf("Active Uniforms: %d\n", count);
+    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &varCount);
+    printf("Active Uniforms: %d\n", varCount);
 
     std::vector<GLShader::Variable> result;
 
     int texture2DIndex = 0;
-    for (int i = 0; i < count; i++) {
-        glGetActiveUniform(program, (GLuint)i, bufSize, &length, &size, &type, name);
-        std::string nameStr(name);
+    for (int i = 0; i < varCount; i++) {
+        glGetActiveUniform(program, (GLuint)i, varBufSize, &varNameLength, &varSize, &varType, varName);
 
-        GLShader::Variable var(i, nameStr,
-            createDefaultUniformData(type, size, texture2DIndex));
-
+        GLShader::Variable var(i, varName, createDefaultUniformData(varType, varSize, texture2DIndex));
         result.push_back(std::move(var));
 
-        printf("  - Uniform #%d Type: %u Name: %s\n", i, type, name);
+        printf("  - Uniform #%d, Size: %d, Type: %u, Name: %s\n", i, varSize, varType, varName);
 
-        if (type == GL_SAMPLER_2D)
+        if (varType == GL_SAMPLER_2D)
             texture2DIndex++;
     }
     printf("\n");
