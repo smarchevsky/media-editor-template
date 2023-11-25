@@ -331,10 +331,15 @@ void GLShader::setUniforms(const UniformContainer& newUniforms)
 
     // state machine magic
     for (auto& u : m_uniforms) {
+
         // camera updates only once after bind, and remain unchanged untill next bind
         if (u.m_type == UniformType::Camera) {
             if (u.m_status == UniformStatus::MustUpdate) {
                 setUniformInternal(u.m_location, u.m_currentData);
+                u.m_status = UniformStatus::DontTouch;
+
+            } else if (u.m_status == UniformStatus::MustResetToDefault) {
+                setUniformInternal(u.m_location, u.m_defaultData);
                 u.m_status = UniformStatus::DontTouch;
             }
             continue;
