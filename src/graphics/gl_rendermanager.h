@@ -40,16 +40,20 @@ public:
         drawInternal(shader, *visualObject);
     }
 
-    static void draw(GLFrameBufferBase* frameBuffer,
+    template <typename Container>
+    static void draw(
+        GLFrameBufferBase* frameBuffer,
         GLShader* shader,
         CameraBase* camera,
-        std::vector<VisualObjectSprite2D>& visualObjects,
+        Container& visualObjects,
         GLRenderParameters params = GLRenderParameters())
     {
         preDraw(frameBuffer, shader, camera, params);
 
-        for (auto& vo : visualObjects)
-            drawInternal(shader, vo);
+        typedef typename Container::iterator Iter;
+        for (Iter it = visualObjects.begin(); it != visualObjects.end(); ++it) {
+            drawInternal(shader, *it);
+        }
     }
 
 private:
