@@ -4,7 +4,48 @@ It is a SDL2-based general purpose editor (viewer) template.
 
 <img src="readme_images/screenshot_00.png">
 
-## Key input features:
+# Key features:
+
+## Bind-less OpenGL rendering
+
+Media-editor-template helps you to take away from OpenGL's state machine bindings. And make it as straightforward as possible.
+
+<b>RenderManager</b> takes all pipeline problems. To draw something you must specify next function parameters:
+- Where to draw: (<b>GLFrameBufferBase</b>: buffer or window)
+- Which shader to use (<b>GLShader</b>)
+- Which camera is looking (<b>CameraBase</b>, if no camera - default variables are set),
+- What to draw: (<b>VisualObjectBase</b>, an object, that contains mesh and uniforms)
+- Render parameters (<b>GLRenderParameters</b>, maybe will be params of object, not current render pass)
+
+Key classes and types:
+
+<b>UniformVariant</b> is uniform data itself: float, vec2, vec3, vec4, mat4, int, ivec2, ivec3, ivec4, Texture2D. They are defined in shader.h, and will be expanded if necessary.
+
+<b>UniformContainer</b> is unordered map of HashString and UniformVariant.
+Cameras and VisualObjects have uniform containers.
+
+- If uniform is specified in shader, but not in VisualObject - they will be reset to default in GLShader::applyUniforms (all zero-s, except glm::mat4 is identity matrix).
+
+- If uniform variable is specified in object, but not in current shader - nothing will happens.
+
+So, you can draw the same object with different shaders, and corresponding variables will be applied in different shaders. 
+
+You can't apply a wrong uniform type (e.g. mat4 in shader must be applied by glm::mat4, not float or texture).
+
+
+<b>GLFrameBufferBase</b> (inherited in GLFrameBuffer, Window) - the place, where to draw something. After "render to texture" - texture's mipmaps will be automatically updated when as soon as texture will be binded.
+
+<b>GLShader</b> - OpenGL shader wrapper.
+All you need - is just complie it from text or source file, and use in RenderManager::draw.
+Not recommended to use any other function, it may cause state machine inconsistency. For mode details - see description in code.
+
+<b>Camera</b> is a uniform container with camera transform functions. Once, you have assigned camera uniform - it is marked as UniformType::Camera in shader, and is forbidden be applied by VisualObject (assert), e.g. "projectionMatrix", defined in Camera can not be overwritten by the same name variable in VisualObject. So, for camera and objects use separate uniform names.
+
+<b>VisualObject</b> is a mesh with uniform container. Before draw call all the corresponding uniforms will be applied to shader, all unset variables will be reset to default. So, if shader contains "uniform vec3 objectColor", but uniform container - has no "objectColor" - shader's objectColor will be reset to vec3(0,0,0).
+
+
+
+
 
 ### Key bindings:
 ```
@@ -111,63 +152,6 @@ I did not try it on Windows, so it may not be able to change disks (now).
 </details>
 
 
-## Graphics features
-
-DOF multipass dragon from openglapp3d.h example
-<img src="readme_images/screenshot_dragon.png">
-
-
-
-### FrameBuffer
-
-Place, where to draw something.
-
-Abstract class: GLFrameBufferBase, is inherited by Window and GLFrameBuffer.
-
-GLFrameBuffer - virtual buffer, has its own texture, that can be retrieved getTexture() and applied to any visual object as shader variable.
-
-<details>
-    <summary>GLFrameBuffer example</summary>
-
-```
-// declare it in calss members 
-GLFrameBuffer m_fb;
-
-// in init()
-m_fb.create({ 2048, 2048 }, GLTexture2D::Format::RGBA_8);
-m_fb.getTexture()->setFiltering(GLTexture2D::Filtering::LinearMipmap);
-m_fb.getTexture()->setWrapping(GLTexture2D::Wrapping::ClampEdge);
-m_fb.setClearColor({ .23f, .24f, .25f, 1.f });
-
-// you may bind it manually
-m_fb.bind();
-m_fb.clear();
-m_shader.setUniforms(...camera info...);
-m_shader.setUniforms(...someVisualObject info...);
-m_shader.applyUniforms();
-someVisualObject.draw();
-
-// but better use GLRenderManager
-// draw someVisualObject to Framebuffer m_fb, with null camera, with clear enabled "true"
-// (null camera sets shader camera matrix to identity)
-renderManager.draw(&m_fb, &m_shaderDefault2d, nullptr, someVisualObject, true);
-
-// the same way you can draw to window
-
-```
-</details>
-
-### Shader
-
-A class with stored shader uniforms.
-
-Available types: float, glm::vec2, glm::vec3, glm::vec4, glm::mat4, int, glm::ivec2, glm::ivec3, glm::ivec4, Texture2Ddata. Default values are 0, except glm::mat4 - identity matrix.
-
-Shader uniform is set by key (hash string) and std::variant of types above.
-
-<span style="color:red">To be continued...</span>
-
-
 
 ## How to add it to your project
 For CMake noobs like me.
@@ -205,8 +189,9 @@ int main()
 }
 
 ```
+<img src="readme_images/screenshot_dragon.png">
 
-## Feel free to use and/or make it better!
+## Feel free to use and make it better!
 
 ### Dependencies:
 - SDL2
