@@ -125,6 +125,9 @@ public:
     Window(Window&& rhs) = default;
     ~Window();
 
+    void setFullScreen(bool enabled);
+    bool getWindowFullScreen();
+
     void setMouseDragEvent(MouseButton button, MouseDragEvent event);
     void setMouseMoveEvent(MouseButton button, MouseMoveEvent event);
     void setMouseDownEvent(MouseButton button, MouseDownEvent event);

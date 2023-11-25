@@ -7,6 +7,9 @@
 #include <imgui/imgui_impl_sdl2.h>
 #include <imgui/imgui_internal.h>
 
+// #define GLM_ENABLE_EXPERIMENTAL
+// #include <glm/gtx/string_cast.hpp>
+
 #include <cassert>
 #include <filesystem>
 
@@ -76,6 +79,18 @@ Window::~Window()
     SDL_DestroyWindow(m_SDLwindow);
 
     SDL_Quit();
+}
+
+void Window::setFullScreen(bool enabled)
+{
+    SDL_SetWindowFullscreen(m_SDLwindow, enabled ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+    // int displayIndex = SDL_GetWindowDisplayIndex(m_SDLwindow);
+    // SDL_Rect rect; SDL_GetDisplayBounds(displayIndex, &rect);
+}
+
+bool Window::getWindowFullScreen()
+{
+    return SDL_GetWindowFlags(m_SDLwindow) & SDL_WINDOW_FULLSCREEN;
 }
 
 void Window::display()
@@ -263,6 +278,9 @@ bool Window::processEvent(const SDL_Event* event)
         if (keyMod.key == SDL_KeyCode::SDLK_q
             && (keyMod.mod & SDL_Keymod::KMOD_CTRL)) {
             exit();
+
+        } else if (keyMod.key == SDL_KeyCode::SDLK_F11) {
+            setFullScreen(!getWindowFullScreen());
 
         } else {
             if (!ImGuiWantsCaptureMouse) {
