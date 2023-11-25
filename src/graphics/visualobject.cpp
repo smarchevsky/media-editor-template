@@ -34,7 +34,7 @@ const mat4& VisualObjectSprite2D::getModelMatrix() const
     return m_modelMatrix;
 }
 
-const NameUniformMap& VisualObjectSprite2D::updateAndGetUniforms()
+const UniformContainer& VisualObjectSprite2D::updateAndGetUniforms()
 {
     setUniform(modelWorldName, getModelMatrix());
     return m_uniforms;

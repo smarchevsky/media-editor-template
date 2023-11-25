@@ -37,7 +37,7 @@ public:
     void setViewRect(glm::vec2 p0, glm::vec2 p1) { m_rect[0] = p0, m_rect[1] = p1, m_viewDirty = true; }
     void setViewRect(glm::vec4 p) { setViewRect({ p.x, p.y }, { p.z, p.w }); }
 
-    const NameUniformMap& updateAndGetUniforms() override;
+    const UniformContainer& updateAndGetUniforms() override;
 
     virtual const glm::mat4& getViewMatrix() const;
 };
@@ -126,7 +126,7 @@ public:
     const glm::mat4& getCameraMatrix();
 
     virtual const glm::mat4& getProjection();
-    virtual const NameUniformMap& updateAndGetUniforms() override;
+    virtual const UniformContainer& updateAndGetUniforms() override;
 };
 
 ////////////////////// CAMERA PERSPECTIVE JITTERED //////////////////////////////

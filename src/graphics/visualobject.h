@@ -35,7 +35,7 @@ public:
     void addRotation(float angleOffset) { setRotation(m_angle + angleOffset); }
 
     const glm::mat4& getModelMatrix() const;
-    const NameUniformMap& updateAndGetUniforms() override;
+    const UniformContainer& updateAndGetUniforms() override;
 };
 
 /////////////////////////////// MESH 3D ////////////////////////////

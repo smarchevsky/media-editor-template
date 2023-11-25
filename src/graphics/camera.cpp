@@ -15,7 +15,7 @@ CameraBase::~CameraBase() { }
 // m_viewProjection = glm::ortho(p0.x, p1.x, p0.y, p1.y, -1.f, 1.f);
 ////////////////////////// CAMERA ORTHO //////////////////////////////
 
-const NameUniformMap& CameraRect::updateAndGetUniforms()
+const UniformContainer& CameraRect::updateAndGetUniforms()
 {
     m_uniforms["cameraView"] = getViewMatrix();
     return m_uniforms;
@@ -100,7 +100,7 @@ const glm::mat4& CameraPerspective::getProjection()
     return m_cameraProjection;
 }
 
-const NameUniformMap& CameraPerspective::updateAndGetUniforms()
+const UniformContainer& CameraPerspective::updateAndGetUniforms()
 {
     m_uniforms["cameraView"] = getViewMatrix();
     m_uniforms["cameraPosition"] = m_cameraPosition;

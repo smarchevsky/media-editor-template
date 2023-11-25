@@ -298,7 +298,7 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
     }
 }
 
-void GLShader::setCameraUniforms(const NameUniformMap& cameraUniforms)
+void GLShader::setCameraUniforms(const UniformContainer& cameraUniforms)
 {
     for (const auto& u : cameraUniforms) {
         const auto& cameraUniformName = u.first;
@@ -316,7 +316,7 @@ void GLShader::setCameraUniforms(const NameUniformMap& cameraUniforms)
     }
 }
 
-void GLShader::setUniforms(const NameUniformMap& newUniforms)
+void GLShader::setUniforms(const UniformContainer& newUniforms)
 {
     for (const auto& u : newUniforms) {
         const auto& newUniformName = u.first;

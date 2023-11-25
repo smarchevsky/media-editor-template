@@ -9,12 +9,12 @@
 class EntityBase {
 public:
 protected:
-    NameUniformMap m_uniforms;
+    UniformContainer m_uniforms;
 
 public:
     void setUniform(HashString str, const UniformVariant& var) { m_uniforms[str] = var; }
 
-    virtual const NameUniformMap& updateAndGetUniforms() { return m_uniforms; }
+    virtual const UniformContainer& updateAndGetUniforms() { return m_uniforms; }
 
     virtual ~EntityBase() = 0;
 };

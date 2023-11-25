@@ -47,7 +47,7 @@ typedef std::variant<
 
     UniformVariant;
 
-typedef std::unordered_map<HashString, UniformVariant> NameUniformMap;
+typedef std::unordered_map<HashString, UniformVariant> UniformContainer;
 //////////////////////// SHADER //////////////////////////
 
 class GLShader : NoCopy<GLShader> {
@@ -63,10 +63,10 @@ public:
     void bindAndResetUniforms();
 
     // set uniforms by objects, if variable was previously marked as Camera type - assert
-    void setUniforms(const NameUniformMap& newUniforms);
+    void setUniforms(const UniformContainer& newUniforms);
 
     // set camera uniforms right after bind reset uniforms
-    void setCameraUniforms(const NameUniformMap& cameraUniforms);
+    void setCameraUniforms(const UniformContainer& cameraUniforms);
 
     GLShader() = default;
     GLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode);
