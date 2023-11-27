@@ -50,7 +50,10 @@ public:
     GLTexture2D(GLTexture2D&& rhs) { *this = std::move(rhs); }
     ~GLTexture2D();
 
-    bool createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data);
+    void createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data);
+
+    // update texture from CPU, data must be size of  width * height * format size (byte/float * channelsNum)
+    void updateData(void* data);
 
     void setWrapping(Wrapping);
     void setFiltering(Filtering);

@@ -145,7 +145,7 @@ void GLTexture2D::setFiltering(Filtering filtering)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
 }
 
-bool GLTexture2D::createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data)
+void GLTexture2D::createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data)
 {
     m_size = size;
     m_format = format;
@@ -166,8 +166,21 @@ bool GLTexture2D::createFromRawData(glm::ivec2 size, GLTexture2D::Format format,
     setFiltering(Filtering::Nearset);
 
     LOG((data ? "Texture created: " : "Empty texture created: ") << texelInfo.name);
+}
 
-    return true;
+void GLTexture2D::updateData(void* data)
+{
+    if (!m_textureHandle)
+        return;
+
+    glBindTexture(GL_TEXTURE_2D, m_textureHandle);
+
+    auto texelInfo = getGLTexelFormatInfo(m_format);
+    glTexSubImage2D(GL_TEXTURE_2D, 0,
+        0, 0, m_size.x, m_size.y,
+        texelInfo.externalFormat,
+        texelInfo.externalType,
+        data);
 }
 
 bool GLTexture2D::fromImage(const Image& img)
