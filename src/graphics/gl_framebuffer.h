@@ -31,6 +31,15 @@ protected:
     std::shared_ptr<GLTexture2D> m_colorTexture;
 
 public:
+    GLFrameBuffer() = default;
+    GLFrameBuffer& operator=(GLFrameBuffer&& rhs)
+    {
+        m_fbo = rhs.m_fbo, rhs.m_fbo = 0;
+        m_clearColor = rhs.m_clearColor;
+        m_colorTexture = std::move(rhs.m_colorTexture);
+        return *this;
+    }
+    GLFrameBuffer(GLFrameBuffer&& rhs) { *this = std::move(rhs); }
     ~GLFrameBuffer();
 
     void bind() const override;

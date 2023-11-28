@@ -31,6 +31,14 @@ class GLMeshTriArray : public GLMeshBase {
     uint32_t m_VBO {}, m_vertCount {};
 
 public:
+    GLMeshTriArray& operator=(GLMeshTriArray&& rhs)
+    {
+        m_VAO = rhs.m_VAO, rhs.m_VAO = 0;
+        m_VBO = rhs.m_VBO;
+        m_vertCount = rhs.m_vertCount;
+        return *this;
+    }
+    GLMeshTriArray(GLMeshTriArray&& rhs) { *this = std::move(rhs); }
     GLMeshTriArray() = default;
     ~GLMeshTriArray();
 
@@ -44,6 +52,14 @@ class GLMeshTriIndices : public GLMeshBase {
     uint32_t m_indicesCount {};
 
 public:
+    GLMeshTriIndices& operator=(GLMeshTriIndices&& rhs)
+    {
+        m_VAO = rhs.m_VAO, rhs.m_VAO = 0;
+        m_VBO = rhs.m_VBO;
+        m_indicesCount = rhs.m_indicesCount;
+        return *this;
+    }
+    GLMeshTriIndices(GLMeshTriIndices&& rhs) { *this = std::move(rhs); }
     GLMeshTriIndices(const Model3D& model);
     ~GLMeshTriIndices();
 
