@@ -38,6 +38,7 @@ public:
         m_vertCount = rhs.m_vertCount;
         return *this;
     }
+
     GLMeshTriArray(GLMeshTriArray&& rhs) { *this = std::move(rhs); }
     GLMeshTriArray() = default;
     ~GLMeshTriArray();
@@ -59,6 +60,7 @@ public:
         m_indicesCount = rhs.m_indicesCount;
         return *this;
     }
+
     GLMeshTriIndices(GLMeshTriIndices&& rhs) { *this = std::move(rhs); }
     GLMeshTriIndices(const Model3D& model);
     ~GLMeshTriIndices();

@@ -165,7 +165,8 @@ void GLTexture2D::createFromRawData(glm::ivec2 size, GLTexture2D::Format format,
 
     setFiltering(Filtering::Nearset);
 
-    LOG((data ? "Texture created: " : "Empty texture created: ") << texelInfo.name);
+    LOG((data ? "Texture created: " : "Empty texture created: ")
+        << " size: " << m_size.x << "x" << m_size.y << ", format: " << texelInfo.name);
 }
 
 void GLTexture2D::updateData(void* data)
