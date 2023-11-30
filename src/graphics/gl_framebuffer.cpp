@@ -20,7 +20,7 @@ void GLFrameBufferBase::clear()
     glClear(GL_COLOR_BUFFER_BIT | ((hasDepth()) ? GL_DEPTH_BUFFER_BIT : 0));
 }
 
-void GLFrameBuffer::create(glm::vec2 size, GLTexture2D::Format format)
+void GLFrameBuffer::create(glm::vec2 size, TexelFormat format)
 {
     if (!m_fbo)
         glGenFramebuffers(1, &m_fbo);
@@ -42,7 +42,6 @@ GLFrameBuffer::~GLFrameBuffer()
 {
     if (m_fbo) {
         glDeleteFramebuffers(1, &m_fbo);
-        m_fbo = 0;
     }
 }
 
@@ -75,7 +74,16 @@ void GLFrameBuffer::writeFramebufferToFile(const std::filesystem::__cxx11::path&
     }
 }
 
-void GLFrameBufferDepth::create(glm::vec2 size, GLTexture2D::Format format)
+bool GLFrameBuffer::getDataTmp(std::vector<float>& arr)
+{
+    auto size = m_colorTexture->getSize();
+    arr.resize(size.x * size.y);
+    glBindTexture(GL_TEXTURE_2D, m_colorTexture->getHandle());
+    glReadPixels(0, 0, size.x, size.y, GL_RED, GL_FLOAT, arr.data());
+    return true;
+}
+
+void GLFrameBufferDepth::create(glm::vec2 size, TexelFormat format)
 {
     GLFrameBuffer::create(size, format);
 

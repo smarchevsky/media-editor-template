@@ -71,8 +71,8 @@ public:
         m_shaderDefault2D = GLShader::FromFile("default2d.vert", "default2d.frag");
         m_shaderDefault3D = GLShader::FromFile("default3d.vert", "default3d.frag");
 
-        m_frameBufferAccumulator.create(m_window.getSize(), GLTexture2D::Format::RGB_32F);
-        m_frameBufferReceive3D.create(m_window.getSize(), GLTexture2D::Format::RGB_8);
+        m_frameBufferAccumulator.create(m_window.getSize(), TexelFormat::RGB_32F);
+        m_frameBufferReceive3D.create(m_window.getSize(), TexelFormat::RGB_8);
         m_frameBufferReceive3D.setClearColor({ .08f, .09f, .1f, 1.f });
         m_camera.setFramebufferSize(m_window.getSize());
 

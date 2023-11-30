@@ -16,6 +16,7 @@ class OpenGLApp2D : public Application {
     GLShader m_shaderDefault2d;
     GLFrameBuffer m_fb;
     CameraOrtho m_cameraView;
+    CameraRect m_cameraViewFramebuffer;
 
 public:
     void init() override
@@ -58,7 +59,7 @@ public:
 
         m_shaderDefault2d = GLShader::FromFile("default2d.vert", "default2d.frag");
 
-        m_fb.create({ 2048, 2048 }, GLTexture2D::Format::RGBA_8);
+        m_fb.create({ 2048, 2048 }, TexelFormat::RGBA_8);
         m_fb.getTexture()->setFiltering(GLTexture2D::Filtering::LinearMipmap);
         m_fb.getTexture()->setWrapping(GLTexture2D::Wrapping::ClampEdge);
         m_fb.setClearColor({ .23f, .24f, .25f, 1.f });
@@ -68,16 +69,17 @@ public:
         //   m_textureDefault.fromImage(Image({ 128, 128 }, glm::ivec4(100, 200, 255, 255)));
         {
             VisualObjectSprite2D s; // CHECKER
-            s.setPos({ 0.5f, 0.f });
+            // s.setPos({ 0.5f, 0.f });
             s.setUniform("texture0", texChecker);
             m_sprites.push_back(s);
         }
         {
             VisualObjectSprite2D s; // FRAME BUFFER
-            s.setPos({ -0.5f, -0.3f });
             s.setUniform("texture0", m_fb.getTexture());
+            s.setPos({ -1.5f, -0.3f });
             m_sprites.push_back(s);
         }
+        m_cameraViewFramebuffer.setViewRect({ -2, -2, 2, 2 });
     }
 
     void updateWindow(float dt) override
@@ -86,10 +88,10 @@ public:
         m_sprites[0].addRotation(dt * 0.1f);
 
         m_fb.clear();
-        GLRenderManager::draw(&m_fb, &m_shaderDefault2d, nullptr, &m_sprites[0]);
+        GLRenderManager::draw(&m_fb, &m_shaderDefault2d, &m_cameraViewFramebuffer, &m_sprites[0]);
 
         m_window.clear();
-        GLRenderManager::draw(&m_window, &m_shaderDefault2d, &m_cameraView, &m_sprites[1]);
+        GLRenderManager::draw(&m_window, &m_shaderDefault2d, &m_cameraView, m_sprites);
     }
 };
 typedef OpenGLApp2D App;

@@ -2,6 +2,7 @@
 #define GLTEXTURE_H
 #include "helper_general.h"
 #include "image.h"
+#include "texelformat.h"
 
 class GLTextureInstance;
 
@@ -15,7 +16,6 @@ public:
 class GLTexture2D : public GLTextureBase {
 public:
     // clang-format off
-    enum class Format : uint8_t { Undefined, R_8, RGB_8, RGBA_8, R_32F, RGB_32F, RGBA_32F };
     enum class Wrapping : uint8_t { Repeat, MirrorRepeat, ClampEdge, ClampBorder };
     enum class Filtering : uint8_t { Nearset, NearestMipmap, Linear, LinearMipmap };
     // clang-format on
@@ -23,7 +23,7 @@ protected:
     uint32_t m_textureHandle {};
     glm::ivec2 m_size = glm::ivec2(0);
 
-    Format m_format = Format::Undefined;
+    TexelFormat m_format = TexelFormat::Undefined;
     Filtering m_filtering = Filtering::Nearset;
     Wrapping m_wrapping = Wrapping::Repeat;
 
@@ -32,10 +32,9 @@ protected:
 public:
     GLTexture2D& operator=(GLTexture2D&& rhs) // it seems, you can swap textures with no problems
     {
-        m_textureHandle = rhs.m_textureHandle;
-        rhs.m_textureHandle = 0;
-        m_size = rhs.m_size;
+        m_textureHandle = rhs.m_textureHandle, rhs.m_textureHandle = 0;
 
+        m_size = rhs.m_size;
         m_format = rhs.m_format;
         m_filtering = rhs.m_filtering;
         m_wrapping = rhs.m_wrapping;
@@ -46,11 +45,11 @@ public:
 
     GLTexture2D() = default;
     GLTexture2D(const Image& img) { fromImage(img); }
-    GLTexture2D(glm::ivec2 size, GLTexture2D::Format format, void* data = nullptr) { createFromRawData(size, format, data); }
+    GLTexture2D(glm::ivec2 size, TexelFormat format, void* data = nullptr) { createFromRawData(size, format, data); }
     GLTexture2D(GLTexture2D&& rhs) { *this = std::move(rhs); }
     ~GLTexture2D();
 
-    void createFromRawData(glm::ivec2 size, GLTexture2D::Format format, void* data);
+    void createFromRawData(glm::ivec2 size, TexelFormat format, void* data);
 
     // update texture from CPU, data must be size of  width * height * format size (byte/float * channelsNum)
     void updateData(void* data);
@@ -60,7 +59,7 @@ public:
 
     Filtering getFiltering() const { return m_filtering; }
     Wrapping getWrapping() const { return m_wrapping; }
-    Format getFormat() const { return m_format; }
+    TexelFormat getFormat() const { return m_format; }
     uint32_t getHandle() const { return m_textureHandle; }
     glm::ivec2 getSize() const { return m_size; }
 

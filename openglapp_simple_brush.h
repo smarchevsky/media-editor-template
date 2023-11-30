@@ -82,7 +82,7 @@ public:
         m_shaderDefault2d = GLShader::FromFile("default2d.vert", "default2d.frag");
         m_shaderBrush = GLShader::FromFile("brush2d.vert", "brush2d.frag");
 
-        m_frameBufferImage.create({ 2048, 2048 }, GLTexture2D::Format::RGBA_8);
+        m_frameBufferImage.create({ 2048, 2048 }, TexelFormat::RGBA_8);
         m_frameBufferImage.getTexture()->setFiltering(GLTexture2D::Filtering::LinearMipmap);
         m_frameBufferImage.getTexture()->setWrapping(GLTexture2D::Wrapping::ClampEdge);
         m_frameBufferImage.setClearColor({ .23f, .24f, .25f, 1.f });

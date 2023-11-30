@@ -4,6 +4,7 @@
 #include "gl_texture.h"
 #include <glm/vec4.hpp>
 #include <memory>
+#include <vector>
 
 class GLFrameBufferBase {
 protected:
@@ -39,15 +40,18 @@ public:
         m_colorTexture = std::move(rhs.m_colorTexture);
         return *this;
     }
+    GLFrameBuffer(glm::vec2 size, TexelFormat format) { create(size, format); }
     GLFrameBuffer(GLFrameBuffer&& rhs) { *this = std::move(rhs); }
     ~GLFrameBuffer();
 
     void bind() const override;
     bool hasDepth() const override { return false; }
 
-    virtual void create(glm::vec2 size, GLTexture2D::Format format);
+    virtual void create(glm::vec2 size, TexelFormat format);
     virtual void resize(glm::vec2 newSize);
     const auto& getTexture() const { return m_colorTexture; }
+
+    bool getDataTmp(std::vector<float>& arr);
 
     void writeFramebufferToFile(const std::filesystem::path& path);
 };
@@ -57,7 +61,7 @@ class GLFrameBufferDepth : public GLFrameBuffer {
 
 public:
     bool hasDepth() const override { return true; }
-    void create(glm::vec2 size, GLTexture2D::Format format) override;
+    void create(glm::vec2 size, TexelFormat format) override;
     void resize(glm::vec2 newSize) override;
 };
 

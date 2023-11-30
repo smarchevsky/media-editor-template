@@ -16,6 +16,7 @@ static fs::path projectDir(PROJECT_DIR);
 static const std::string shaderCodeDefault2d_VS = textFromFile(shaderDir / "default2d.vert");
 static const std::string shaderCodeDefault2d_PS = textFromFile(shaderDir / "default2d.frag");
 
+// https://www.shadertoy.com/view/XstGRf
 static const std::string shaderCodeConweysLife_PS = R"(
 #version 330 core
 in vec2 uv;
@@ -32,7 +33,7 @@ void main() {
         + cell(px + ivec2(-1, 0)) +                          cell(px + ivec2(1, 0))
         + cell(px + ivec2(-1, 1)) + cell(px + ivec2(0, 1)) + cell(px + ivec2(1, 1));
     int e = cell(px);
-    FragColor = (((k == 2) && (e == 1)) || (k == 3)) ? 1.0 : 0.0;
+    FragColor = ((k == 2 && e == 1) || k == 3) ? 1.0 : 0.0;
 }
 )";
 
@@ -54,7 +55,7 @@ float edgeMark(vec2 uv, float fw) {
 }
 
 void main() {
-    vec3 f = texture2D(texture0, uv).rrr;
+    vec3 f = vec3(texture2D(texture0, uv).r > 0.5);
     vec2 fw = fwidth(uv) * TextureSize;
     f = mix(f, vec3(0, .6, 0), saturate(.03 / fw.x - 0.1) * edgeMark(uv, fw.x));
     FragColor = vec4(f, 1);
@@ -128,9 +129,6 @@ public:
         m_spriteFullScreen.setUniform("texture0", getThisFB().getTexture());
         GLRenderManager::draw(&getThatFB(), &m_shaderLife, 0, &m_spriteFullScreen);
         m_spriteFullScreen.setUniform("texture0", getThatFB().getTexture());
-
-        GLRenderParameters paramsAccumulate { GLBlend::OneMinusAlpha, GLDepth::Disabled };
-        // GLRenderManager::draw(&m_frameBufferAccumulator, &m_shaderDefault2d, 0, &m_sprite, paramsAccumulate);
 
         m_frameBufferFlip = !m_frameBufferFlip;
         m_iterationIndex++;
@@ -229,8 +227,8 @@ public:
         m_shaderVisualizeLife = GLShader(shaderCodeDefault2d_VS, shaderCodeConweysLifeVisualize_PS);
 
         const int size = 1024;
-        m_fb0.create({ size, size }, GLTexture2D::Format::R_8);
-        m_fb1.create({ size, size }, GLTexture2D::Format::R_8);
+        m_fb0.create({ size, size }, TexelFormat::R_8);
+        m_fb1.create({ size, size }, TexelFormat::R_8);
         m_fb0.getTexture()->setFiltering(GLTexture2D::Filtering::NearestMipmap);
         m_fb1.getTexture()->setFiltering(GLTexture2D::Filtering::NearestMipmap);
 
@@ -248,13 +246,12 @@ public:
         } else if (m_isPlaying)
             updateLife();
 
-        // m_sprite.setUniform("texture0", m_frameBufferAccumulator.getTexture());
-
+        // draw image
         m_window.clear();
         GLRenderManager::draw(&m_window, &m_shaderVisualizeLife, &m_cameraView, &m_spriteFullScreen);
 
+        // draw brush
         m_spriteBrush.setUniform("texture0", m_pixelBright);
-
         GLRenderManager::draw(&m_window, &m_shaderDefault2d, &m_cameraView, &m_spriteBrush);
     }
 };
