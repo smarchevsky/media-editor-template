@@ -81,7 +81,7 @@ public:
         m_spriteReceive3D.setUniform("texture0", m_frameBufferReceive3D.getTexture());
         m_spriteAccumulator.setUniform("texture0", m_frameBufferAccumulator.getTexture());
 
-        auto textureAO = std::make_shared<GLTexture2D>(Image(resourceDir / "models3d" / "AO.png"));
+        auto textureAO = std::make_shared<GLTexture2D>(Image(resourceDir / "models3d" / "stanford_dragon_ao.png"));
         auto models = MeshReader::read(resourceDir / "models3d" / "stanford_dragon.obj");
         assert(models.size());
         auto glMesh3d = std::make_shared<GLMeshTriIndices>(models[0]);
