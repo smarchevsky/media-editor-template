@@ -4,6 +4,8 @@
 #include "image.h"
 #include "texelformat.h"
 
+#include <vector>
+
 class GLTextureInstance;
 
 class GLTextureBase : NoCopy<GLTextureBase> {
@@ -49,7 +51,7 @@ public:
     GLTexture2D(GLTexture2D&& rhs) { *this = std::move(rhs); }
     ~GLTexture2D();
 
-    void createFromRawData(glm::ivec2 size, TexelFormat format, void* data);
+    void createFromRawData(glm::ivec2 size, TexelFormat format, const void* data);
 
     // update texture from CPU, data must be size of  width * height * format size (byte/float * channelsNum)
     void updateData(void* data);

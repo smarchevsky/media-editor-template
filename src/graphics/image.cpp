@@ -11,8 +11,10 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include <iostream>
-#include <memory>
+
 // #define LOG_VERBOSE
+
+void Image::STBIDeleter::operator()(uint8_t* data) const { stbi_image_free(data); }
 
 Image::~Image() { clear(); }
 
@@ -21,7 +23,7 @@ void Image::load(const std::filesystem::path& path)
     clear();
     // stbi_set_flip_vertically_on_load(true);
     int nrChannels = 0;
-    m_data = stbi_load(path.c_str(), &m_size.x, &m_size.y, &nrChannels, 0);
+    m_data.reset(stbi_load(path.c_str(), &m_size.x, &m_size.y, &nrChannels, 0));
 
     if (m_data) {
         switch (nrChannels) {
@@ -66,10 +68,10 @@ void Image::fill(glm::ivec2 size, int32_t packedColor)
 
     size_t img_size = m_size.x * m_size.y * texelInfo.sizeInBytes;
 
-    m_data = (uint8_t*)malloc(img_size);
+    m_data.reset(new uint8_t[img_size]);
     assert(m_data && "Cannot allocate memory");
 
-    for (uint8_t* p = m_data; p < m_data + img_size; p += texelInfo.sizeInBytes) {
+    for (uint8_t* p = m_data.get(); p < m_data.get() + img_size; p += texelInfo.sizeInBytes) {
         p[0] = color[0], p[1] = color[1], p[2] = color[2], p[3] = color[3];
     }
 
@@ -85,8 +87,7 @@ void Image::fill(glm::ivec2 size, int32_t packedColor)
 void Image::clear()
 {
     if (m_data) {
-        STBI_FREE(m_data);
-        m_data = nullptr;
+        m_data.reset();
         m_size = glm::ivec2(0);
         m_format = TexelFormat::Undefined;
 

@@ -6,25 +6,22 @@
 #include <filesystem>
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
-#include <vector>
+#include <memory>
 
 class Image : NoCopy<Image> {
-    uint8_t* m_data {};
+protected:
+    struct STBIDeleter {
+        void operator()(uint8_t* data) const;
+    };
+
+protected:
+    std::unique_ptr<uint8_t, STBIDeleter> m_data;
     glm::ivec2 m_size = glm::ivec2(0);
     TexelFormat m_format {};
     std::string m_name;
 
 public:
-    Image(Image&& rhs)
-    {
-        m_data = rhs.m_data, rhs.m_data = nullptr;
-
-        m_size = rhs.m_size;
-        m_format = rhs.m_format;
-        m_name = rhs.m_name;
-    }
-
-    Image() { }
+    Image() = default;
     Image(const std::filesystem::path& path) { load(path); }
     explicit Image(glm::ivec2 size, int32_t packedRGBA) { fill(size, packedRGBA); }
     ~Image();
@@ -34,10 +31,10 @@ public:
     void clear();
     bool isValid() const;
 
-    unsigned char* getDataMutable() { return m_data; }
-    const unsigned char* getData() const { return m_data; }
-
+    unsigned char* getDataMutable() { return m_data.get(); }
+    const unsigned char* getData() const { return m_data.get(); }
     size_t getDataSize() const;
+
     glm::ivec2 getSize() const { return m_size; }
 
     TexelFormat getFormat() const { return m_format; }

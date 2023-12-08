@@ -81,7 +81,7 @@ void GLTexture2D::setFiltering(Filtering filtering)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
 }
 
-void GLTexture2D::createFromRawData(glm::ivec2 size, TexelFormat format, void* data)
+void GLTexture2D::createFromRawData(glm::ivec2 size, TexelFormat format, const void* data)
 {
     m_size = size;
     m_format = format;
@@ -127,7 +127,7 @@ bool GLTexture2D::fromImage(const Image& img)
         return false;
     }
 
-    createFromRawData(img.m_size, img.m_format, img.m_data);
+    createFromRawData(img.m_size, img.m_format, img.getData());
     setFiltering(Filtering::LinearMipmap);
     setWrapping(Wrapping::Repeat);
 
