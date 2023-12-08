@@ -130,7 +130,10 @@ public:
 
     void setMouseDragEvent(MouseButton button, MouseDragEvent event);
     void setMouseMoveEvent(MouseButton button, MouseMoveEvent event);
+
     void setMouseDownEvent(MouseButton button, MouseDownEvent event);
+    void setMouseUpEvent(MouseButton button, MouseDownEvent event);
+
     void setMouseScrollEvent(MouseScrollEvent event);
 
     void addKeyDownEvent(SDL_KeyCode key, SDL_Keymod mod, KeyEvent event);
@@ -143,6 +146,8 @@ public:
     void preDrawImGui();
     void postDrawImGui();
     void display();
+
+    // void getRawPixelDataRGBA8(std::vector<uint8_t>& pixelData);
 
     void bind() const override;
     bool hasDepth() const override { return true; }
@@ -162,7 +167,8 @@ public:
     }
     glm::vec2 toNormalizedPos(const glm::vec2 pixelPos, bool flipY) { return toNormalizedPos01(pixelPos, flipY) * 2.f - 1.f; }
 
-    glm::ivec2 getSize() { return m_windowSize; }
+    glm::ivec2 getSize() const { return m_windowSize; }
+    void setSize(glm::ivec2 newSize);
 
 private:
     bool processEvent(const SDL_Event* event);

@@ -98,6 +98,15 @@ void Window::display()
     SDL_GL_SwapWindow(m_SDLwindow);
 }
 
+// void Window::getRawPixelDataRGBA8(std::vector<uint8_t>& pixelData)
+// {
+//     static constexpr int pixelSize = 4;
+//     pixelData.resize(m_windowSize.x * m_windowSize.y * pixelSize);
+
+//     glBindTexture(GL_TEXTURE_2D, 0);
+//     glReadPixels(0, 0, m_windowSize.x, m_windowSize.y, GL_RGBA, GL_UNSIGNED_BYTE, pixelData.data());
+// }
+
 void Window::preDrawImGui()
 {
     ImGui_ImplOpenGL3_NewFrame();
@@ -132,6 +141,14 @@ void Window::setMouseDownEvent(MouseButton button, MouseDownEvent event)
     auto mouseEventData = getMouseEventData(button);
     if (mouseEventData) {
         mouseEventData->setMouseDownEvent(event);
+    }
+}
+
+void Window::setMouseUpEvent(MouseButton button, MouseDownEvent event)
+{
+    auto mouseEventData = getMouseEventData(button);
+    if (mouseEventData) {
+        mouseEventData->setMouseUpEvent(event);
     }
 }
 
@@ -213,6 +230,11 @@ bool Window::processEvents()
             somethingHappened |= processEvent(&event);
     }
     return somethingHappened;
+}
+
+void Window::setSize(glm::ivec2 newSize)
+{
+    SDL_SetWindowSize(m_SDLwindow, newSize.x, newSize.y);
 }
 
 bool Window::processEvent(const SDL_Event* event)
