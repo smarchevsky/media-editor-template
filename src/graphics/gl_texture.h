@@ -65,8 +65,8 @@ public:
     uint32_t getHandle() const { return m_textureHandle; }
     glm::ivec2 getSize() const { return m_size; }
 
-    static void getRawData(std::vector<uint8_t>& byteArray,
-        uint32_t glTextureTarget, glm::ivec2 size, TexelFormat format);
+    Image toImage(TexelFormat format = TexelFormat::Undefined); // if undefined - use texture format, else convert
+    static Image getImage(uint32_t glTextureTarget, glm::ivec2 size, TexelFormat format);
 
 protected:
     void generateMipMapsIfDirty();

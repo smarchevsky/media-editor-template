@@ -7,6 +7,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
@@ -15,6 +18,17 @@
 // #define LOG_VERBOSE
 
 void Image::STBIDeleter::operator()(uint8_t* data) const { stbi_image_free(data); }
+
+Image::Image(glm::ivec2 size, TexelFormat format)
+{
+    m_size = size;
+    m_format = format;
+    assert(m_format == TexelFormat::R_8 || m_format == TexelFormat::RGB_8 || m_format == TexelFormat::RGBA_8);
+
+    TexelFormatInfo texelInfo(m_format);
+    size_t imgSizeBytes = m_size.x * m_size.y * texelInfo.sizeInBytes;
+    m_data.reset((uint8_t*)stbi__malloc(imgSizeBytes));
+}
 
 Image::~Image() { clear(); }
 
@@ -68,7 +82,7 @@ void Image::fill(glm::ivec2 size, int32_t packedColor)
 
     size_t img_size = m_size.x * m_size.y * texelInfo.sizeInBytes;
 
-    m_data.reset(new uint8_t[img_size]);
+    m_data.reset((uint8_t*)stbi__malloc(img_size));
     assert(m_data && "Cannot allocate memory");
 
     for (uint8_t* p = m_data.get(); p < m_data.get() + img_size; p += texelInfo.sizeInBytes) {
@@ -99,4 +113,16 @@ void Image::clear()
 }
 
 bool Image::isValid() const { return m_data && m_size.x > 0 && m_size.y > 0 && (m_format != TexelFormat::Undefined); }
+
+bool Image::writeToFile(const std::filesystem::path& path, bool flipVertically)
+{
+    if (!isValid())
+        return false;
+
+    TexelFormatInfo texelInfo(m_format);
+    stbi_flip_vertically_on_write(flipVertically);
+    if (path.extension() == ".png")
+        return stbi_write_png(path.c_str(), m_size.x, m_size.y, texelInfo.numChannels, getData(), m_size.x * texelInfo.numChannels);
+    return false;
+}
 size_t Image::getDataSize() const { return m_size.x * m_size.y * TexelFormatInfo(m_format).sizeInBytes; }

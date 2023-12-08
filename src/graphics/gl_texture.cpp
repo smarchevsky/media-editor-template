@@ -159,12 +159,21 @@ GLTexture2D::~GLTexture2D()
     }
 }
 
-void GLTexture2D::getRawData(std::vector<uint8_t>& byteArray, uint32_t glTextureTarget, glm::ivec2 size, TexelFormat format)
+Image GLTexture2D::toImage(TexelFormat format)
 {
+    if (format == TexelFormat::Undefined)
+        format = m_format;
+
+    return getImage(m_textureHandle, m_size, format);
+}
+
+Image GLTexture2D::getImage(uint32_t glTextureTarget, glm::ivec2 size, TexelFormat format)
+{
+    Image image(size, format);
     const TexelFormatInfo texelInfo(format);
-    byteArray.resize(size.x * size.y * texelInfo.sizeInBytes);
     glBindTexture(GL_TEXTURE_2D, glTextureTarget);
-    glReadPixels(0, 0, size.x, size.y, texelInfo.glExternalFormat, texelInfo.glExternalType, byteArray.data());
+    glReadPixels(0, 0, size.x, size.y, texelInfo.glExternalFormat, texelInfo.glExternalType, image.getDataMutable());
+    return image;
 }
 
 /////////////////// RENDER (DEPTH) BUFFER /////////////////

@@ -23,6 +23,19 @@ protected:
 public:
     Image() = default;
     Image(const std::filesystem::path& path) { load(path); }
+    Image& operator=(Image&& rhs)
+    {
+        if (this != &rhs) {
+            m_data = std::move(rhs.m_data);
+            m_size = rhs.m_size;
+            m_format = rhs.m_format;
+            m_name = std::move(rhs.m_name);
+        }
+        return *this;
+    }
+    Image(Image&& rhs) { *this = std::move(rhs); }
+
+    Image(glm::ivec2 size, TexelFormat format); // uninitialized
     explicit Image(glm::ivec2 size, int32_t packedRGBA) { fill(size, packedRGBA); }
     ~Image();
 
@@ -30,6 +43,8 @@ public:
     void fill(glm::ivec2 size, int32_t packedColor);
     void clear();
     bool isValid() const;
+
+    bool writeToFile(const std::filesystem::path& path, bool flipVertically = false);
 
     unsigned char* getDataMutable() { return m_data.get(); }
     const unsigned char* getData() const { return m_data.get(); }

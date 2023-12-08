@@ -19,7 +19,7 @@ public:
 public:
     virtual void bind() const = 0;
     virtual bool hasDepth() const = 0;
-    virtual void getRawPixelData(std::vector<uint8_t>& byteArray, TexelFormat format) = 0;
+    virtual Image getBufferImage(TexelFormat format) = 0;
     void clear();
 
     void setClearColor(const glm::vec4& color) { m_clearColor = color; }
@@ -52,7 +52,7 @@ public:
     virtual void resize(glm::vec2 newSize);
     const auto& getTexture() const { return m_colorTexture; }
 
-    void getRawPixelData(std::vector<uint8_t>& byteArray, TexelFormat format) override;
+    Image getBufferImage(TexelFormat format) override;
 };
 
 class GLFrameBufferDepth : public GLFrameBuffer {

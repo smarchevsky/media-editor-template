@@ -60,12 +60,20 @@ void GLFrameBuffer::bind() const
     }
 }
 
-void GLFrameBuffer::getRawPixelData(std::vector<uint8_t>& byteArray, TexelFormat format)
+// void GLFrameBuffer::getRawPixelData(std::vector<uint8_t>& byteArray, TexelFormat format)
+// {
+//     if (m_colorTexture) {
+//         GLTexture2D::getRawData(byteArray, m_colorTexture->getHandle(), m_colorTexture->getSize(), format);
+//     }
+// }
+
+Image GLFrameBuffer::getBufferImage(TexelFormat format)
 {
+    Image image;
     if (m_colorTexture) {
-        GLTexture2D::getRawData(byteArray, m_colorTexture->getHandle(),
-            m_colorTexture->getSize(), format);
+        image = m_colorTexture->toImage(format);
     }
+    return image;
 }
 
 void GLFrameBufferDepth::create(glm::vec2 size, TexelFormat format)

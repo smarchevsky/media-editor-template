@@ -148,7 +148,7 @@ public:
     void display();
 
     // make screenshot
-    void getRawPixelData(std::vector<uint8_t>& pixelData, TexelFormat format) override;
+    Image getBufferImage(TexelFormat format) override;
 
     void bind() const override;
     bool hasDepth() const override { return true; }

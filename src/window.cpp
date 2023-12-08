@@ -98,9 +98,9 @@ void Window::display()
     SDL_GL_SwapWindow(m_SDLwindow);
 }
 
-void Window::getRawPixelData(std::vector<uint8_t>& pixelData, TexelFormat format)
+Image Window::getBufferImage(TexelFormat format)
 {
-    GLTexture2D::getRawData(pixelData, 0, m_windowSize, format);
+    return GLTexture2D::getImage(0, m_windowSize, format);
 }
 
 void Window::preDrawImGui()
