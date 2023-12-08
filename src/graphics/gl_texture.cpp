@@ -159,13 +159,13 @@ GLTexture2D::~GLTexture2D()
     }
 }
 
-// void GLTexture2D::bind()
-// {
-//     if (s_currentBindedTextureHandle != m_textureHandle) {
-//         glBindTexture(GL_TEXTURE_2D, m_textureHandle);
-//         s_currentBindedTextureHandle = m_textureHandle;
-//     }
-// }
+void GLTexture2D::getRawData(std::vector<uint8_t>& byteArray, uint32_t glTextureTarget, glm::ivec2 size, TexelFormat format)
+{
+    const TexelFormatInfo texelInfo(format);
+    byteArray.resize(size.x * size.y * texelInfo.sizeInBytes);
+    glBindTexture(GL_TEXTURE_2D, glTextureTarget);
+    glReadPixels(0, 0, size.x, size.y, texelInfo.glExternalFormat, texelInfo.glExternalType, byteArray.data());
+}
 
 /////////////////// RENDER (DEPTH) BUFFER /////////////////
 

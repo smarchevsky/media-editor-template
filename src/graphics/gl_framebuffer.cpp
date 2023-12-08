@@ -1,8 +1,5 @@
 #include "gl_framebuffer.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
 
@@ -63,24 +60,12 @@ void GLFrameBuffer::bind() const
     }
 }
 
-void GLFrameBuffer::writeFramebufferToFile(const std::filesystem::__cxx11::path& path)
+void GLFrameBuffer::getRawPixelData(std::vector<uint8_t>& byteArray, TexelFormat format)
 {
     if (m_colorTexture) {
-        auto size = m_colorTexture->getSize();
-        uint8_t* data = new uint8_t[size.x * size.y * 3];
-        glBindTexture(GL_TEXTURE_2D, m_colorTexture->getHandle());
-        glReadPixels(0, 0, size.x, size.y, GL_RGB, GL_UNSIGNED_BYTE, data);
-        stbi_write_png(path.c_str(), size.x, size.y, 3, data, size.x * 3);
+        GLTexture2D::getRawData(byteArray, m_colorTexture->getHandle(),
+            m_colorTexture->getSize(), format);
     }
-}
-
-bool GLFrameBuffer::getDataTmp(std::vector<float>& arr)
-{
-    auto size = m_colorTexture->getSize();
-    arr.resize(size.x * size.y);
-    glBindTexture(GL_TEXTURE_2D, m_colorTexture->getHandle());
-    glReadPixels(0, 0, size.x, size.y, GL_RED, GL_FLOAT, arr.data());
-    return true;
 }
 
 void GLFrameBufferDepth::create(glm::vec2 size, TexelFormat format)

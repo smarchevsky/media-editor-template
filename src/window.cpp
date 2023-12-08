@@ -98,14 +98,10 @@ void Window::display()
     SDL_GL_SwapWindow(m_SDLwindow);
 }
 
-// void Window::getRawPixelDataRGBA8(std::vector<uint8_t>& pixelData)
-// {
-//     static constexpr int pixelSize = 4;
-//     pixelData.resize(m_windowSize.x * m_windowSize.y * pixelSize);
-
-//     glBindTexture(GL_TEXTURE_2D, 0);
-//     glReadPixels(0, 0, m_windowSize.x, m_windowSize.y, GL_RGBA, GL_UNSIGNED_BYTE, pixelData.data());
-// }
+void Window::getRawPixelData(std::vector<uint8_t>& pixelData, TexelFormat format)
+{
+    GLTexture2D::getRawData(pixelData, 0, m_windowSize, format);
+}
 
 void Window::preDrawImGui()
 {

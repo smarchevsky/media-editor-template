@@ -147,7 +147,8 @@ public:
     void postDrawImGui();
     void display();
 
-    // void getRawPixelDataRGBA8(std::vector<uint8_t>& pixelData);
+    // make screenshot
+    void getRawPixelData(std::vector<uint8_t>& pixelData, TexelFormat format) override;
 
     void bind() const override;
     bool hasDepth() const override { return true; }
