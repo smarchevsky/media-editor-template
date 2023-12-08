@@ -1,17 +1,18 @@
 #include "image.h"
 #include <glm/common.hpp>
 
+// #define TINYEXR_USE_STB_ZLIB
+// #include "tinyexr.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include <iostream>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
+#include <iostream>
+#include <memory>
 // #define LOG_VERBOSE
-Image::Image()
-{
-}
 
 Image::~Image() { clear(); }
 
@@ -19,7 +20,7 @@ void Image::load(const std::filesystem::path& path)
 {
     clear();
     // stbi_set_flip_vertically_on_load(true);
-    int nrChannels;
+    int nrChannels = 0;
     m_data = stbi_load(path.c_str(), &m_size.x, &m_size.y, &nrChannels, 0);
 
     if (m_data) {
@@ -84,11 +85,15 @@ void Image::fill(glm::ivec2 size, int32_t packedColor)
 void Image::clear()
 {
     if (m_data) {
-        stbi_image_free(m_data);
+        STBI_FREE(m_data);
+        m_data = nullptr;
+        m_size = glm::ivec2(0);
+        m_format = TexelFormat::Undefined;
 
 #ifdef LOG_VERBOSE
         LOG("Image destroyed: " << m_name);
 #endif
+        m_name.clear();
     }
 }
 

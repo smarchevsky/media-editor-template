@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>
+#include <vector>
 
 class Image : NoCopy<Image> {
     uint8_t* m_data {};
@@ -23,7 +24,7 @@ public:
         m_name = rhs.m_name;
     }
 
-    Image();
+    Image() { }
     Image(const std::filesystem::path& path) { load(path); }
     explicit Image(glm::ivec2 size, int32_t packedRGBA) { fill(size, packedRGBA); }
     ~Image();
@@ -35,9 +36,11 @@ public:
 
     unsigned char* getDataMutable() { return m_data; }
     const unsigned char* getData() const { return m_data; }
+
     size_t getDataSize() const;
-    TexelFormat getFormat() const { return m_format; }
     glm::ivec2 getSize() const { return m_size; }
+
+    TexelFormat getFormat() const { return m_format; }
 
     friend class GLTexture2D;
 };
