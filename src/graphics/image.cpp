@@ -114,15 +114,19 @@ void Image::clear()
 
 bool Image::isValid() const { return m_data && m_size.x > 0 && m_size.y > 0 && (m_format != TexelFormat::Undefined); }
 
-bool Image::writeToFile(const std::filesystem::path& path, bool flipVertically)
+bool Image::writeToFile(const std::filesystem::path& path, bool flipVertically) const
 {
     if (!isValid())
         return false;
 
     TexelFormatInfo texelInfo(m_format);
     stbi_flip_vertically_on_write(flipVertically);
-    if (path.extension() == ".png")
+    if (path.extension() == ".jpg") {
+        return stbi_write_jpg(path.c_str(), m_size.x, m_size.y, texelInfo.numChannels, getData(), 96 /* default stbi quality is 90 */);
+    } else if (path.extension() == ".png") {
         return stbi_write_png(path.c_str(), m_size.x, m_size.y, texelInfo.numChannels, getData(), m_size.x * texelInfo.numChannels);
+    }
+
     return false;
 }
 size_t Image::getDataSize() const { return m_size.x * m_size.y * TexelFormatInfo(m_format).sizeInBytes; }

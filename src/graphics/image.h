@@ -44,7 +44,7 @@ public:
     void clear();
     bool isValid() const;
 
-    bool writeToFile(const std::filesystem::path& path, bool flipVertically = false);
+    bool writeToFile(const std::filesystem::path& path, bool flipVertically = false) const;
 
     unsigned char* getDataMutable() { return m_data.get(); }
     const unsigned char* getData() const { return m_data.get(); }
