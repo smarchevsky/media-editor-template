@@ -50,6 +50,10 @@ void GLRenderParameters::apply()
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         } break;
+        case GLBlend::Additive: {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        } break;
         default:
             LOGE("Not supported blend mode: " << (int)blendMode);
             assert(false);

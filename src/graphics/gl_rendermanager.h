@@ -8,7 +8,7 @@ class GLFrameBufferBase;
 class VisualObjectBase;
 
 // clang-format off
-enum class GLBlend : uint8_t { Disabled, OneMinusAlpha };
+enum class GLBlend : uint8_t { Disabled, OneMinusAlpha, Additive };
 enum class GLDepth : uint8_t { Disabled, Enabled };
 enum class GLPolyMode : uint8_t { Fill, Lines };
 enum class GLCullMode : uint8_t { NoCull, Back, Front };
