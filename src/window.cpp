@@ -231,6 +231,7 @@ bool Window::processEvents()
 void Window::setSize(glm::ivec2 newSize)
 {
     SDL_SetWindowSize(m_SDLwindow, newSize.x, newSize.y);
+    processEvents(); // process events immediately, dont wait for main loop
 }
 
 bool Window::processEvent(const SDL_Event* event)
