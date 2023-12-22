@@ -15,6 +15,54 @@
 namespace fs = std::filesystem;
 static fs::path projectDir(PROJECT_DIR);
 
+static const std::string shaderBrush_VS = R"(
+#version 330 core
+
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec2 uv;
+
+out VS_OUT
+{
+    vec2 brushUV;
+    vec2 imageUV;
+}
+vs;
+
+uniform mat4 cameraView;
+uniform mat4 modelWorld;
+uniform mat4 imageViewMatrix;
+
+void main()
+{
+    vec4 pos = vec4(position, 1);
+    gl_Position = cameraView * modelWorld * pos;
+    vs.brushUV = uv;
+    vs.imageUV = (imageViewMatrix * modelWorld * pos).xy;
+    vs.imageUV = vs.imageUV * 0.5 + 0.5;
+}
+)";
+
+static const std::string shaderBrush_FS = R"(
+#version 330 core
+
+out vec4 FragColor;
+// uniform vec4 color;
+uniform sampler2D backgroundTexture;
+
+in VS_OUT
+{
+    vec2 brushUV;
+    vec2 imageUV;
+}
+vs;
+
+void main()
+{
+    vec4 imageColor = texture2D(backgroundTexture, vs.imageUV);
+    FragColor = imageColor;
+}
+)";
+
 class OpenGLApp2D : public Application {
     VisualObjectSprite2D m_spriteImage, m_spriteBrush;
     GLFrameBuffer m_frameBufferImage;
@@ -80,7 +128,7 @@ public:
         m_window.setClearColor({ .13f, .14f, .15f, 1.f });
 
         m_shaderDefault2d = GLShader::FromFile("default2d.vert", "default2d.frag");
-        m_shaderBrush = GLShader::FromFile("brush2d.vert", "brush2d.frag");
+        m_shaderBrush = GLShader(shaderBrush_VS, shaderBrush_FS);
 
         m_frameBufferImage.create({ 2048, 2048 }, TexelFormat::RGBA_8);
         m_frameBufferImage.getTexture()->setFiltering(GLTexture2D::Filtering::LinearMipmap);
