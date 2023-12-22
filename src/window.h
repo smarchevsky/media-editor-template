@@ -14,6 +14,18 @@
 
 typedef void* SDL_GLContext;
 
+///////////////////////////////////
+inline void hash_combine(std::size_t& seed) { }
+template <typename T, typename... Rest>
+inline void hash_combine(std::size_t& seed, const T& v, Rest... rest)
+{
+    std::hash<T> hasher;
+    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    hash_combine(seed, rest...);
+}
+
+/////////////////////////////////
+
 static SDL_Keymod operator|(SDL_Keymod a, SDL_Keymod b) { return SDL_Keymod((int)a | (int)b); }
 enum class MouseButton : uint8_t {
     Left = SDL_BUTTON_LEFT,
@@ -21,16 +33,20 @@ enum class MouseButton : uint8_t {
     Right = SDL_BUTTON_RIGHT,
 };
 
+static const SDL_Keymod ignoredKeyModifiers = KMOD_NUM | KMOD_CAPS | KMOD_MODE | KMOD_SCROLL;
 struct KeyWithModifier {
     KeyWithModifier(SDL_KeyCode key, SDL_Keymod mod, bool down)
         : key(key)
-        , mod(mod)
+        , mod(SDL_Keymod(mod & ~ignoredKeyModifiers))
         , down(down)
     {
     }
-    bool operator==(const KeyWithModifier& rhs) const { return key == rhs.key && mod == rhs.mod && down == rhs.down; }
+    bool operator==(const KeyWithModifier& rhs) const
+    {
+        return key == rhs.key && mod == rhs.mod && down == rhs.down;
+    }
     SDL_KeyCode key = SDLK_UNKNOWN;
-    uint16_t mod = KMOD_NONE;
+    SDL_Keymod mod = KMOD_NONE;
     bool down = true;
 };
 
@@ -39,11 +55,9 @@ template <>
 struct hash<KeyWithModifier> {
     std::size_t operator()(const KeyWithModifier& k) const
     {
-        uint64_t keyAction64
-            = (uint64_t)k.key << 32
-            | (uint64_t)((uint64_t)k.mod << 16)
-            | (uint64_t)((uint64_t)k.down);
-        return std::hash<uint64_t>()(static_cast<uint64_t>(keyAction64));
+        uint64_t seed = 0;
+        hash_combine(seed, (uint64_t)k.key, (uint64_t)k.mod, (uint64_t)k.down);
+        return seed;
     }
 };
 }
