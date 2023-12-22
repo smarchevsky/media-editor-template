@@ -346,7 +346,7 @@ void GLShader::setUniforms(const UniformContainer& newUniforms)
         }
 
         // if variable is updated - update it in shader
-        if ((u.m_status == UniformStatus::MustUpdate)) {
+        if (u.m_status == UniformStatus::MustUpdate) {
             setUniformInternal(u.m_location, u.m_currentData);
             u.m_currentData = u.m_defaultData;
             u.m_status = UniformStatus::MustResetToDefault;
