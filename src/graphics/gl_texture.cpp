@@ -172,7 +172,8 @@ Image GLTexture2D::getImage(uint32_t glTextureTarget, glm::ivec2 size, TexelForm
     Image image(size, format);
     const TexelFormatInfo texelInfo(format);
     glBindTexture(GL_TEXTURE_2D, glTextureTarget);
-    glReadPixels(0, 0, size.x, size.y, texelInfo.glExternalFormat, texelInfo.glExternalType, image.getDataMutable());
+    glGetTexImage(GL_TEXTURE_2D, 0, texelInfo.glExternalFormat, texelInfo.glExternalType, image.getDataMutable());
+    // glReadPixels(0, 0, size.x, size.y, texelInfo.glExternalFormat, texelInfo.glExternalType, image.getDataMutable());
     return image;
 }
 
