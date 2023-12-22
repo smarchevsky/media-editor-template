@@ -19,14 +19,14 @@ class GLTexture2D : public GLTextureBase {
 public:
     // clang-format off
     enum class Wrapping : uint8_t { Repeat, MirrorRepeat, ClampEdge, ClampBorder };
-    enum class Filtering : uint8_t { Nearset, NearestMipmap, Linear, LinearMipmap };
+    enum class Filtering : uint8_t { Nearest, NearestMipmap, Linear, LinearMipmap };
     // clang-format on
 protected:
     uint32_t m_textureHandle {};
     glm::ivec2 m_size = glm::ivec2(0);
 
     TexelFormat m_format = TexelFormat::Undefined;
-    Filtering m_filtering = Filtering::Nearset;
+    Filtering m_filtering = Filtering::Nearest;
     Wrapping m_wrapping = Wrapping::Repeat;
 
     mutable bool m_mipmapDirty = false; // used for framebuffer

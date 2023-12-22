@@ -48,7 +48,7 @@ void GLTexture2D::setFiltering(Filtering filtering)
 
     int minFilter, magFilter;
     switch (filtering) {
-    case Filtering::Nearset: {
+    case Filtering::Nearest: {
         minFilter = GL_NEAREST;
         magFilter = GL_NEAREST;
     } break;
@@ -99,7 +99,7 @@ void GLTexture2D::createFromRawData(glm::ivec2 size, TexelFormat format, const v
         texelInfo.glExternalType,
         data);
 
-    setFiltering(Filtering::Nearset);
+    setFiltering(Filtering::Nearest);
 
     LOG((data ? "Texture created: " : "Empty texture created: ")
         << " size: " << m_size.x << "x" << m_size.y << ", format: " << texelInfo.name);
