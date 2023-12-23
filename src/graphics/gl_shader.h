@@ -19,7 +19,6 @@
 #include <vector>
 
 static const std::filesystem::path shaderDir(SHADER_DIR);
-std::string textFromFile(const std::filesystem::path& path);
 
 struct Texture2Ddata {
     Texture2Ddata() = default;
@@ -72,11 +71,9 @@ public:
     GLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode);
     ~GLShader();
 
-private:
     // clang-format off
     enum class UniformType : uint8_t { Default, Camera };
     enum class UniformStatus : uint8_t { DontTouch, MustUpdate, MustResetToDefault };
-
 
     class Variable {
         UniformVariant m_defaultData;
@@ -94,11 +91,10 @@ private:
         friend class GLShader;
     };
     // clang-format on
-
+private:
     UniformType getCurrentUniformType(int location) const { return m_uniforms[location].m_type; }
 
     void setUniformInternal(int location, const UniformVariant& var);
-    std::vector<GLShader::Variable> getUniformList(GLShader* shader);
 
 public:
     GLShader& operator=(GLShader&& rhs)

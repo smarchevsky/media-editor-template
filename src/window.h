@@ -4,6 +4,7 @@
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_mouse.h>
 
+#include "common.h"
 #include "graphics/gl_framebuffer.h"
 
 #include <functional>
@@ -13,18 +14,6 @@
 #include <unordered_map>
 
 typedef void* SDL_GLContext;
-
-///////////////////////////////////
-inline void hash_combine(std::size_t& seed) { }
-template <typename T, typename... Rest>
-inline void hash_combine(std::size_t& seed, const T& v, Rest... rest)
-{
-    std::hash<T> hasher;
-    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    hash_combine(seed, rest...);
-}
-
-/////////////////////////////////
 
 static SDL_Keymod operator|(SDL_Keymod a, SDL_Keymod b) { return SDL_Keymod((int)a | (int)b); }
 enum class MouseButton : uint8_t {

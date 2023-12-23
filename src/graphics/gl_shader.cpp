@@ -1,6 +1,9 @@
 #include "gl_shader.h"
 #include "helper_general.h"
 
+#include "common.h"
+// #include "shadercodeparser.h"
+
 #define ERRORCHEKING
 #define GL_GLEXT_PROTOTYPES
 #include <SDL2/SDL_opengl.h>
@@ -8,6 +11,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -15,65 +19,6 @@
 uint32_t GLShader::s_currentBindedShaderHandle = 0;
 
 namespace {
-/// https://gist.github.com/nnaumenko/1db96f7e187979a057ee7ad757dee4f2
-/// @return Index of type T in variant V; or variant size if V does not include an alternative for T.
-template <typename V, typename T, size_t I = 0>
-constexpr size_t variant_index()
-{
-    if constexpr (I >= std::variant_size_v<V>) {
-        return (std::variant_size_v<V>);
-    } else {
-        if constexpr (std::is_same_v<std::variant_alternative_t<I, V>, T>) {
-            return (I);
-        } else {
-            return (variant_index<V, T, I + 1>());
-        }
-    }
-}
-#define GET_INDEX(type) variant_index<UniformVariant, type>()
-
-UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
-{
-    // constexpr int floatSize = sizeof(float);
-    // constexpr int intSize = sizeof(int);
-
-    switch (GLtype) {
-    case GL_FLOAT:
-        return 0.f;
-
-    case GL_FLOAT_VEC2:
-        return glm::vec2(0);
-
-    case GL_FLOAT_VEC3:
-        return glm::vec3(0);
-
-    case GL_FLOAT_VEC4:
-        return glm::vec4(0);
-
-    case GL_FLOAT_MAT4:
-        return glm::mat4(1);
-
-    case GL_INT:
-        return int(0);
-
-    case GL_INT_VEC2:
-        return glm::ivec2(0);
-
-    case GL_INT_VEC3:
-        return glm::ivec3(0);
-
-    case GL_INT_VEC4:
-        return glm::ivec4(0);
-
-    case GL_SAMPLER_2D: {
-        // assert(size == intSize);
-        return Texture2Ddata(nullptr, textureIndex);
-    }
-    }
-
-    assert(false && "Unsupported uniform format");
-    return {};
-}
 
 int createShader(const char* shaderSource, int shaderType)
 {
@@ -107,12 +52,40 @@ int createShader(const char* shaderSource, int shaderType)
 
     return currentShader;
 }
-} // namespace
 
-std::vector<GLShader::Variable> GLShader::getUniformList(GLShader* shader)
+UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
 {
-    const auto program = shader->getHandle();
+    switch (GLtype) {
+    case GL_FLOAT:
+        return 0.f;
+    case GL_FLOAT_VEC2:
+        return glm::vec2(0);
+    case GL_FLOAT_VEC3:
+        return glm::vec3(0);
+    case GL_FLOAT_VEC4:
+        return glm::vec4(0);
+    case GL_FLOAT_MAT4:
+        return glm::mat4(1);
+    case GL_INT:
+        return int(0);
+    case GL_INT_VEC2:
+        return glm::ivec2(0);
+    case GL_INT_VEC3:
+        return glm::ivec3(0);
+    case GL_INT_VEC4:
+        return glm::ivec4(0);
+    case GL_SAMPLER_2D: {
+        // assert(size == intSize);
+        return Texture2Ddata(nullptr, textureIndex);
+    }
+    }
 
+    assert(false && "Unsupported uniform format");
+    return {};
+}
+
+std::vector<GLShader::Variable> getUniformList(int program)
+{
     GLint varCount;
     GLint varSize; // size of the variable
     GLenum varType; // type of the variable (float, vec3 or mat4, etc)
@@ -131,14 +104,14 @@ std::vector<GLShader::Variable> GLShader::getUniformList(GLShader* shader)
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &varCount);
     printf("Active Uniforms: %d\n", varCount);
 
-    std::vector<GLShader::Variable> result;
-
     int texture2DIndex = 0;
+    std::vector<GLShader::Variable> uniformVariables;
     for (int i = 0; i < varCount; i++) {
         glGetActiveUniform(program, (GLuint)i, varBufSize, &varNameLength, &varSize, &varType, varName);
 
-        GLShader::Variable var(i, varName, createDefaultUniformData(varType, varSize, texture2DIndex));
-        result.push_back(std::move(var));
+        const std::string nameString(varName);
+        GLShader::Variable var(i, nameString, createDefaultUniformData(varType, varSize, texture2DIndex));
+        uniformVariables.push_back(std::move(var));
 
         printf("  - Uniform #%d, Size: %d, Type: %u, Name: %s\n", i, varSize, varType, varName);
 
@@ -146,14 +119,15 @@ std::vector<GLShader::Variable> GLShader::getUniformList(GLShader* shader)
             texture2DIndex++;
     }
     printf("\n");
-    return result;
+    return uniformVariables;
 }
+} // namespace
 
 GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragmentShaderCode)
 {
     GLint success = GL_FALSE;
     if (vertexShaderCode.size() && fragmentShaderCode.size()) {
-        const_cast<uint32_t&>(m_shaderProgram) = glCreateProgram();
+        UNCONST(m_shaderProgram) = glCreateProgram();
         GLuint vs = createShader(vertexShaderCode.c_str(), GL_VERTEX_SHADER);
         GLuint fs = createShader(fragmentShaderCode.c_str(), GL_FRAGMENT_SHADER);
         glAttachShader(m_shaderProgram, vs);
@@ -164,18 +138,25 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
         glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
 
         if (success == GL_TRUE) {
-            const_cast<std::vector<Variable>&>(m_uniforms) = getUniformList(this);
+            std::vector<Variable> uniforms = getUniformList(getHandle());
 
-            auto& locations = const_cast<std::unordered_map<HashString, int>&>(m_locations);
-            for (const auto& d : m_uniforms) {
-                locations.insert({ d.m_name.c_str(), d.m_location });
+            { // PARSE DEFAULT VARIABLES HERE
+              // std::unordered_map<std::string, GLint> uniformNamesSet_VS, uniformNamesSet_FS;
+              // for (auto& u : uniforms)
+              //     uniformNamesSet_VS.emplace(u.m_name, u.m_type);
+              // uniformNamesSet_FS = uniformNamesSet_VS;
+              // parseDefaultUniforms(vertexShaderCode, uniformNamesSet_VS);
             }
+
+            UNCONST(m_uniforms) = std::move(uniforms);
+            for (const auto& d : m_uniforms)
+                UNCONST(m_locations).insert({ d.m_name.c_str(), d.m_location });
 
         } else {
 
             glGetProgramInfoLog(m_shaderProgram, 512, NULL, infoLog);
             std::cerr << "Linking failed: " << infoLog << std::endl;
-            const_cast<uint32_t&>(m_shaderProgram) = 0;
+            UNCONST(m_shaderProgram) = 0;
 
             assert(false && "Shader compilation failed");
         }
@@ -376,19 +357,4 @@ void GLShader::bindAndResetUniforms()
     for (auto& u : m_uniforms) {
         u.m_status = UniformStatus::MustResetToDefault;
     }
-}
-
-std::string textFromFile(const std::filesystem::path& path)
-{
-    std::string sourceCode;
-    std::ifstream codeStream(path, std::ios::in);
-    if (codeStream.is_open()) {
-        std::stringstream sstr;
-        sstr << codeStream.rdbuf();
-        sourceCode = sstr.str();
-        codeStream.close();
-    } else {
-        LOGE("Can't open file: " << path);
-    }
-    return sourceCode;
 }
