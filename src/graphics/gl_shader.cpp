@@ -1,7 +1,7 @@
 #include "gl_shader.h"
 
 #include "common.h"
-// #include "shadercodeparser.h"
+#include "shadercodeparser.h"
 
 #define ERRORCHEKING
 #define GL_GLEXT_PROTOTYPES
@@ -140,7 +140,7 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
             std::vector<Variable> uniforms = getUniformList(getHandle());
 
             // ShaderCodeParser::parseDefaultUniforms(vertexShaderCode, uniforms);
-            // ShaderCodeParser::parseDefaultUniforms(fragmentShaderCode, uniforms);
+            ShaderCodeParser::parseDefaultUniforms(fragmentShaderCode, uniforms);
 
             UNCONST(m_uniforms) = std::move(uniforms);
             for (const auto& d : m_uniforms)
