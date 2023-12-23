@@ -6,6 +6,13 @@
 #include "common.h"
 
 namespace {
+std::string removeComments(const std::string& code)
+{
+    // God bless ChatGPT !!111
+    std::regex commentRegex(R"((//.*?$|/\*[^*]*\*+(?:[^/*][^*]*\*+)*/))", std::regex::multiline);
+    return std::regex_replace(code, commentRegex, "");
+}
+
 void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarString)
 {
     enum class VarDataType : uint8_t { FLOAT,
@@ -19,7 +26,6 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
 
     auto stringToFloat = [](const std::string& str, float& outFloat) {
         char* endptr;
-        LOGE(str);
         outFloat = strtof(str.c_str(), &endptr);
         // if (endptr != str.c_str()) { // handle invalid number
         //     return false;
@@ -38,7 +44,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
 
     auto convertDataIfCan = [&](const std::smatch& matches, int num, VarDataType type) {
         for (int i = 0; i < num; ++i) {
-            const auto& str = matches[i + 1].str();
+            const auto& str = matches[i + 1].str(); // first is whole expression
 
             switch (type) {
             case VarDataType::FLOAT: {
@@ -156,16 +162,15 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
 void ShaderCodeParser::parseDefaultUniforms(const std::string& shaderCode,
     std::vector<GLShader::Variable>& uniformVariables)
 {
+    // std::string removeCommentsCode = removeComments(shaderCode);
+
     std::regex pattern(R"(uniform\s+(\w+)\s+(\w+)\s*=\s*(.+);)");
 
-    // to stop further code parsing, if all uniforms found
-    std::unordered_map<std::string, int> uniformNamesSet;
+    std::unordered_map<std::string, int> uniformNamesSet; // used to stop further code parsing, if all uniforms found
     for (int varIndex = 0; varIndex < uniformVariables.size(); ++varIndex) {
         const auto& v = uniformVariables[varIndex];
         uniformNamesSet.emplace(v.m_name, varIndex);
     }
-
-    // std::unordered_map<std::string, std::string> variableMap;
 
     auto regex_iterator = std::sregex_iterator(shaderCode.begin(), shaderCode.end(), pattern);
     auto end_iterator = std::sregex_iterator();
@@ -180,7 +185,7 @@ void ShaderCodeParser::parseDefaultUniforms(const std::string& shaderCode,
         parseDefaultVariable(uniformVariables[varIndex].m_defaultData, variableValue);
         // variableMap[variableName] = variableValue;
 
-        uniformNamesSet.erase(variableName);
+        uniformNamesSet.erase(foundVarIter);
         if (uniformNamesSet.empty()) // all variables seems found in shader
             break;
     }
