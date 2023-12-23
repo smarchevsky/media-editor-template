@@ -89,6 +89,7 @@ public:
             : m_defaultData(data), m_currentData(data),  m_location(location), m_name(m_name)  {}
 
         friend class GLShader;
+        friend class ShaderCodeParser;
     };
     // clang-format on
 private:

@@ -1,7 +1,7 @@
 #ifndef GLMESH_H
 #define GLMESH_H
 
-#include "helper_general.h"
+#include "common.h"
 #include <cstdint> // uintXX_t
 #include <memory>
 #include <vector>

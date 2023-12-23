@@ -1,6 +1,6 @@
 #ifndef IMAGE_H
 #define IMAGE_H
-#include "helper_general.h"
+#include "common.h"
 #include "texelformat.h"
 
 #include <filesystem>

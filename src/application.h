@@ -1,7 +1,7 @@
 #ifndef APP_ABSTRACT_H
 #define APP_ABSTRACT_H
 
-#include "helper_general.h"
+#include "common.h"
 #include "openfileinfo.h"
 #include "window.h"
 

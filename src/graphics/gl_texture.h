@@ -1,6 +1,6 @@
 #ifndef GLTEXTURE_H
 #define GLTEXTURE_H
-#include "helper_general.h"
+#include "common.h"
 #include "image.h"
 #include "texelformat.h"
 

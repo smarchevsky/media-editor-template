@@ -1,5 +1,4 @@
 #include "gl_shader.h"
-#include "helper_general.h"
 
 #include "common.h"
 // #include "shadercodeparser.h"
@@ -140,13 +139,8 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
         if (success == GL_TRUE) {
             std::vector<Variable> uniforms = getUniformList(getHandle());
 
-            { // PARSE DEFAULT VARIABLES HERE
-              // std::unordered_map<std::string, GLint> uniformNamesSet_VS, uniformNamesSet_FS;
-              // for (auto& u : uniforms)
-              //     uniformNamesSet_VS.emplace(u.m_name, u.m_type);
-              // uniformNamesSet_FS = uniformNamesSet_VS;
-              // parseDefaultUniforms(vertexShaderCode, uniformNamesSet_VS);
-            }
+            // ShaderCodeParser::parseDefaultUniforms(vertexShaderCode, uniforms);
+            // ShaderCodeParser::parseDefaultUniforms(fragmentShaderCode, uniforms);
 
             UNCONST(m_uniforms) = std::move(uniforms);
             for (const auto& d : m_uniforms)
