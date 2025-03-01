@@ -54,7 +54,7 @@ public:
     void createFromRawData(glm::ivec2 size, TexelFormat format, const void* data);
 
     // update texture from CPU, data must be size of  width * height * format size (byte/float * channelsNum)
-    void updateData(void* data);
+    void updateData(const void* data, TexelFormat externalDataFormat = TexelFormat::Undefined);
 
     void setWrapping(Wrapping);
     void setFiltering(Filtering);

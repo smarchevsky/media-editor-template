@@ -50,6 +50,10 @@ public:
 
     virtual void create(glm::vec2 size, TexelFormat format);
     virtual void resize(glm::vec2 newSize);
+
+    // update framebuffer's texture from Image, must match size
+    bool setImage(const Image& image);
+
     const auto& getTexture() const { return m_colorTexture; }
 
     Image getBufferImage(TexelFormat format) override;

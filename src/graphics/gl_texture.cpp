@@ -105,14 +105,16 @@ void GLTexture2D::createFromRawData(glm::ivec2 size, TexelFormat format, const v
         << " size: " << m_size.x << "x" << m_size.y << ", format: " << texelInfo.name);
 }
 
-void GLTexture2D::updateData(void* data)
+void GLTexture2D::updateData(const void* data, TexelFormat externalDataFormat)
 {
     if (!m_textureHandle)
         return;
 
     glBindTexture(GL_TEXTURE_2D, m_textureHandle);
 
-    TexelFormatInfo texelInfo(m_format);
+    TexelFormatInfo texelInfo(
+        externalDataFormat == TexelFormat::Undefined ? m_format : externalDataFormat);
+
     glTexSubImage2D(GL_TEXTURE_2D, 0,
         0, 0, m_size.x, m_size.y,
         texelInfo.glExternalFormat,

@@ -35,6 +35,15 @@ void GLFrameBuffer::resize(glm::vec2 newSize)
         m_colorTexture->createFromRawData(newSize, m_colorTexture->getFormat(), nullptr);
 }
 
+bool GLFrameBuffer::setImage(const Image& image)
+{
+    if (m_colorTexture && m_colorTexture->getSize() == image.getSize()) {
+        m_colorTexture->updateData(image.getData(), image.getFormat());
+        return true;
+    }
+    return false;
+}
+
 GLFrameBuffer::~GLFrameBuffer()
 {
     if (m_fbo) {

@@ -46,8 +46,8 @@ public:
 
     bool writeToFile(const std::filesystem::path& path, bool flipVertically = false) const;
 
-    unsigned char* getDataMutable() { return m_data.get(); }
-    const unsigned char* getData() const { return m_data.get(); }
+    uint8_t* getDataMutable() { return m_data.get(); }
+    const uint8_t* getData() const { return m_data.get(); }
     size_t getDataSize() const;
 
     glm::ivec2 getSize() const { return m_size; }
