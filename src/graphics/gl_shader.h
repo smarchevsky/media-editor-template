@@ -14,7 +14,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
+
 #include <variant>
 #include <vector>
 
@@ -33,15 +33,24 @@ struct Texture2Ddata {
 
 typedef std::variant<
     char, // is invalid, dont set char :)
+
     float,
     glm::vec2,
     glm::vec3,
     glm::vec4,
     glm::mat4,
+
+    std::vector<float>,
+    std::vector<glm::vec2>,
+    std::vector<glm::vec3>,
+    std::vector<glm::vec4>,
+    std::vector<glm::mat4>,
+
     int,
     glm::ivec2,
     glm::ivec3,
     glm::ivec4,
+
     Texture2Ddata>
 
     UniformVariant;

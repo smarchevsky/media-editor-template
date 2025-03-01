@@ -1,7 +1,7 @@
 #include "gl_shader.h"
 
 #include "common.h"
-#include "shadercodeparser.h"
+// #include "shadercodeparser.h"
 
 #define ERRORCHEKING
 #define GL_GLEXT_PROTOTYPES
@@ -11,9 +11,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include <cstring>
-#include <fstream>
 #include <iostream>
-#include <sstream>
 
 uint32_t GLShader::s_currentBindedShaderHandle = 0;
 
@@ -52,31 +50,51 @@ int createShader(const char* shaderSource, int shaderType)
     return currentShader;
 }
 
-UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex)
+UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex, bool isArray)
 {
-    switch (GLtype) {
-    case GL_FLOAT:
-        return 0.f;
-    case GL_FLOAT_VEC2:
-        return glm::vec2(0);
-    case GL_FLOAT_VEC3:
-        return glm::vec3(0);
-    case GL_FLOAT_VEC4:
-        return glm::vec4(0);
-    case GL_FLOAT_MAT4:
-        return glm::mat4(1);
-    case GL_INT:
-        return int(0);
-    case GL_INT_VEC2:
-        return glm::ivec2(0);
-    case GL_INT_VEC3:
-        return glm::ivec3(0);
-    case GL_INT_VEC4:
-        return glm::ivec4(0);
-    case GL_SAMPLER_2D: {
-        // assert(size == intSize);
-        return Texture2Ddata(nullptr, textureIndex);
-    }
+    if (isArray /*size > 1*/) {
+        switch (GLtype) {
+
+        case GL_FLOAT:
+            return std::vector<float>(0);
+        case GL_FLOAT_VEC2:
+            return std::vector<glm::vec2>(0);
+        case GL_FLOAT_VEC3:
+            return std::vector<glm::vec3>(0);
+        case GL_FLOAT_VEC4:
+            return std::vector<glm::vec4>(0);
+        case GL_FLOAT_MAT4:
+            return std::vector<glm::mat4>(0);
+        }
+
+    } else {
+        switch (GLtype) {
+
+        case GL_FLOAT:
+            return 0.f;
+        case GL_FLOAT_VEC2:
+            return glm::vec2(0);
+        case GL_FLOAT_VEC3:
+            return glm::vec3(0);
+        case GL_FLOAT_VEC4:
+            return glm::vec4(0);
+        case GL_FLOAT_MAT4:
+            return glm::mat4(1);
+
+        case GL_INT:
+            return int(0);
+        case GL_INT_VEC2:
+            return glm::ivec2(0);
+        case GL_INT_VEC3:
+            return glm::ivec3(0);
+        case GL_INT_VEC4:
+            return glm::ivec4(0);
+
+        case GL_SAMPLER_2D: {
+            // assert(size == intSize);
+            return Texture2Ddata(nullptr, textureIndex);
+        }
+        }
     }
 
     assert(false && "Unsupported uniform format");
@@ -97,7 +115,7 @@ std::vector<GLShader::Variable> getUniformList(int program)
     printf("Active Attributes: %d\n", varCount);
     for (int i = 0; i < varCount; i++) {
         glGetActiveAttrib(program, (GLuint)i, varBufSize, &varNameLength, &varSize, &varType, varName);
-        printf("  - Attribute #%d Type: %u Name: %s\n", i, varType, varName);
+        printf("  - Attribute #%d Type: %u, Size: %u, Name: %s\n", i, varType, varSize, varName);
     }
 
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &varCount);
@@ -108,11 +126,16 @@ std::vector<GLShader::Variable> getUniformList(int program)
     for (int i = 0; i < varCount; i++) {
         glGetActiveUniform(program, (GLuint)i, varBufSize, &varNameLength, &varSize, &varType, varName);
 
-        const std::string nameString(varName);
-        GLShader::Variable var(i, nameString, createDefaultUniformData(varType, varSize, texture2DIndex));
+        std::string nameString(varName);
+        auto openBracketIndex = nameString.find('[');
+        bool isArray = openBracketIndex != -1;
+        if (isArray)
+            nameString = nameString.substr(0, openBracketIndex);
+
+        GLShader::Variable var(i, nameString, createDefaultUniformData(varType, varSize, texture2DIndex, isArray));
         uniformVariables.push_back(std::move(var));
 
-        printf("  - Uniform #%d, Size: %d, Type: %u, Name: %s\n", i, varSize, varType, varName);
+        printf("  - Uniform #%d, Size: %d, Type: %u, Name: %s\n", i, varSize, varType, nameString.c_str());
 
         if (varType == GL_SAMPLER_2D)
             texture2DIndex++;
@@ -140,7 +163,7 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
             std::vector<Variable> uniforms = getUniformList(getHandle());
 
             // ShaderCodeParser::parseDefaultUniforms(vertexShaderCode, uniforms);
-            ShaderCodeParser::parseDefaultUniforms(fragmentShaderCode, uniforms);
+            // ShaderCodeParser::parseDefaultUniforms(fragmentShaderCode, uniforms);
 
             UNCONST(m_uniforms) = std::move(uniforms);
             for (const auto& d : m_uniforms)
@@ -242,6 +265,35 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
         const auto& var = std::get<glm::mat4>(uniformVariable);
         glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]);
     } break;
+
+        // VECTORS
+
+    case GET_INDEX(std::vector<float>): {
+        const auto& var = std::get<std::vector<float>>(uniformVariable);
+        glUniform1fv(location, var.size(), var.data());
+    } break;
+
+    case GET_INDEX(std::vector<glm::vec2>): {
+        const auto& var = std::get<std::vector<glm::vec2>>(uniformVariable);
+        glUniform2fv(location, var.size(), &var[0].x);
+    } break;
+
+    case GET_INDEX(std::vector<glm::vec3>): {
+        const auto& var = std::get<std::vector<glm::vec3>>(uniformVariable);
+        glUniform3fv(location, var.size(), &var[0].x);
+    } break;
+
+    case GET_INDEX(std::vector<glm::vec4>): {
+        const auto& var = std::get<std::vector<glm::vec4>>(uniformVariable);
+        glUniform4fv(location, var.size(), &var[0].x);
+    } break;
+
+    case GET_INDEX(std::vector<glm::mat4>): {
+        const auto& var = std::get<std::vector<glm::mat4>>(uniformVariable);
+        glUniformMatrix4fv(location, var.size(), GL_FALSE, &var[0][0].x);
+    } break;
+
+        // VECTORS
 
     case GET_INDEX(int): {
         const auto& var = std::get<int>(uniformVariable);
