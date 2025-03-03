@@ -1,10 +1,10 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <cstdint>
 #include <filesystem>
 #include <fstream>
 
+#include <iostream>
 #include <variant>
 
 //////////// NOCOPY /////////////
@@ -40,7 +40,6 @@ inline void hash_combine(std::size_t& seed, const T& v, Rest... rest)
 }
 
 ////////// VARIANT ///////////
-
 /// https://gist.github.com/nnaumenko/1db96f7e187979a057ee7ad757dee4f2
 /// @return Index of type T in variant V; or variant size if V does not include an alternative for T.
 template <typename V, typename T, std::size_t I = 0>
@@ -56,7 +55,8 @@ constexpr std::size_t variant_index()
         }
     }
 }
-#define GET_INDEX(type) variant_index<UniformVariant, type>()
+
+#define GET_UNIFORM_VARIANT_INDEX(type) variant_index<UniformVariant, type>()
 
 //////// FILE TO TEXT //////////
 

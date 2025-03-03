@@ -172,7 +172,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
 
     // thanks to ChatGPT, I have no glue, how regex works
     switch (var.index()) {
-    case GET_INDEX(float): {
+    case GET_UNIFORM_VARIANT_INDEX(float): {
         float v;
         if (stringToFloat(defaultVarString, v)) {
             var = v;
@@ -180,7 +180,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
         return;
     }
 
-    case GET_INDEX(glm::vec2): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::vec2): {
         if (std::regex_search(defaultVarString, matches,
                 std::regex("vec2\\(([^,]+),([^)]+)\\)"))) {
             convertDataIfCan(matches, 2, VarDataType::FLOAT);
@@ -189,7 +189,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
         return;
     }
 
-    case GET_INDEX(glm::vec3): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::vec3): {
         if (std::regex_search(defaultVarString, matches,
                 std::regex("vec3\\(([^,]+),\\s*([^,]+),\\s*([^)]+)\\)"))) {
             convertDataIfCan(matches, 3, VarDataType::FLOAT);
@@ -198,7 +198,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
         return;
     }
 
-    case GET_INDEX(glm::vec4): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::vec4): {
         glm::vec4 result(0);
         if (std::regex_search(defaultVarString, matches,
                 std::regex("vec4\\(([^,]+),\\s*([^,]+),\\s*([^,]+),\\s*([^)]+)\\)"))) {
@@ -208,7 +208,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
         return;
     }
 
-    case GET_INDEX(glm::mat4): { // identity by default, not zero matrix
+    case GET_UNIFORM_VARIANT_INDEX(glm::mat4): { // identity by default, not zero matrix
         if (std::regex_search(defaultVarString, matches,
                 std::regex("mat4\\("
                            "([^,]+),\\s*([^,]+),\\s*([^,]+),\\s*([^,]+),\\s*"
@@ -223,7 +223,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
         return;
     }
 
-    case GET_INDEX(int): {
+    case GET_UNIFORM_VARIANT_INDEX(int): {
         int v;
         if (stringToInt(defaultVarString, v)) {
             var = v;
@@ -231,7 +231,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
         return;
     }
 
-    case GET_INDEX(glm::ivec2): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::ivec2): {
         if (std::regex_search(defaultVarString, matches,
                 std::regex("ivec2\\(([^,]+),([^)]+)\\)"))) {
             convertDataIfCan(matches, 2, VarDataType::INT);
@@ -240,7 +240,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
         return;
     }
 
-    case GET_INDEX(glm::ivec3): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::ivec3): {
         if (std::regex_search(defaultVarString, matches,
                 std::regex("ivec3\\(([^,]+),\\s*([^,]+),\\s*([^)]+)\\)"))) {
             convertDataIfCan(matches, 3, VarDataType::INT);
@@ -249,7 +249,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
         return;
     }
 
-    case GET_INDEX(glm::ivec4): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::ivec4): {
         if (std::regex_search(defaultVarString, matches,
                 std::regex("ivec4\\(([^,]+),\\s*([^,]+),\\s*([^,]+),\\s*([^)]+)\\)"))) {
             convertDataIfCan(matches, 4, VarDataType::INT);
@@ -258,7 +258,7 @@ void parseDefaultVariable(UniformVariant& var, const std::string& defaultVarStri
         return;
     }
 
-    case GET_INDEX(Texture2Ddata): { // do nothing
+    case GET_UNIFORM_VARIANT_INDEX(Texture2Ddata): { // do nothing
     }
     }
 }

@@ -202,15 +202,19 @@ GLShader::~GLShader()
     }
 }
 
+#define LOG_UNIFORMS(x)
 void GLShader::setUniformInternal(int location, const UniformVariant& uniformVariable)
 {
     const auto& currentDefaultUniform = m_uniforms[location].m_defaultData;
     assert(uniformVariable.index() == currentDefaultUniform.index() && "Variable must match shader type");
+
+    LOG_UNIFORMS(std::cout << "Var index: " << uniformVariable.index() << ", type: ")
+
     switch (uniformVariable.index()) {
 
-    case GET_INDEX(Texture2Ddata): {
+    case GET_UNIFORM_VARIANT_INDEX(Texture2Ddata): {
         const auto& var = std::get<Texture2Ddata>(uniformVariable);
-
+        LOG_UNIFORMS(std::cout << "Texture2Ddata" << std::endl)
         const auto& sharedTexture = var.m_texture;
 
         int textureIndex = 0;
@@ -241,76 +245,90 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
 #endif
     } break;
 
-    case GET_INDEX(float): {
+    case GET_UNIFORM_VARIANT_INDEX(float): {
+        LOG_UNIFORMS(std::cout << "float" << std::endl)
         const auto& var = std::get<float>(uniformVariable);
         glUniform1f(location, var);
     } break;
 
-    case GET_INDEX(glm::vec2): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::vec2): {
+        LOG_UNIFORMS(std::cout << "vec2" << std::endl)
         const auto& var = std::get<glm::vec2>(uniformVariable);
         glUniform2fv(location, 1, &var[0]);
     } break;
 
-    case GET_INDEX(glm::vec3): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::vec3): {
+        LOG_UNIFORMS(std::cout << "vec3" << std::endl)
         const auto& var = std::get<glm::vec3>(uniformVariable);
         glUniform3fv(location, 1, &var[0]);
     } break;
 
-    case GET_INDEX(glm::vec4): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::vec4): {
+        LOG_UNIFORMS(std::cout << "vec4" << std::endl)
         const auto& var = std::get<glm::vec4>(uniformVariable);
         glUniform4fv(location, 1, &var[0]);
     } break;
 
-    case GET_INDEX(glm::mat4): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::mat4): {
+        LOG_UNIFORMS(std::cout << "mat4" << std::endl)
         const auto& var = std::get<glm::mat4>(uniformVariable);
         glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]);
     } break;
 
         // VECTORS
 
-    case GET_INDEX(std::vector<float>): {
+    case GET_UNIFORM_VARIANT_INDEX(std::vector<float>): {
+        LOG_UNIFORMS(std::cout << "float vector" << std::endl)
         const auto& var = std::get<std::vector<float>>(uniformVariable);
         glUniform1fv(location, var.size(), var.data());
     } break;
 
-    case GET_INDEX(std::vector<glm::vec2>): {
+    case GET_UNIFORM_VARIANT_INDEX(std::vector<glm::vec2>): {
+        LOG_UNIFORMS(std::cout << "vec2 vector" << std::endl)
         const auto& var = std::get<std::vector<glm::vec2>>(uniformVariable);
         glUniform2fv(location, var.size(), &var[0].x);
     } break;
 
-    case GET_INDEX(std::vector<glm::vec3>): {
+    case GET_UNIFORM_VARIANT_INDEX(std::vector<glm::vec3>): {
+        LOG_UNIFORMS(std::cout << "vec3 vector" << std::endl)
         const auto& var = std::get<std::vector<glm::vec3>>(uniformVariable);
         glUniform3fv(location, var.size(), &var[0].x);
     } break;
 
-    case GET_INDEX(std::vector<glm::vec4>): {
+    case GET_UNIFORM_VARIANT_INDEX(std::vector<glm::vec4>): {
+        LOG_UNIFORMS(std::cout << "vec4 vector" << std::endl)
         const auto& var = std::get<std::vector<glm::vec4>>(uniformVariable);
         glUniform4fv(location, var.size(), &var[0].x);
     } break;
 
-    case GET_INDEX(std::vector<glm::mat4>): {
+    case GET_UNIFORM_VARIANT_INDEX(std::vector<glm::mat4>): {
+        LOG_UNIFORMS(std::cout << "mat4" << std::endl)
         const auto& var = std::get<std::vector<glm::mat4>>(uniformVariable);
         glUniformMatrix4fv(location, var.size(), GL_FALSE, &var[0][0].x);
     } break;
 
         // VECTORS
 
-    case GET_INDEX(int): {
+    case GET_UNIFORM_VARIANT_INDEX(int): {
+        LOG_UNIFORMS(std::cout << "int" << std::endl)
         const auto& var = std::get<int>(uniformVariable);
         glUniform1i(location, var);
     } break;
 
-    case GET_INDEX(glm::ivec2): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::ivec2): {
+        LOG_UNIFORMS(std::cout << "ivec2" << std::endl)
         const auto& var = std::get<glm::ivec2>(uniformVariable);
         glUniform2iv(location, 1, &var[0]);
     } break;
 
-    case GET_INDEX(glm::ivec3): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::ivec3): {
+        LOG_UNIFORMS(std::cout << "ivec3" << std::endl)
         const auto& var = std::get<glm::ivec3>(uniformVariable);
         glUniform3iv(location, 1, &var[0]);
     } break;
 
-    case GET_INDEX(glm::ivec4): {
+    case GET_UNIFORM_VARIANT_INDEX(glm::ivec4): {
+        LOG_UNIFORMS(std::cout << "ivec4" << std::endl)
         const auto& var = std::get<glm::ivec4>(uniformVariable);
         glUniform4iv(location, 1, &var[0]);
     } break;
