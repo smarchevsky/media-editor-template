@@ -1,8 +1,6 @@
 #ifndef GLSHADER_H
 #define GLSHADER_H
 
-#include <filesystem>
-
 #include "gl_texture.h"
 #include "hashstring.h"
 
@@ -11,7 +9,9 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#include <iostream>
+#include <cstring>
+#include <filesystem>
+
 #include <string>
 #include <unordered_map>
 
@@ -30,6 +30,27 @@ struct Texture2Ddata {
     std::shared_ptr<GLTexture2D> m_texture;
     int m_index = -1;
 };
+
+#ifdef UNIFORM_BUFFER_FEATURE
+// I don't want to create separate branch and deal with merge conflicts
+
+class UniformStruct {
+public:
+    // clang-format off
+    enum class DataPackingFormat : uint8_t { Invalid, CPU, std140, std430 } m_packingFormat {};
+    struct MetaData { uint8_t type; uint16_t offset; };
+    struct SizeAlign { int size; int align; };
+
+protected:
+    std::vector<uint8_t> m_data; // all data in bytes
+    std::vector<MetaData> m_metaData; // size: num arguments
+    // clang-format on
+
+public:
+    template <typename... Args>
+    explicit UniformStruct(Args... args); // implementation after UniformVariant
+};
+#endif
 
 typedef std::variant<
     char, // is invalid, dont set char :)
@@ -54,6 +75,86 @@ typedef std::variant<
     Texture2Ddata>
 
     UniformVariant;
+
+#ifdef UNIFORM_BUFFER_FEATURE
+template <typename... Args>
+UniformStruct::UniformStruct(Args... args)
+{
+    constexpr size_t numArg = sizeof...(args);
+    m_metaData.resize(numArg);
+
+    auto getSizeAndAlignForStd140 = [](size_t uniformVarIndex) -> SizeAlign {
+        switch (uniformVarIndex) {
+        case GET_UNIFORM_VARIANT_INDEX(float):
+        case GET_UNIFORM_VARIANT_INDEX(int): {
+            return { 4, 4 };
+        }
+        case GET_UNIFORM_VARIANT_INDEX(glm::vec2):
+        case GET_UNIFORM_VARIANT_INDEX(glm::ivec2): {
+            return { 8, 8 };
+        }
+        case GET_UNIFORM_VARIANT_INDEX(glm::vec3):
+        case GET_UNIFORM_VARIANT_INDEX(glm::ivec3):
+        case GET_UNIFORM_VARIANT_INDEX(glm::vec4):
+        case GET_UNIFORM_VARIANT_INDEX(glm::ivec4): {
+            return { 16, 16 };
+        }
+        case GET_UNIFORM_VARIANT_INDEX(glm::mat4): {
+            return { 64, 16 };
+        }
+        default:
+            assert(false && "Not supported format for uniform variable");
+            return { 0, 0 };
+        }
+    };
+
+    /*auto updateOffset = [](size_t& offset, size_t size, size_t align) {
+        size_t padding = (align - (offset % align)) % align;
+        offset += padding + size;
+    };*/
+
+    size_t currentOffset = 0, currentArgIndex = 0;
+    auto computeDataSizeAndMetadata = [&](size_t typeIndex, auto&& arg) {
+        assert(typeIndex < std::numeric_limits<decltype(MetaData::type)>().max());
+        assert(currentOffset < std::numeric_limits<decltype(MetaData::offset)>().max());
+        SizeAlign dataSizeAlign = getSizeAndAlignForStd140(typeIndex);
+
+        size_t padding = (dataSizeAlign.align - (currentOffset % dataSizeAlign.align)) % dataSizeAlign.align;
+        currentOffset += padding;
+
+        auto& md = m_metaData[currentArgIndex];
+        md.type = static_cast<decltype(MetaData::type)>(typeIndex);
+        md.offset = currentOffset;
+        LOGE(currentArgIndex << " type: " << (int)md.type << " offset: " << md.offset);
+
+        currentOffset += dataSizeAlign.size;
+        currentArgIndex++;
+    };
+
+    (computeDataSizeAndMetadata(GET_UNIFORM_VARIANT_INDEX(decltype(args)), args), ...);
+
+    m_data.resize(currentOffset);
+    std::memset(m_data.data(), 0, m_data.size()); // clear old data
+
+    currentOffset = currentArgIndex = 0;
+    auto pushData = [&](auto&& arg) {
+        std::memcpy(m_data.data() + m_metaData[currentArgIndex].offset, &arg, sizeof(arg));
+
+        currentArgIndex++;
+    };
+
+    (pushData(args), ...);
+    m_packingFormat = DataPackingFormat::CPU;
+
+    std::cout << std::endl;
+    for (int i = 0; i < m_data.size() / 4; ++i) {
+        float curr = ((float*)m_data.data())[i];
+        LOG(curr);
+    }
+
+    exit(0);
+}
+#endif
 
 typedef std::unordered_map<HashString, UniformVariant> UniformContainer;
 //////////////////////// SHADER //////////////////////////
