@@ -294,8 +294,11 @@ bool Window::processEvent(const SDL_Event* event)
             (SDL_KeyCode)event->key.keysym.sym,
             (SDL_Keymod)event->key.keysym.mod, true);
 
-        if (keyMod.key == SDL_KeyCode::SDLK_q
-            && (keyMod.mod & SDL_Keymod::KMOD_CTRL)) {
+        auto isCtrlQ = [&]() { return keyMod.key == SDL_KeyCode::SDLK_q
+                                   && (keyMod.mod & SDL_Keymod::KMOD_CTRL); };
+
+        auto isEsc = [&]() { return keyMod.key == SDL_KeyCode::SDLK_ESCAPE; };
+        if (isEsc()) {
             exit();
 
         } else if (keyMod.key == SDL_KeyCode::SDLK_F11) {
