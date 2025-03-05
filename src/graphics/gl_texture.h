@@ -46,7 +46,13 @@ public:
     }
 
     GLTexture2D() = default;
-    GLTexture2D(const Image& img) { fromImage(img); }
+    GLTexture2D(const Image& img,
+        Filtering filtering = Filtering::LinearMipmap,
+        Wrapping wrapping = Wrapping::Repeat)
+    {
+        fromImage(img, filtering, wrapping);
+    }
+
     GLTexture2D(glm::ivec2 size, TexelFormat format, void* data = nullptr) { createFromRawData(size, format, data); }
     GLTexture2D(GLTexture2D&& rhs) { *this = std::move(rhs); }
     ~GLTexture2D();
@@ -70,7 +76,7 @@ public:
 
 protected:
     void generateMipMapsIfDirty();
-    bool fromImage(const Image& img);
+    bool fromImage(const Image& img, Filtering filtering, Wrapping wrapping);
 
     // static uint32_t s_currentBindedTextureHandle;
     friend class GLFrameBuffer;

@@ -122,7 +122,7 @@ void GLTexture2D::updateData(const void* data, TexelFormat externalDataFormat)
         data);
 }
 
-bool GLTexture2D::fromImage(const Image& img)
+bool GLTexture2D::fromImage(const Image& img, Filtering filtering, Wrapping wrapping)
 {
     if (!img.isValid()) {
         LOGE("trying to load invalid texture");
@@ -130,8 +130,8 @@ bool GLTexture2D::fromImage(const Image& img)
     }
 
     createFromRawData(img.m_size, img.m_format, img.getData());
-    setFiltering(Filtering::LinearMipmap);
-    setWrapping(Wrapping::Repeat);
+    setFiltering(filtering);
+    setWrapping(wrapping);
 
     return true;
 }
