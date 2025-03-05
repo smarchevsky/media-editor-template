@@ -209,7 +209,7 @@ GLShader::~GLShader()
     }
 }
 
-#define LOG_UNIFORMS(x) x;
+#define LOG_UNIFORMS(x) // x;
 void GLShader::setUniformInternal(int location, const UniformVariant& uniformVariable)
 {
     auto uniformIt = m_uniforms.find(location);
