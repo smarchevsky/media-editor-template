@@ -203,7 +203,7 @@ public:
     };
     // clang-format on
 private:
-    UniformType getCurrentUniformType(int location) const { return m_uniforms[location].m_type; }
+    // UniformType getCurrentUniformType(int location) const { return m_uniforms[location]; }
 
     void setUniformInternal(int location, const UniformVariant& var);
 
@@ -214,15 +214,15 @@ public:
         const_cast<uint32_t&>(rhs.m_shaderProgram) = 0;
 
         const_cast<std::unordered_map<HashString, int>&>(m_locations) = std::move(rhs.m_locations);
-        const_cast<std::vector<Variable>&>(m_uniforms) = std::move(rhs.m_uniforms);
+        const_cast<std::unordered_map<int, Variable>&>(m_uniforms) = std::move(rhs.m_uniforms);
         return *this;
     }
 
 private: // DATA
     const uint32_t m_shaderProgram {};
-    const std::unordered_map<HashString, int> m_locations;
 
-    const std::vector<Variable> m_uniforms;
+    const std::unordered_map<HashString, int> m_locations;
+    const std::unordered_map<int, Variable> m_uniforms;
 
 private:
     static uint32_t s_currentBindedShaderHandle;

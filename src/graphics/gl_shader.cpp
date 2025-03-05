@@ -101,7 +101,7 @@ UniformVariant createDefaultUniformData(int GLtype, int size, int textureIndex, 
     return {};
 }
 
-std::vector<GLShader::Variable> getUniformList(int program)
+std::unordered_map<int, GLShader::Variable> getUniformList(int program)
 {
     GLint varCount;
     GLint varSize; // size of the variable
@@ -122,7 +122,7 @@ std::vector<GLShader::Variable> getUniformList(int program)
     printf("Active Uniforms: %d\n", varCount);
 
     int texture2DIndex = 0;
-    std::vector<GLShader::Variable> uniformVariables;
+    std::unordered_map<int, GLShader::Variable> uniformVariables;
     for (int i = 0; i < varCount; i++) {
         glGetActiveUniform(program, (GLuint)i, varBufSize, &varNameLength, &varSize, &varType, varName);
 
@@ -132,10 +132,13 @@ std::vector<GLShader::Variable> getUniformList(int program)
         if (isArray)
             nameString = nameString.substr(0, openBracketIndex);
 
-        GLShader::Variable var(i, nameString, createDefaultUniformData(varType, varSize, texture2DIndex, isArray));
-        uniformVariables.push_back(std::move(var));
+        int location = glGetUniformLocation(program, nameString.c_str());
 
-        printf("  - Uniform #%d, Size: %d, Type: %u, Name: %s\n", i, varSize, varType, nameString.c_str());
+        GLShader::Variable var(location, nameString, createDefaultUniformData(varType, varSize, texture2DIndex, isArray));
+        uniformVariables[location] = std::move(var);
+
+        printf("  - Uniform #%d, Size: %d, Type: %u, Name: %s, rawName: %s\n",
+            location, varSize, varType, nameString.c_str(), varName);
 
         if (varType == GL_SAMPLER_2D)
             texture2DIndex++;
@@ -160,14 +163,18 @@ GLShader::GLShader(const std::string& vertexShaderCode, const std::string& fragm
         glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &success);
 
         if (success == GL_TRUE) {
-            std::vector<Variable> uniforms = getUniformList(getHandle());
+            std::unordered_map<int, Variable> uniforms = getUniformList(m_shaderProgram);
+            // volatile int dataLocation = glGetUniformLocation(m_shaderProgram, "data");
+            // volatile int timeLocation = glGetUniformLocation(m_shaderProgram, "time");
 
             // ShaderCodeParser::parseDefaultUniforms(vertexShaderCode, uniforms);
             // ShaderCodeParser::parseDefaultUniforms(fragmentShaderCode, uniforms);
 
             UNCONST(m_uniforms) = std::move(uniforms);
-            for (const auto& d : m_uniforms)
-                UNCONST(m_locations).insert({ d.m_name.c_str(), d.m_location });
+            for (const auto& pair : m_uniforms) {
+                auto& uniformData = pair.second;
+                UNCONST(m_locations).insert({ uniformData.m_name.c_str(), uniformData.m_location });
+            }
 
         } else {
 
@@ -202,13 +209,18 @@ GLShader::~GLShader()
     }
 }
 
-#define LOG_UNIFORMS(x)
+#define LOG_UNIFORMS(x) x;
 void GLShader::setUniformInternal(int location, const UniformVariant& uniformVariable)
 {
-    const auto& currentDefaultUniform = m_uniforms[location].m_defaultData;
+    auto uniformIt = m_uniforms.find(location);
+    if (uniformIt == m_uniforms.end())
+        return;
+    const auto& uniform = uniformIt->second;
+
+    const auto& currentDefaultUniform = uniform.m_defaultData;
     assert(uniformVariable.index() == currentDefaultUniform.index() && "Variable must match shader type");
 
-    LOG_UNIFORMS(std::cout << "Var index: " << uniformVariable.index() << ", type: ")
+    LOG_UNIFORMS(std::cout << "Name: " << uniform.m_name << ",\t Variant index: " << uniformVariable.index() << ", type: ")
 
     switch (uniformVariable.index()) {
 
@@ -349,10 +361,14 @@ void GLShader::setCameraUniforms(const UniformContainer& cameraUniforms)
         if (varLocationIter != m_locations.end()) {
             int varLocation = varLocationIter->second;
 
+            auto uniformIt = m_uniforms.find(varLocation);
+            if (uniformIt == m_uniforms.end())
+                continue;
+            auto& uniform = uniformIt->second;
             // mark as camera type
-            m_uniforms[varLocation].m_currentData = cameraUniformVariable;
-            m_uniforms[varLocation].m_type = UniformType::Camera;
-            m_uniforms[varLocation].m_status = UniformStatus::MustUpdate;
+            uniform.m_currentData = cameraUniformVariable;
+            uniform.m_type = UniformType::Camera;
+            uniform.m_status = UniformStatus::MustUpdate;
         }
     }
 }
@@ -367,39 +383,45 @@ void GLShader::setUniforms(const UniformContainer& newUniforms)
         if (varLocationIter != m_locations.end()) {
             int varLocation = varLocationIter->second;
 
-            assert(getCurrentUniformType(varLocation) == UniformType::Default && "Uniform was previously marked as Camera type.");
+            auto uniformIt = m_uniforms.find(varLocation);
+            if (uniformIt == m_uniforms.end())
+                continue;
+            auto& uniform = uniformIt->second;
 
-            m_uniforms[varLocation].m_currentData = newUniformVariable;
-            m_uniforms[varLocation].m_status = UniformStatus::MustUpdate;
+            assert(uniform.m_type == UniformType::Default && "Uniform was previously marked as Camera type.");
+
+            uniform.m_currentData = newUniformVariable;
+            uniform.m_status = UniformStatus::MustUpdate;
         }
     }
 
     // state machine magic
-    for (auto& u : m_uniforms) {
+    for (auto& pair : m_uniforms) {
+        auto& uniform = pair.second;
 
         // camera updates only once after bind, and remain unchanged untill next bind
-        if (u.m_type == UniformType::Camera) {
-            if (u.m_status == UniformStatus::MustUpdate) {
-                setUniformInternal(u.m_location, u.m_currentData);
-                u.m_status = UniformStatus::DontTouch;
+        if (uniform.m_type == UniformType::Camera) {
+            if (uniform.m_status == UniformStatus::MustUpdate) {
+                setUniformInternal(uniform.m_location, uniform.m_currentData);
+                uniform.m_status = UniformStatus::DontTouch;
 
-            } else if (u.m_status == UniformStatus::MustResetToDefault) {
-                setUniformInternal(u.m_location, u.m_defaultData);
-                u.m_status = UniformStatus::DontTouch;
+            } else if (uniform.m_status == UniformStatus::MustResetToDefault) {
+                setUniformInternal(uniform.m_location, uniform.m_defaultData);
+                uniform.m_status = UniformStatus::DontTouch;
             }
             continue;
         }
 
         // if variable is updated - update it in shader
-        if (u.m_status == UniformStatus::MustUpdate) {
-            setUniformInternal(u.m_location, u.m_currentData);
-            u.m_currentData = u.m_defaultData;
-            u.m_status = UniformStatus::MustResetToDefault;
+        if (uniform.m_status == UniformStatus::MustUpdate) {
+            setUniformInternal(uniform.m_location, uniform.m_currentData);
+            uniform.m_currentData = uniform.m_defaultData;
+            uniform.m_status = UniformStatus::MustResetToDefault;
 
             // if variable was previously updated - reset it to default
-        } else if (u.m_status == UniformStatus::MustResetToDefault) {
-            setUniformInternal(u.m_location, u.m_defaultData);
-            u.m_status = UniformStatus::DontTouch;
+        } else if (uniform.m_status == UniformStatus::MustResetToDefault) {
+            setUniformInternal(uniform.m_location, uniform.m_defaultData);
+            uniform.m_status = UniformStatus::DontTouch;
         }
     }
 }
@@ -418,7 +440,8 @@ void GLShader::bindAndResetUniforms()
 
     // all default uniforms are dirty, don't change it
     // so, they will be overwritten in
-    for (auto& u : m_uniforms) {
-        u.m_status = UniformStatus::MustResetToDefault;
+    for (auto& pair : m_uniforms) {
+        auto& uniform = pair.second;
+        uniform.m_status = UniformStatus::MustResetToDefault;
     }
 }
