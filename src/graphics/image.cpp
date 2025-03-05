@@ -13,8 +13,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
-#include <iostream>
-
 // #define LOG_VERBOSE
 
 void Image::STBIDeleter::operator()(uint8_t* data) const { stbi_image_free(data); }
@@ -23,7 +21,7 @@ Image::Image(glm::ivec2 size, TexelFormat format)
 {
     m_size = size;
     m_format = format;
-    assert(m_format == TexelFormat::R_8 || m_format == TexelFormat::RGB_8 || m_format == TexelFormat::RGBA_8);
+    assert(m_format != TexelFormat::Undefined);
 
     TexelFormatInfo texelInfo(m_format);
     size_t imgSizeBytes = m_size.x * m_size.y * texelInfo.sizeInBytes;
