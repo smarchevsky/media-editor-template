@@ -209,9 +209,33 @@ GLShader::~GLShader()
     }
 }
 
-#define LOG_UNIFORMS(x) // x;
+// #define ENABLE_UNIFORMS_LOGGING
+#ifdef ENABLE_UNIFORMS_LOGGING
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& arr)
+{
+    os << "[";
+    for (size_t i = 0; i < arr.size(); ++i) {
+        if constexpr (std::is_same_v<T, float> || std::is_same_v<T, int>) {
+            os << arr[i];
+            // } else if constexpr (std::is_same_v<T, glm::vec2>) {
+        } else {
+            os << glm::to_string(arr[i]);
+        }
+        if (i < arr.size() - 1)
+            os << ", ";
+    }
+    os << "]";
+    return os;
+}
+#define LOG_UNIFORMS(x) x;
+#else
+#define LOG_UNIFORMS(x)
+#endif
+
 void GLShader::setUniformInternal(int location, const UniformVariant& uniformVariable)
 {
+
     auto uniformIt = m_uniforms.find(location);
     if (uniformIt == m_uniforms.end())
         return;
@@ -226,7 +250,7 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
 
     case GET_UNIFORM_VARIANT_INDEX(Texture2Ddata): {
         const auto& var = std::get<Texture2Ddata>(uniformVariable);
-        LOG_UNIFORMS(std::cout << "Texture2Ddata" << std::endl)
+        LOG_UNIFORMS(std::cout << "Texture2Ddata")
         const auto& sharedTexture = var.m_texture;
 
         int textureIndex = 0;
@@ -258,90 +282,90 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(float): {
-        LOG_UNIFORMS(std::cout << "float" << std::endl)
         const auto& var = std::get<float>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "float: " << var)
         glUniform1f(location, var);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(glm::vec2): {
-        LOG_UNIFORMS(std::cout << "vec2" << std::endl)
         const auto& var = std::get<glm::vec2>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "vec2: " << glm::to_string(var))
         glUniform2fv(location, 1, &var[0]);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(glm::vec3): {
-        LOG_UNIFORMS(std::cout << "vec3" << std::endl)
         const auto& var = std::get<glm::vec3>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "vec3: " << glm::to_string(var))
         glUniform3fv(location, 1, &var[0]);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(glm::vec4): {
-        LOG_UNIFORMS(std::cout << "vec4" << std::endl)
         const auto& var = std::get<glm::vec4>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "vec4: " << glm::to_string(var))
         glUniform4fv(location, 1, &var[0]);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(glm::mat4): {
-        LOG_UNIFORMS(std::cout << "mat4" << std::endl)
         const auto& var = std::get<glm::mat4>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "mat4: " << glm::to_string(var))
         glUniformMatrix4fv(location, 1, GL_FALSE, &var[0][0]);
     } break;
 
         // VECTORS
 
     case GET_UNIFORM_VARIANT_INDEX(std::vector<float>): {
-        LOG_UNIFORMS(std::cout << "float vector" << std::endl)
         const auto& var = std::get<std::vector<float>>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "float vector: " << var)
         glUniform1fv(location, var.size(), var.data());
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(std::vector<glm::vec2>): {
-        LOG_UNIFORMS(std::cout << "vec2 vector" << std::endl)
         const auto& var = std::get<std::vector<glm::vec2>>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "vec2 vector: " << var)
         glUniform2fv(location, var.size(), &var[0].x);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(std::vector<glm::vec3>): {
-        LOG_UNIFORMS(std::cout << "vec3 vector" << std::endl)
         const auto& var = std::get<std::vector<glm::vec3>>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "vec3 vector: " << var)
         glUniform3fv(location, var.size(), &var[0].x);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(std::vector<glm::vec4>): {
-        LOG_UNIFORMS(std::cout << "vec4 vector" << std::endl)
         const auto& var = std::get<std::vector<glm::vec4>>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "vec4 vector: " << var)
         glUniform4fv(location, var.size(), &var[0].x);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(std::vector<glm::mat4>): {
-        LOG_UNIFORMS(std::cout << "mat4" << std::endl)
         const auto& var = std::get<std::vector<glm::mat4>>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "mat4: " << var)
         glUniformMatrix4fv(location, var.size(), GL_FALSE, &var[0][0].x);
     } break;
 
         // VECTORS
 
     case GET_UNIFORM_VARIANT_INDEX(int): {
-        LOG_UNIFORMS(std::cout << "int" << std::endl)
         const auto& var = std::get<int>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "int: " << var)
         glUniform1i(location, var);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(glm::ivec2): {
-        LOG_UNIFORMS(std::cout << "ivec2" << std::endl)
         const auto& var = std::get<glm::ivec2>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "ivec2: " << glm::to_string(var))
         glUniform2iv(location, 1, &var[0]);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(glm::ivec3): {
-        LOG_UNIFORMS(std::cout << "ivec3" << std::endl)
         const auto& var = std::get<glm::ivec3>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "ivec3: " << glm::to_string(var))
         glUniform3iv(location, 1, &var[0]);
     } break;
 
     case GET_UNIFORM_VARIANT_INDEX(glm::ivec4): {
-        LOG_UNIFORMS(std::cout << "ivec4" << std::endl)
         const auto& var = std::get<glm::ivec4>(uniformVariable);
+        LOG_UNIFORMS(std::cout << "ivec4: " << glm::to_string(var))
         glUniform4iv(location, 1, &var[0]);
     } break;
 
@@ -349,6 +373,9 @@ void GLShader::setUniformInternal(int location, const UniformVariant& uniformVar
         LOGE("Unsupported uniform variable type");
     }
     }
+#ifdef ENABLE_UNIFORMS_LOGGING
+    std::cout << std::endl;
+#endif
 }
 
 void GLShader::setCameraUniforms(const UniformContainer& cameraUniforms)
